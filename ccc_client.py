@@ -123,11 +123,10 @@ class AppRepoRunner(object):
     Send requests to the AppRepo
     """
     def __init__(self, args):
-        super(DtsRunner, self).__init__(args)
+        super(AppRepoRunner, self).__init__(args)
         self.host = re.sub('(http|https|://)', '', args.host)
         self.port = args.port
         self.blob = args.filepath
-        self.imageId = args.imageId
         self.imageTag = args.imageTag
 
         if args.name is None:
@@ -141,24 +140,47 @@ class AppRepoRunner(object):
         except Exception:
             self.metadata = None
 
+        if args.imageId is not None:
+            self.imageId = args.imageId
+        elif self.metadata is not None:
+            self.imageId = self.metadata['id']
+        else:
+            self.imageId = None
+
     def run(self):
         if self.blob is not None:
-            self.post_blob()
+            self.__post_blob()
 
-        if (self.metadata is not None) and (self.imageId is not None):
-            self.post_metadata()
+        if self.metadata is not None:
+            self.__post_metadata()
 
-    def post_blob(self):
+    def __post_blob(self):
         headers = {'Content-Type': 'multipart/form-data'}
         endpoint = "http://{0}:{1}/api/v1/tool/".format(self.host, self.port)
 
-        response = requests.post(endpoint, data="", headers=headers)
+        form_data = {'file': (self.blob, open(self.blob, 'rb')),
+                     "imageName": (None, self.imageName),
+                     "imageTag": (None, self.imageTag)}
+
+        response = requests.post(endpoint, files=form_data, headers=headers)
+        self.imageId = re.compile(
+            r'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}').findall(
+                response.content)[0]
         return response.content
 
-    def post_metadata(self):
+    def __post_metadata(self):
+        if self.imageId is None:
+            if self.metadata['id'] == '':
+                raise KeyError("imageId needs to be specified")
+            else:
+                self.imageId = self.metadata['id']
+        elif self.metadata['id'] == '':
+            self.metadata['id'] = self.imageId
+        else:
+            assert self.metadata['id'] == self.imageId
+
         headers = {'Content-Type': 'application/json'}
         endpoint = "http://{0}:{1}/api/v1/tool/{2}".format(self.host, self.port, self.toolId)
-
         response = requests.put(endpoint, data=self.metadata, headers=headers)
         return response.content
 
@@ -182,6 +204,19 @@ def add_execengine_parser(subparsers):
     )
     parser.set_defaults(runner=ExecEngineRunner)
     return parser
+
+
+class ExecEngineRunner(object):
+    """
+    Send requests to the ExecEngine
+    """
+    def __init__(self, args):
+        super(ExecEngineRunner, self).__init__(args)
+        self.host = re.sub('(http|https|://)', '', args.host)
+        self.port = args.port
+
+    def run(self):
+        pass
 
 
 # ------------------------------
