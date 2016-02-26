@@ -9,6 +9,8 @@ import os
 import re
 import requests
 
+from uuid import NAMESPACE_OID as noid, uuid5
+
 
 # ------------------------------
 # Misc
@@ -29,7 +31,7 @@ def add_dts_parser(subparsers):
         '--host', '-d', type=str, default="http://0.0.0.0", help='host'
     )
     parser.add_argument(
-        '--port', '-p', type=str, default="8900", help='port'
+        '--port', '-p', type=str, default="9510", help='port'
     )
     parser.add_argument(
         '--filepath', '-f', required=True, type=str,
@@ -57,16 +59,24 @@ class DtsRunner(object):
         self.host = re.sub('(http|https|://)', '', args.host)
         self.port = args.port
         self.site = args.site
-        self.name = os.path.basename(args.filepath).strip()
-        self.path = os.path.dirname(args.filepath).strip()
+        self.name = os.path.basename(args.filepath)
+        self.path = os.path.dirname(args.filepath)
+        self.size = os.path.getsize(args.filepath)
         self.user = args.user
+        self.cccId = str(uuid5(noid, args.filepath))
+        self.timestampUpdated = os.stat(args.filepath)[-2]
 
     def run(self):
         data = {}
+        data['cccId'] = self.cccId
         data['name'] = self.name
-        data['siteId'] = self.site
-        data['path'] = self.path
-        data['user'] = self.user
+        data['size'] = self.size
+        location = {}
+        location['site'] = self.site
+        location['path'] = self.path
+        location['timestampUpdated'] = self.timestampUpdated
+        location['user'] = {"name": self.user}
+        data['location'] = [location]
 
         headers = {'Content-Type': 'application/json'}
         endpoint = "http://{0}:{1}/api/v1/dts/file".format(self.host, self.port)
