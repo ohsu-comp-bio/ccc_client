@@ -55,7 +55,6 @@ class DtsRunner(object):
     Send requests to the DTS
     """
     def __init__(self, args):
-        super(DtsRunner, self).__init__(args)
         self.host = re.sub('(http|https|://)', '', args.host)
         self.port = args.port
         self.site = args.site
@@ -78,10 +77,8 @@ class DtsRunner(object):
         location['user'] = {"name": self.user}
         data['location'] = [location]
 
-        headers = {'Content-Type': 'application/json'}
         endpoint = "http://{0}:{1}/api/v1/dts/file".format(self.host, self.port)
-
-        response = requests.post(endpoint, data=json.dumps(data), headers=headers)
+        response = requests.post(endpoint, data=json.dumps(data))
         return response.content
 
 
@@ -123,7 +120,6 @@ class AppRepoRunner(object):
     Send requests to the AppRepo
     """
     def __init__(self, args):
-        super(AppRepoRunner, self).__init__(args)
         self.host = re.sub('(http|https|://)', '', args.host)
         self.port = args.port
         self.blob = args.filepath
@@ -152,23 +148,24 @@ class AppRepoRunner(object):
             self.__post_blob()
 
         if self.metadata is not None:
-            self.__post_metadata()
+            self.__put_metadata()
 
     def __post_blob(self):
-        headers = {'Content-Type': 'multipart/form-data'}
         endpoint = "http://{0}:{1}/api/v1/tool/".format(self.host, self.port)
 
-        form_data = {'file': (self.blob, open(self.blob, 'rb')),
+        form_data = {'file': open(self.blob, 'rb'),
                      "imageName": (None, self.imageName),
                      "imageTag": (None, self.imageTag)}
 
-        response = requests.post(endpoint, files=form_data, headers=headers)
+        response = requests.post(endpoint, files=form_data)
+
         self.imageId = re.compile(
             r'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}').findall(
                 response.content)[0]
+
         return response.content
 
-    def __post_metadata(self):
+    def __put_metadata(self):
         if self.imageId is None:
             if self.metadata['id'] == '':
                 raise KeyError("imageId needs to be specified")
@@ -179,9 +176,8 @@ class AppRepoRunner(object):
         else:
             assert self.metadata['id'] == self.imageId
 
-        headers = {'Content-Type': 'application/json'}
         endpoint = "http://{0}:{1}/api/v1/tool/{2}".format(self.host, self.port, self.toolId)
-        response = requests.put(endpoint, data=self.metadata, headers=headers)
+        response = requests.put(endpoint, data=json.dumps(self.metadata))
         return response.content
 
 
@@ -200,7 +196,7 @@ def add_execengine_parser(subparsers):
         '--wdlSource', type=str, help='WDL workflow file'
     )
     parser.add_argument(
-        '--inputJson', type=str, help='WDL inputs json file'
+        '--workflowInputs', type=str, help='WDL inputs json file'
     )
     parser.set_defaults(runner=ExecEngineRunner)
     return parser
@@ -211,12 +207,19 @@ class ExecEngineRunner(object):
     Send requests to the ExecEngine
     """
     def __init__(self, args):
-        super(ExecEngineRunner, self).__init__(args)
         self.host = re.sub('(http|https|://)', '', args.host)
         self.port = args.port
+        self.wdlSource = args.wdlSource
+        self.workflowInputs = args.workflowInputs
 
     def run(self):
-        pass
+        endpoint = "http://{0}:{1}/api/workflows/v1".format(self.host, self.port)
+
+        form_data = {'wdlSource': open(self.wdlSource, 'rb'),
+                     'workflowInputs': open(self.workflowInputs, 'rb')}
+
+        response = requests.post(endpoint, files=form_data)
+        return response.content
 
 
 # ------------------------------
@@ -244,7 +247,7 @@ def client_main(args=None):
             response = runner.run()
             print(response)
         except Exception as e:
-            raise e
+            print(e)
 
 
 if __name__ == "__main__":
