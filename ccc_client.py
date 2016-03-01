@@ -8,8 +8,7 @@ import json
 import os
 import re
 import requests
-
-from uuid import NAMESPACE_OID as noid, uuid5
+import uuid
 
 
 # ------------------------------
@@ -41,10 +40,11 @@ def add_dts_parser(subparsers):
         '--user', '-u', required=True, type=str, help='site user')
     parser.add_argument(
         '--site', '-s', required=True, type=str,
-        choices=["g1.spark0.intel.com", "central-gateway.ccc.org",
-                 "pdx-gateway.ccc.org", "dfci-gateway.ccc.org", 
-                 "boston-gateway.ccc.org"],
+        choices=["central", "dfci", "ohsu", "oicr"],
         help='site the data resides at'
+    )
+    parser.add_argument(
+        '--cccId', type=str, help='cccId entry to GET'
     )
     parser.set_defaults(runner=DtsRunner)
     return parser
@@ -53,6 +53,9 @@ def add_dts_parser(subparsers):
 class DtsRunner(object):
     """
     Send requests to the DTS
+
+    /api/v1/dts/file
+    /api/v1/dts/file/{uuid}
     """
     def __init__(self, args):
         self.host = re.sub('(http|https|://)', '', args.host)
@@ -62,16 +65,33 @@ class DtsRunner(object):
         self.path = os.path.dirname(args.filepath)
         self.size = os.path.getsize(args.filepath)
         self.user = args.user
-        self.cccId = str(uuid5(noid, args.filepath))
+        self.cccId = args.cccId
         self.timestampUpdated = os.stat(args.filepath)[-2]
 
     def run(self):
+        if self.cccId is not None:
+            self.__get_dts_entry()
+        else:
+            self.__post_dts_entry()
+
+    def __get_dts_entry(self):
+        endpoint = "http://{0}:{1}/api/v1/dts/file/{2}".format(self.host, self.port, self.cccId)
+        response = requests.get(endpoint)
+        return response.content
+
+    def __post_dts_entry(self):
+        # remap site name to IP
+        site_map = {"central": "10.73.127.1",
+                    "ohsu": "10.73.127.6",
+                    "dfci": "10.73.127.18",
+                    "oicr": "10.73.127.14"}
+
         data = {}
-        data['cccId'] = self.cccId
+        data['cccId'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, args.filepath))
         data['name'] = self.name
         data['size'] = self.size
         location = {}
-        location['site'] = self.site
+        location['site'] = site_map['self.site']
         location['path'] = self.path
         location['timestampUpdated'] = self.timestampUpdated
         location['user'] = {"name": self.user}
@@ -118,6 +138,10 @@ def add_apprepo_parser(subparsers):
 class AppRepoRunner(object):
     """
     Send requests to the AppRepo
+
+    /api/v1/tool
+    /api/v1/tool/{uuid}/
+    /api/v1/tool/{uuid}/data
     """
     def __init__(self, args):
         self.host = re.sub('(http|https|://)', '', args.host)
@@ -205,6 +229,10 @@ def add_execengine_parser(subparsers):
 class ExecEngineRunner(object):
     """
     Send requests to the ExecEngine
+
+    /api/workflows/v1
+    /api/workflows/v1/{uuid}/status
+    /api/workflows/v1/{uuid}/outputs
     """
     def __init__(self, args):
         self.host = re.sub('(http|https|://)', '', args.host)
