@@ -4,153 +4,351 @@ Command line utility for interacting with CCC services.
 from __future__ import print_function
 
 import argparse
+import glob
+import itertools
 import json
 import os
 import re
 import requests
+import sys
 import uuid
 
 
-# ------------------------------
-# Misc
-# ------------------------------
-def add_subparser(subparsers, subcommand, description):
-    parser = subparsers.add_parser(
-        subcommand, description=description, help=description
-    )
-    return parser
+def display_help(parser):
+    """
+    This function is called from customParser to "hijack" the help message
+    :return:
+    """
+    # Print main help message
+    print(parser.format_help())
+
+    # Find all service subparsers
+    subparsers_actions = [
+        action for action in parser._actions
+        if isinstance(action, argparse._SubParsersAction)
+    ]
+
+    # Iterate through the services
+    for subparsers_action in subparsers_actions:
+        for choice, subparser in subparsers_action.choices.items():
+
+            # Find all actions for service
+            method_subparser_actions = [
+                action for action in subparser._actions
+                if isinstance(action, argparse._SubParsersAction)
+            ]
+
+            # Print service help
+            print("=" * 60)
+            print("{0}".format(choice))
+            print("=" * 60)
+            print(find_options(subparser.format_help()))
+
+            # Iterate through the actions for a service
+            for method_subparser_action in method_subparser_actions:
+                for method_choice, method_subparser in method_subparser_action.choices.items():
+                    # Print service action help
+                    print("-" * len("| {0} |".format(method_choice)))
+                    print("| {0} |".format(method_choice))
+                    print("-" * len("| {0} |".format(method_choice)))
+                    print(find_options(method_subparser.format_help()))
 
 
-# ------------------------------
-# DTS
-# ------------------------------
-def add_dts_parser(subparsers):
-    parser = add_subparser(subparsers, "dts", "Interact with the DTS")
-    parser.add_argument(
-        '--host', '-d', type=str, default="http://0.0.0.0", help='host'
+def find_options(helptext, show_help=False, show_usage=True):
+    """
+    Return a substring with the optional arguments
+    :param helptext: Help text, as it"s called
+    :return:
+    """
+    helplist = helptext.split("\n")
+
+    # Remove usage info
+    if not show_usage:
+        helplist = helplist[helplist.index("optional arguments:"):]
+
+    # Remove help flag info
+    if not show_help:
+        del helplist[helplist.index("optional arguments:") + 1]
+
+    # Handle cases where there are no optional arguments
+    if helplist[helplist.index("optional arguments:") + 1] == "":
+        del helplist[helplist.index("optional arguments:") + 1]
+        del helplist[helplist.index("optional arguments:")]
+
+    return "\n".join(helplist)
+
+
+def setup_parser():
+    parser = argparse.ArgumentParser(description="CCC client")
+    parser.add_argument("--host",
+                        type=str,
+                        default="0.0.0.0",
+                        choices=["0.0.0.0",
+                                 "central-gateway.ccc.org",
+                                 "docker-centos7"],
+                        help="host")
+    parser.add_argument("--port",
+                        type=str,
+                        help="port")
+    parser.add_argument("--debug",
+                        default=False,
+                        action="store_true",
+                        help="debug flag")
+    parser.add_argument("--extra-help",
+                        default=False,
+                        action="store_true",
+                        help="Show help message for all services and actions")
+    subparsers = parser.add_subparsers(title="service", dest="service")
+
+    ##
+    # DTS
+    ##
+    dts = subparsers.add_parser("dts")
+    dts.set_defaults(port="9510")
+    dts.set_defaults(runner=DtsRunner)
+
+    dts_sub = dts.add_subparsers(title="action", dest="action")
+
+    # api/v1/dts/file
+    dts_post = dts_sub.add_parser("post")
+    dts_post.set_defaults(endpoint="/api/v1/file/")
+    dts_post.add_argument(
+        "--filepath", "-f",
+        required=True,
+        type=str,
+        nargs="+",
+        help="name of file(s) or pattern to glob on"
     )
-    parser.add_argument(
-        '--port', '-p', type=str, default="9510", help='port'
-    )
-    parser.add_argument(
-        '--filepath', '-f', required=True, type=str,
-        help='name of file or path'
-    )
-    parser.add_argument(
-        '--user', '-u', required=True, type=str, help='site user')
-    parser.add_argument(
-        '--site', '-s', required=True, type=str,
+    dts_post.add_argument(
+        "--user", "-u",
+        required=True,
+        type=str,
+        help="site user")
+    dts_post.add_argument(
+        "--site", "-s",
+        required=True,
+        type=str,
         choices=["central", "dfci", "ohsu", "oicr"],
-        help='site the data resides at'
+        help="site the data resides at"
     )
-    parser.add_argument(
-        '--cccId', type=str, help='cccId entry to GET'
+
+    # api/v1/dts/file/<uuid>
+    dts_get = dts_sub.add_parser("get")
+    dts_get.add_argument(
+        "--cccId",
+        required=True,
+        type=str,
+        nargs="+",
+        help="cccId entry to GET"
     )
-    parser.set_defaults(runner=DtsRunner)
+
+    # api/v1/dts/file/<uuid>
+    dts_delete = dts_sub.add_parser("delete")
+    dts_delete.add_argument(
+        "--cccId",
+        required=True,
+        type=str,
+        nargs="+",
+        help="cccId entry to DELETE"
+    )
+
+    ##
+    # App Repo
+    ##
+    ar = subparsers.add_parser("app-repo")
+    ar.set_defaults(port="8082")
+    ar.set_defaults(runner=AppRepoRunner)
+
+    ar_sub = ar.add_subparsers(title="action", dest="action")
+
+    # api/v1/tool/
+    ar_post = ar_sub.add_parser("post")
+    ar_post.add_argument(
+        "--filepath", "-f", type=str, help="name of file or path"
+    )
+    ar_post.add_argument(
+        "--imageName", "-n", type=str, help="name of docker image"
+    )
+    ar_post.add_argument(
+        "--imageTag", "-t", type=str, default="latest",
+        help="docker image version tag"
+    )
+    ar_post.add_argument(
+        "--metadata", "-m", type=str,
+        help="tool metadata"
+    )
+
+    # api/v1/tool/<uuid>
+    ar_put = ar_sub.add_parser("put")
+    ar_put.add_argument(
+        "--metadata", "-m", type=str,
+        help="tool metadata"
+    )
+    ar_put.add_argument(
+        "--imageId", "-i", type=str,
+        help="docker image id"
+    )
+
+    # api/v1/tool/<uuid>
+    # api/v1/tool/<tool_name>/data
+    ar_get = ar_sub.add_parser("get")
+    ar_get.add_argument(
+        "--imageId", "-i", type=str,
+        help="docker image id"
+    )
+
+    # api/v1/tool/<uuid>
+    ar_delete = ar_sub.add_parser("delete")
+    ar_delete.add_argument(
+        "--imageId", "-i", type=str,
+        help="docker image id"
+    )
+
+    ##
+    # Exec Engine
+    ##
+    ee = subparsers.add_parser("exec-engine")
+    ee.set_defaults(port="8000")
+    ee.set_defaults(runner=ExecEngineRunner)
+
+    ee_sub = ee.add_subparsers(title="action", dest="action")
+
+    # api/workflows/v1/
+    ee_post = ee_sub.add_parser("post")
+    ee_post.add_argument(
+        "--wdlSource", "-s",
+        type=str,
+        help="name of file or path"
+    )
+    ee_post.add_argument(
+        "--workflowInputs", "-i",
+        type=str,
+        help="name of docker image"
+    )
+    ee_post.add_argument(
+        "--workflowOptions", "-o",
+        type=str,
+        default="-",
+        help="docker image version tag"
+    )
+
+    # api/workflows/v1/<uuid>/status
+    ee_status = ee_sub.add_parser("status")
+    ee_status.add_argument(
+        "--workflowId", "-i",
+        type=str,
+        help="workflow uuid"
+    )
+
+    # api/workflows/v1/<uuid>/outputs
+    ee_outputs = ee_sub.add_parser("outputs")
+    ee_outputs.add_argument(
+        "--workflowId", "-i",
+        type=str,
+        help="workflow uuid"
+    )
+
+    # api/workflows/v1/<uuid>/metadata
+    ee_meta = ee_sub.add_parser("metadata")
+    ee_meta.add_argument(
+        "--workflowId", "-i",
+        type=str,
+        help="workflow uuid"
+    )
+
     return parser
 
 
 class DtsRunner(object):
     """
     Send requests to the DTS
-
-    /api/v1/dts/file
-    /api/v1/dts/file/{uuid}
     """
     def __init__(self, args):
-        self.host = re.sub('(http|https|://)', '', args.host)
+        self.host = args.host
         self.port = args.port
+        self.endpoint = "api/v1/dts/file"
+        self.action = args.action
+
         self.site = args.site
-        self.name = os.path.basename(args.filepath)
-        self.path = os.path.dirname(args.filepath)
-        self.size = os.path.getsize(args.filepath)
+
+        self.filepath = list(itertools.chain.from_iterable(
+            [glob.glob(f) for f in args.filepath]
+        ))
         self.user = args.user
+
         self.cccId = args.cccId
-        self.timestampUpdated = os.stat(args.filepath)[-2]
 
     def run(self):
-        if self.cccId is not None:
-            self.__get_dts_entry()
+        if self.action == "get":
+            self.__get_entry()
+        elif self.action == "post":
+            self.__post_entry()
+        elif self.action == "delete":
+            self.__delete_entry()
         else:
-            self.__post_dts_entry()
+            raise RuntimeError("Unsupported action: {0}".format(self.action))
 
-    def __get_dts_entry(self):
-        endpoint = "http://{0}:{1}/api/v1/dts/file/{2}".format(self.host, self.port, self.cccId)
-        response = requests.get(endpoint)
-        return response.content
+    def __get_entry(self):
+        response = []
+        for cccId in self.cccId:
+            endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
+                                                       self.endpoint, cccId)
+            response.append(requests.get(endpoint))
+        return response
 
-    def __post_dts_entry(self):
+    def __delete_entry(self):
+        response = []
+        for cccId in self.cccId:
+            endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
+                                                       self.endpoint, cccId)
+            response.append(requests.delete(endpoint))
+        return response
+
+    def __post_entry(self):
         # remap site name to IP
         site_map = {"central": "10.73.127.1",
                     "ohsu": "10.73.127.6",
                     "dfci": "10.73.127.18",
                     "oicr": "10.73.127.14"}
 
-        data = {}
-        data['cccId'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, args.filepath))
-        data['name'] = self.name
-        data['size'] = self.size
-        location = {}
-        location['site'] = site_map['self.site']
-        location['path'] = self.path
-        location['timestampUpdated'] = self.timestampUpdated
-        location['user'] = {"name": self.user}
-        data['location'] = [location]
+        response = []
+        for filepath in self.filepath:
+            if not os.path.isfile(filepath):
+                raise RuntimeError(
+                    "{0} was not found on the file system".format(filepath)
+                )
 
-        endpoint = "http://{0}:{1}/api/v1/dts/file".format(self.host, self.port)
-        response = requests.post(endpoint, data=json.dumps(data))
+            data = {}
+
+            data['cccId'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, filepath))
+            data['name'] = os.path.basename(filepath)
+            data['size'] = os.path.getsize(filepath)
+            location = {}
+            location['site'] = site_map[self.site]
+            location['path'] = os.path.abspath(filepath)
+            location['timestampUpdated'] = os.stat(filepath)[-2]
+            location['user'] = {"name": self.user}
+            data['location'] = [location]
+
+            endpoint = "http://{0}:{1}/{2}".format(self.host, self.port,
+                                                   self.endpoint)
+            response.append(requests.post(endpoint, data=json.dumps(data)))
         return response.content
-
-
-# ------------------------------
-# AppRepo
-# ------------------------------
-def add_apprepo_parser(subparsers):
-    parser = add_subparser(subparsers, "app-repo", "Interact with the App Repo")
-    parser.add_argument(
-        '--host', '-d', type=str, default="http://0.0.0.0", help='host'
-    )
-    parser.add_argument(
-        '--port', '-p', type=str, default="8082", help='port'
-    )
-    parser.add_argument(
-        '--filepath', '-f', type=str, help='name of file or path'
-    )
-    parser.add_argument(
-        '--imageName', '-n', type=str, help='name of docker image'
-    )
-    parser.add_argument(
-        '--imageTag', '-t', type=str, default="latest",
-        help='docker image version tag'
-    )
-    parser.add_argument(
-        '--metadata', '-m', type=str,
-        help='tool metadata'
-    )
-    parser.add_argument(
-        '--imageId', '-i', type=str,
-        help='docker image id'
-    )
-    parser.set_defaults(runner=AppRepoRunner)
-    return parser
 
 
 class AppRepoRunner(object):
     """
     Send requests to the AppRepo
-
-    /api/v1/tool
-    /api/v1/tool/{uuid}/
-    /api/v1/tool/{uuid}/data
     """
     def __init__(self, args):
-        self.host = re.sub('(http|https|://)', '', args.host)
+        self.host = args.host
         self.port = args.port
         self.blob = args.filepath
         self.imageTag = args.imageTag
 
         if args.name is None:
-            self.imageName = re.sub("(\.tar)", "", os.path.dirname(args.filepath))
+            self.imageName = re.sub("(\.tar)", "",
+                                    os.path.dirname(args.filepath))
         else:
             self.imageName = args.imageName
 
@@ -200,48 +398,26 @@ class AppRepoRunner(object):
         else:
             assert self.metadata['id'] == self.imageId
 
-        endpoint = "http://{0}:{1}/api/v1/tool/{2}".format(self.host, self.port, self.toolId)
+        endpoint = "http://{0}:{1}/api/v1/tool/{2}".format(self.host,
+                                                           self.port,
+                                                           self.toolId)
         response = requests.put(endpoint, data=json.dumps(self.metadata))
         return response.content
-
-
-# ------------------------------
-# Exec Engine
-# ------------------------------
-def add_execengine_parser(subparsers):
-    parser = add_subparser(subparsers, "exec-engine", "Interact with the Execution Engine")
-    parser.add_argument(
-        '--host', '-d', type=str, default="http://0.0.0.0", help='host'
-    )
-    parser.add_argument(
-        '--port', '-p', type=str, default="8000", help='port'
-    )
-    parser.add_argument(
-        '--wdlSource', type=str, help='WDL workflow file'
-    )
-    parser.add_argument(
-        '--workflowInputs', type=str, help='WDL inputs json file'
-    )
-    parser.set_defaults(runner=ExecEngineRunner)
-    return parser
 
 
 class ExecEngineRunner(object):
     """
     Send requests to the ExecEngine
-
-    /api/workflows/v1
-    /api/workflows/v1/{uuid}/status
-    /api/workflows/v1/{uuid}/outputs
     """
     def __init__(self, args):
-        self.host = re.sub('(http|https|://)', '', args.host)
+        self.host = args.host
         self.port = args.port
         self.wdlSource = args.wdlSource
         self.workflowInputs = args.workflowInputs
 
     def run(self):
-        endpoint = "http://{0}:{1}/api/workflows/v1".format(self.host, self.port)
+        endpoint = "http://{0}:{1}/api/workflows/v1".format(self.host,
+                                                            self.port)
 
         form_data = {'wdlSource': open(self.wdlSource, 'rb'),
                      'workflowInputs': open(self.workflowInputs, 'rb')}
@@ -250,22 +426,13 @@ class ExecEngineRunner(object):
         return response.content
 
 
-# ------------------------------
-# client entrypoint
-# ------------------------------
-def get_ccc_client_parser():
-    parser = argparse.ArgumentParser(
-        description="CCC client")
-    subparsers = parser.add_subparsers(title='subcommands',)
-    add_dts_parser(subparsers)
-    add_apprepo_parser(subparsers)
-    add_execengine_parser(subparsers)
-    return parser
+def client_main():
+    parser = setup_parser()
 
+    if "--extra-help" in sys.argv[1:]:
+        return display_help(parser)
 
-def client_main(args=None):
-    parser = get_ccc_client_parser()
-    args = parser.parse_args(args)
+    args = parser.parse_args()
 
     if "runner" not in args:
         parser.print_help()
