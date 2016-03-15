@@ -345,8 +345,7 @@ class DtsRunner(object):
                 print("{0}    {1}".format(filepath, data['cccId']))
                 response.append(r.content)
             else:
-                print(r.content)
-                raise
+                r.raise_for_status()
 
         return response
 
