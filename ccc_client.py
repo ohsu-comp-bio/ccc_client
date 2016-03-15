@@ -82,13 +82,14 @@ def setup_parser():
     parser = argparse.ArgumentParser(description="CCC client")
     parser.add_argument("--host",
                         type=str,
-                        default="0.0.0.0",
+                        required=True,
                         choices=["0.0.0.0",
                                  "central-gateway.ccc.org",
                                  "docker-centos7"],
                         help="host")
     parser.add_argument("--port",
                         type=str,
+                        required=True,
                         help="port")
     parser.add_argument("--debug",
                         default=False,
@@ -98,12 +99,14 @@ def setup_parser():
                         default=False,
                         action="store_true",
                         help="Show help message for all services and actions")
+
     subparsers = parser.add_subparsers(title="service", dest="service")
 
     ##
     # DTS
     ##
     dts = subparsers.add_parser("dts")
+    dts.set_defaults(port="central-gateway.ccc.org")
     dts.set_defaults(port="9510")
     dts.set_defaults(runner=DtsRunner)
 
@@ -156,6 +159,7 @@ def setup_parser():
     # App Repo
     ##
     ar = subparsers.add_parser("app-repo")
+    ar.set_defaults(port="docker-centos7")
     ar.set_defaults(port="8082")
     ar.set_defaults(runner=AppRepoRunner)
 
@@ -208,13 +212,14 @@ def setup_parser():
     # Exec Engine
     ##
     ee = subparsers.add_parser("exec-engine")
+    ar.set_defaults(port="0.0.0.0")
     ee.set_defaults(port="8000")
     ee.set_defaults(runner=ExecEngineRunner)
 
     ee_sub = ee.add_subparsers(title="action", dest="action")
 
     # api/workflows/v1/
-    ee_post = ee_sub.add_parser("post")
+    ee_post = ee_sub.add_parser("submit")
     ee_post.add_argument(
         "--wdlSource", "-s",
         type=str,
@@ -407,15 +412,29 @@ class AppRepoRunner(object):
 
 class ExecEngineRunner(object):
     """
-    Send requests to the ExecEngine
+    Send requests to the Execution Engine
     """
     def __init__(self, args):
         self.host = args.host
         self.port = args.port
+        self.action = args.action
         self.wdlSource = args.wdlSource
         self.workflowInputs = args.workflowInputs
+        self.workflowId = args.workflowId
 
     def run(self):
+        if self.action == "submit":
+            self.__submit_workflow()
+        elif self.action == "status":
+            self.__get_status()
+        elif self.action == "metadata":
+            self.__get_metadata()
+        elif self.action == "outputs":
+            self.__get_outputs()
+        else:
+            raise RuntimeError("Unsupported action: {0}".format(self.action))
+
+    def __submit_workflow(self):
         endpoint = "http://{0}:{1}/api/workflows/v1".format(self.host,
                                                             self.port)
 
@@ -423,6 +442,30 @@ class ExecEngineRunner(object):
                      'workflowInputs': open(self.workflowInputs, 'rb')}
 
         response = requests.post(endpoint, files=form_data)
+        return response.content
+
+    def __get_status(self):
+        endpoint = "http://{0}:{1}/api/workflows/v1/{2}/status".format(
+            self.host, self.port, self.workflowId
+        )
+
+        response = requests.get(endpoint)
+        return response.content
+
+    def __get_metadata(self):
+        endpoint = "http://{0}:{1}/api/workflows/v1/{2}/metadata".format(
+            self.host, self.port, self.workflowId
+        )
+
+        response = requests.get(endpoint)
+        return response.content
+
+    def __get_outputs(self):
+        endpoint = "http://{0}:{1}/api/workflows/v1/{2}/outputs".format(
+            self.host, self.port, self.workflowId
+        )
+
+        response = requests.get(endpoint)
         return response.content
 
 
