@@ -298,7 +298,8 @@ class DtsRunner(object):
         for cccId in self.cccId:
             endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
                                                        self.endpoint, cccId)
-            response.append(requests.get(endpoint))
+            r = requests.get(endpoint)
+            response.append(r.content)
         return response
 
     def __delete_entry(self):
@@ -306,7 +307,8 @@ class DtsRunner(object):
         for cccId in self.cccId:
             endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
                                                        self.endpoint, cccId)
-            response.append(requests.delete(endpoint))
+            r = requests.delete(endpoint)
+            response.append(r.content)
         return response
 
     def __post_entry(self):
@@ -337,8 +339,16 @@ class DtsRunner(object):
 
             endpoint = "http://{0}:{1}/{2}".format(self.host, self.port,
                                                    self.endpoint)
-            response.append(requests.post(endpoint, data=json.dumps(data)))
-        return response.content
+            r = requests.post(endpoint, data=json.dumps(data))
+
+            if r.status_code == '200':
+                print("{0}    {1}".format(filepath, data['cccId']))
+                response.append(r.content)
+            else:
+                print(r.content)
+                raise
+
+        return response
 
 
 class AppRepoRunner(object):
