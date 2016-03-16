@@ -292,7 +292,7 @@ class DtsRunner(object):
         if self.action == "post":
             self.site = args.site
             self.filepath = list(itertools.chain.from_iterable(
-                [glob.glob(f) for f in args.filepath]
+                [glob.glob(os.path.abspath(f)) for f in args.filepath]
             ))
             self.user = args.user
         else:
@@ -349,7 +349,7 @@ class DtsRunner(object):
             data['size'] = os.path.getsize(filepath)
             location = {}
             location['site'] = site_map[self.site]
-            location['path'] = os.path.dirname(os.path.abspath(filepath))
+            location['path'] = os.path.dirname(filepath)
             location['timestampUpdated'] = os.stat(filepath)[-2]
             location['user'] = {"name": self.user}
             data['location'] = [location]
