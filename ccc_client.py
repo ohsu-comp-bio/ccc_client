@@ -284,27 +284,25 @@ class DtsRunner(object):
     Send requests to the DTS
     """
     def __init__(self, args):
-        try:
-            self.host = args.host
-            self.port = args.port
-            self.endpoint = "api/v1/dts/file"
-            self.action = args.action
+        self.args = args
+        self.port = args.port
+        self.endpoint = "api/v1/dts/file"
+        self.action = args.action
 
+        if self.action == "post":
             self.site = args.site
             self.filepath = list(itertools.chain.from_iterable(
                 [glob.glob(f) for f in args.filepath]
             ))
             self.user = args.user
-
+        else:
             self.cccId = args.cccId
-        except:
-            pass
 
     def run(self):
-        if self.action == "get":
-            self.__get_entry()
-        elif self.action == "post":
+        if self.action == "post":
             self.__post_entry()
+        elif self.action == "get":
+            self.__get_entry()
         elif self.action == "delete":
             self.__delete_entry()
         else:
@@ -372,9 +370,11 @@ class AppRepoRunner(object):
     Send requests to the AppRepo
     """
     def __init__(self, args):
-        try:
-            self.host = args.host
-            self.port = args.port
+        self.host = args.host
+        self.port = args.port
+        self.action = args.action
+
+        if self.action == "post":
             self.blob = args.filepath
             self.imageTag = args.imageTag
 
@@ -390,21 +390,28 @@ class AppRepoRunner(object):
             except Exception:
                 self.metadata = None
 
+        if self.action == "put":
+            with open(args.metadata) as metadata:
+                self.metadata = json.loads(metadata)
+
             if args.imageId is not None:
                 self.imageId = args.imageId
-            elif self.metadata is not None:
-                self.imageId = self.metadata['id']
             else:
-                self.imageId = None
-        except:
-            pass
+                self.imageId = str(uuid.uuid4())
+                self.metadata['id'] = self.imageId
+
+            assert self.imageId == self.metadata['id']
+
+        if self.action in ["get", "delete"]:
+            self.imageId = args.imageId
 
     def run(self):
-        if self.blob is not None:
-            self.__post_blob()
+        if self.action == "post":
+            if self.blob is not None:
+                self.__post_blob()
 
-        if self.metadata is not None:
-            self.__put_metadata()
+            if self.metadata is not None:
+                self.__put_metadata()
 
     def __post_blob(self):
         endpoint = "http://{0}:{1}/api/v1/tool/".format(self.host, self.port)
@@ -422,16 +429,6 @@ class AppRepoRunner(object):
         return response.content
 
     def __put_metadata(self):
-        if self.imageId is None:
-            if self.metadata['id'] == '':
-                raise KeyError("imageId needs to be specified")
-            else:
-                self.imageId = self.metadata['id']
-        elif self.metadata['id'] == '':
-            self.metadata['id'] = self.imageId
-        else:
-            assert self.metadata['id'] == self.imageId
-
         endpoint = "http://{0}:{1}/api/v1/tool/{2}".format(self.host,
                                                            self.port,
                                                            self.toolId)
@@ -444,15 +441,15 @@ class ExecEngineRunner(object):
     Send requests to the Execution Engine
     """
     def __init__(self, args):
-        try:
-            self.host = args.host
-            self.port = args.port
-            self.action = args.action
+        self.host = args.host
+        self.port = args.port
+        self.action = args.action
+
+        if self.action == "submit":
             self.wdlSource = args.wdlSource
             self.workflowInputs = args.workflowInputs
+        else:
             self.workflowId = args.workflowId
-        except:
-            pass
 
     def run(self):
         if self.action == "submit":
