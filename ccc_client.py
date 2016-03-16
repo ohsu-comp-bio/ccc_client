@@ -80,17 +80,6 @@ def find_options(helptext, show_help=False, show_usage=True):
 
 def setup_parser():
     parser = argparse.ArgumentParser(description="CCC client")
-    parser.add_argument("--host",
-                        type=str,
-                        required=True,
-                        choices=["0.0.0.0",
-                                 "central-gateway.ccc.org",
-                                 "docker-centos7"],
-                        help="host")
-    parser.add_argument("--port",
-                        type=str,
-                        required=True,
-                        help="port")
     parser.add_argument("--debug",
                         default=False,
                         action="store_true",
@@ -106,15 +95,23 @@ def setup_parser():
     # DTS
     ##
     dts = subparsers.add_parser("dts")
-    dts.set_defaults(port="central-gateway.ccc.org")
-    dts.set_defaults(port="9510")
+    dts.add_argument("--host",
+                     type=str,
+                     default="central-gateway.ccc.org",
+                     choices=["0.0.0.0",
+                              "central-gateway.ccc.org",
+                              "docker-centos7"],
+                     help="host")
+    dts.add_argument("--port",
+                     type=str,
+                     default="9510",
+                     help="port")
     dts.set_defaults(runner=DtsRunner)
 
     dts_sub = dts.add_subparsers(title="action", dest="action")
 
     # api/v1/dts/file
     dts_post = dts_sub.add_parser("post")
-    dts_post.set_defaults(endpoint="/api/v1/file/")
     dts_post.add_argument(
         "--filepath", "-f",
         required=True,
@@ -159,8 +156,17 @@ def setup_parser():
     # App Repo
     ##
     ar = subparsers.add_parser("app-repo")
-    ar.set_defaults(port="docker-centos7")
-    ar.set_defaults(port="8082")
+    ar.add_argument("--host",
+                    type=str,
+                    default="docker-centos7",
+                    choices=["0.0.0.0",
+                             "central-gateway.ccc.org",
+                             "docker-centos7"],
+                    help="host")
+    ar.add_argument("--port",
+                    type=str,
+                    default="8082",
+                    help="port")
     ar.set_defaults(runner=AppRepoRunner)
 
     ar_sub = ar.add_subparsers(title="action", dest="action")
@@ -212,8 +218,17 @@ def setup_parser():
     # Exec Engine
     ##
     ee = subparsers.add_parser("exec-engine")
-    ar.set_defaults(port="0.0.0.0")
-    ee.set_defaults(port="8000")
+    ee.add_argument("--host",
+                    type=str,
+                    default="0.0.0.0",
+                    choices=["0.0.0.0",
+                             "central-gateway.ccc.org",
+                             "docker-centos7"],
+                    help="host")
+    ee.add_argument("--port",
+                    type=str,
+                    default="8000",
+                    help="port")    
     ee.set_defaults(runner=ExecEngineRunner)
 
     ee_sub = ee.add_subparsers(title="action", dest="action")
@@ -275,7 +290,6 @@ class DtsRunner(object):
         self.action = args.action
 
         self.site = args.site
-
         self.filepath = list(itertools.chain.from_iterable(
             [glob.glob(f) for f in args.filepath]
         ))
@@ -332,14 +346,15 @@ class DtsRunner(object):
             data['size'] = os.path.getsize(filepath)
             location = {}
             location['site'] = site_map[self.site]
-            location['path'] = os.path.abspath(filepath)
+            location['path'] = os.path.dirname(os.path.abspath(filepath))
             location['timestampUpdated'] = os.stat(filepath)[-2]
             location['user'] = {"name": self.user}
             data['location'] = [location]
 
             endpoint = "http://{0}:{1}/{2}".format(self.host, self.port,
                                                    self.endpoint)
-            r = requests.post(endpoint, data=json.dumps(data))
+            headers = {'Content-Type': 'application/json'}
+            r = requests.post(endpoint, data=json.dumps(data), headers=headers)
 
             if r.status_code == '200':
                 print("{0}    {1}".format(filepath, data['cccId']))
