@@ -381,7 +381,7 @@ class AppRepoRunner(object):
             self.blob = args.filepath
             self.imageTag = args.imageTag
 
-            if args.name is None:
+            if args.imageName is None:
                 self.imageName = re.sub("(\.tar)", "",
                                         os.path.dirname(args.filepath))
             else:
