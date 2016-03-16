@@ -300,13 +300,16 @@ class DtsRunner(object):
 
     def run(self):
         if self.action == "post":
-            self.__post_entry()
+            response_list = self.__post_entry()
         elif self.action == "get":
-            self.__get_entry()
+            response_list = self.__get_entry()
         elif self.action == "delete":
-            self.__delete_entry()
+            response_list = self.__delete_entry()
         else:
             raise RuntimeError("Unsupported action: {0}".format(self.action))
+
+        # responses are already list type
+        return response_list
 
     def __get_entry(self):
         response = []
@@ -315,7 +318,7 @@ class DtsRunner(object):
                                                        self.endpoint, cccId)
             headers = {'Content-Type': 'application/json'}
             r = requests.get(endpoint, headers=headers)
-            response.append(r.content)
+            response.append(r)
         return response
 
     def __delete_entry(self):
@@ -325,7 +328,7 @@ class DtsRunner(object):
                                                        self.endpoint, cccId)
             headers = {'Content-Type': 'application/json'}
             r = requests.delete(endpoint, headers=headers)
-            response.append(r.content)
+            response.append(r)
         return response
 
     def __post_entry(self):
@@ -361,7 +364,7 @@ class DtsRunner(object):
 
             print("{0}    {1}".format(os.path.abspath(filepath),
                                       data['cccId']))
-            response.append(r.content)
+            response.append(r)
         return response
 
 
@@ -406,12 +409,18 @@ class AppRepoRunner(object):
             self.imageId = args.imageId
 
     def run(self):
+        response = []
+
         if self.action == "post":
             if self.blob is not None:
-                self.__post_blob()
-
+                response.append(self.__post_blob())
             if self.metadata is not None:
-                self.__put_metadata()
+                response.append(self.__put_metadata())
+
+        if self.action == "put":
+            response.append(self.__put_metadata())
+
+        return response
 
     def __post_blob(self):
         endpoint = "http://{0}:{1}/api/v1/tool/".format(self.host, self.port)
@@ -426,14 +435,14 @@ class AppRepoRunner(object):
             r'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}').findall(
                 response.content)[0]
 
-        return response.content
+        return response
 
     def __put_metadata(self):
         endpoint = "http://{0}:{1}/api/v1/tool/{2}".format(self.host,
                                                            self.port,
                                                            self.toolId)
         response = requests.put(endpoint, data=json.dumps(self.metadata))
-        return response.content
+        return response
 
 
 class ExecEngineRunner(object):
@@ -453,15 +462,17 @@ class ExecEngineRunner(object):
 
     def run(self):
         if self.action == "submit":
-            self.__submit_workflow()
+            response = self.__submit_workflow()
         elif self.action == "status":
-            self.__get_status()
+            response = self.__get_status()
         elif self.action == "metadata":
-            self.__get_metadata()
+            response = self.__get_metadata()
         elif self.action == "outputs":
-            self.__get_outputs()
+            response = self.__get_outputs()
         else:
             raise RuntimeError("Unsupported action: {0}".format(self.action))
+
+        return [response]
 
     def __submit_workflow(self):
         endpoint = "http://{0}:{1}/api/workflows/v1".format(self.host,
@@ -471,7 +482,7 @@ class ExecEngineRunner(object):
                      'workflowInputs': open(self.workflowInputs, 'rb')}
 
         response = requests.post(endpoint, files=form_data)
-        return response.content
+        return response
 
     def __get_status(self):
         endpoint = "http://{0}:{1}/api/workflows/v1/{2}/status".format(
@@ -479,7 +490,7 @@ class ExecEngineRunner(object):
         )
 
         response = requests.get(endpoint)
-        return response.content
+        return response
 
     def __get_metadata(self):
         endpoint = "http://{0}:{1}/api/workflows/v1/{2}/metadata".format(
@@ -487,7 +498,7 @@ class ExecEngineRunner(object):
         )
 
         response = requests.get(endpoint)
-        return response.content
+        return response
 
     def __get_outputs(self):
         endpoint = "http://{0}:{1}/api/workflows/v1/{2}/outputs".format(
@@ -495,7 +506,7 @@ class ExecEngineRunner(object):
         )
 
         response = requests.get(endpoint)
-        return response.content
+        return response
 
 
 def client_main():
@@ -511,9 +522,14 @@ def client_main():
     else:
         try:
             runner = args.runner(args)
-            response = runner.run()
-            if response is not None:
-                print(response)
+            responses = runner.run()
+
+            for r in responses:
+                if args.debug:
+                    print(r.headers)
+                if r.text is not None:
+                    print(r.text)
+
         except Exception as e:
             print(e)
 
