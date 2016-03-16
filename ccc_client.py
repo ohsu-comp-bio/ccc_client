@@ -284,7 +284,7 @@ class DtsRunner(object):
     Send requests to the DTS
     """
     def __init__(self, args):
-        self.args = args
+        self.host = args.host
         self.port = args.port
         self.endpoint = "api/v1/dts/file"
         self.action = args.action
