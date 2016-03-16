@@ -284,18 +284,21 @@ class DtsRunner(object):
     Send requests to the DTS
     """
     def __init__(self, args):
-        self.host = args.host
-        self.port = args.port
-        self.endpoint = "api/v1/dts/file"
-        self.action = args.action
+        try:
+            self.host = args.host
+            self.port = args.port
+            self.endpoint = "api/v1/dts/file"
+            self.action = args.action
 
-        self.site = args.site
-        self.filepath = list(itertools.chain.from_iterable(
-            [glob.glob(f) for f in args.filepath]
-        ))
-        self.user = args.user
+            self.site = args.site
+            self.filepath = list(itertools.chain.from_iterable(
+                [glob.glob(f) for f in args.filepath]
+            ))
+            self.user = args.user
 
-        self.cccId = args.cccId
+            self.cccId = args.cccId
+        except:
+            pass
 
     def run(self):
         if self.action == "get":
@@ -312,7 +315,8 @@ class DtsRunner(object):
         for cccId in self.cccId:
             endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
                                                        self.endpoint, cccId)
-            r = requests.get(endpoint)
+            headers = {'Content-Type': 'application/json'}
+            r = requests.get(endpoint, headers=headers)
             response.append(r.content)
         return response
 
@@ -321,7 +325,8 @@ class DtsRunner(object):
         for cccId in self.cccId:
             endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
                                                        self.endpoint, cccId)
-            r = requests.delete(endpoint)
+            headers = {'Content-Type': 'application/json'}
+            r = requests.delete(endpoint, headers=headers)
             response.append(r.content)
         return response
 
@@ -356,12 +361,9 @@ class DtsRunner(object):
             headers = {'Content-Type': 'application/json'}
             r = requests.post(endpoint, data=json.dumps(data), headers=headers)
 
-            if r.status_code == '200':
-                print("{0}    {1}".format(filepath, data['cccId']))
-                response.append(r.content)
-            else:
-                r.raise_for_status()
-
+            print("{0}    {1}".format(os.path.abspath(filepath),
+                                      data['cccId']))
+            response.append(r.content)
         return response
 
 
@@ -370,29 +372,32 @@ class AppRepoRunner(object):
     Send requests to the AppRepo
     """
     def __init__(self, args):
-        self.host = args.host
-        self.port = args.port
-        self.blob = args.filepath
-        self.imageTag = args.imageTag
-
-        if args.name is None:
-            self.imageName = re.sub("(\.tar)", "",
-                                    os.path.dirname(args.filepath))
-        else:
-            self.imageName = args.imageName
-
         try:
-            with open(args.metadata) as metadata:
-                self.metadata = json.loads(metadata)
-        except Exception:
-            self.metadata = None
+            self.host = args.host
+            self.port = args.port
+            self.blob = args.filepath
+            self.imageTag = args.imageTag
 
-        if args.imageId is not None:
-            self.imageId = args.imageId
-        elif self.metadata is not None:
-            self.imageId = self.metadata['id']
-        else:
-            self.imageId = None
+            if args.name is None:
+                self.imageName = re.sub("(\.tar)", "",
+                                        os.path.dirname(args.filepath))
+            else:
+                self.imageName = args.imageName
+
+            try:
+                with open(args.metadata) as metadata:
+                    self.metadata = json.loads(metadata)
+            except Exception:
+                self.metadata = None
+
+            if args.imageId is not None:
+                self.imageId = args.imageId
+            elif self.metadata is not None:
+                self.imageId = self.metadata['id']
+            else:
+                self.imageId = None
+        except:
+            pass
 
     def run(self):
         if self.blob is not None:
@@ -439,12 +444,15 @@ class ExecEngineRunner(object):
     Send requests to the Execution Engine
     """
     def __init__(self, args):
-        self.host = args.host
-        self.port = args.port
-        self.action = args.action
-        self.wdlSource = args.wdlSource
-        self.workflowInputs = args.workflowInputs
-        self.workflowId = args.workflowId
+        try:
+            self.host = args.host
+            self.port = args.port
+            self.action = args.action
+            self.wdlSource = args.wdlSource
+            self.workflowInputs = args.workflowInputs
+            self.workflowId = args.workflowId
+        except:
+            pass
 
     def run(self):
         if self.action == "submit":
@@ -507,7 +515,8 @@ def client_main():
         try:
             runner = args.runner(args)
             response = runner.run()
-            print(response)
+            if response is not None:
+                print(response)
         except Exception as e:
             print(e)
 
