@@ -440,8 +440,11 @@ class AppRepoRunner(object):
     def __put_metadata(self):
         endpoint = "http://{0}:{1}/api/v1/tool/{2}".format(self.host,
                                                            self.port,
-                                                           self.toolId)
-        response = requests.put(endpoint, data=json.dumps(self.metadata))
+                                                           self.imageId)
+        headers = {'Content-Type': 'application/json'}
+        response = requests.put(endpoint,
+                                data=json.dumps(self.metadata),
+                                headers=headers)
         return response
 
 
