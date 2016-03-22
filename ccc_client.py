@@ -366,9 +366,8 @@ class DtsRunner(object):
                 print("{0}    {1}".format(os.path.abspath(filepath),
                                           data['cccId']))
             else:
-                sys.stderr.write("[STATUS CODE - {0}] attempt to register {1} failed.".format(
-                    r.status_code, os.path.abspath(filepath)
-                ))
+                sys.stderr.write("Registration with the DTS failed for:    {0}\n".format(os.path.abspath(filepath)))
+
             response.append(r)
         return response
 
@@ -538,7 +537,8 @@ def client_main():
                 if not (args.service == "dts" and args.action == "post"):
                     print(r.text)
             else:
-                sys.stderr.write(r.text)
+                sys.stderr.write("[STATUS CODE - {0}]    {1}\n".format(
+                    r.status_code, r.text))
 
 if __name__ == "__main__":
     client_main()
