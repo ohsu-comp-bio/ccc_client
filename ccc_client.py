@@ -361,9 +361,14 @@ class DtsRunner(object):
                                                    self.endpoint)
             headers = {'Content-Type': 'application/json'}
             r = requests.post(endpoint, data=json.dumps(data), headers=headers)
-
-            print("{0}    {1}".format(os.path.abspath(filepath),
-                                      data['cccId']))
+            
+            if r.status_code == 201:
+                print("{0}    {1}".format(os.path.abspath(filepath),
+                                          data['cccId']))
+            else:
+                sys.stderr.write("[STATUS CODE - {0}] attempt to register {1} failed.".format(
+                    r.status_code, os.path.abspath(filepath)
+                ))
             response.append(r)
         return response
 
@@ -523,18 +528,18 @@ def client_main():
     if "runner" not in args:
         parser.print_help()
     else:
-        try:
-            runner = args.runner(args)
-            responses = runner.run()
+        runner = args.runner(args)
+        responses = runner.run()
 
-            for r in responses:
-                if args.debug:
-                    print(r.headers)
-                if r.text is not None:
+        for r in responses:
+            if args.debug:
+                print(r.headers)
+
+            if r.status_code // 100 == 2:
+                if not (args.service == "dts" and args.action == "post"):
                     print(r.text)
-
-        except Exception as e:
-            print(e)
+            else:
+                sys.stderr.write(r.text)
 
 
 if __name__ == "__main__":
