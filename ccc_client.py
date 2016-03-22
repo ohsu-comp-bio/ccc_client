@@ -361,7 +361,7 @@ class DtsRunner(object):
                                                    self.endpoint)
             headers = {'Content-Type': 'application/json'}
             r = requests.post(endpoint, data=json.dumps(data), headers=headers)
-            
+
             if r.status_code == 201:
                 print("{0}    {1}".format(os.path.abspath(filepath),
                                           data['cccId']))
@@ -534,13 +534,11 @@ def client_main():
         for r in responses:
             if args.debug:
                 print(r.headers)
-
             if r.status_code // 100 == 2:
                 if not (args.service == "dts" and args.action == "post"):
                     print(r.text)
             else:
                 sys.stderr.write(r.text)
-
 
 if __name__ == "__main__":
     client_main()
