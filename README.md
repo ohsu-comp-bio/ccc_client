@@ -1,14 +1,13 @@
-# CCC Client
-
-usage: ccc_client.py [-h] [--debug] [--extra-help]
-                     {dts,app-repo,exec-engine} ...
+usage: ccc_client_dev.py [-h] [--version] [--debug] [--help-long]
+                         {dts,app-repo,exec-engine} ...
 
 CCC client
 
 optional arguments:
   -h, --help            show this help message and exit
+  --version             show program's version number and exit
   --debug               debug flag
-  --extra-help          Show help message for all services and actions
+  --help-long           Show help message for all services and actions
 
 service:
   {dts,app-repo,exec-engine}
@@ -16,10 +15,10 @@ service:
 ============================================================
 dts
 ============================================================
-usage: ccc_client.py dts [-h]
-                         [--host {0.0.0.0,central-gateway.ccc.org,docker-centos7}]
-                         [--port PORT]
-                         {post,get,delete} ...
+usage: ccc_client_dev.py dts [-h]
+                             [--host {0.0.0.0,central-gateway.ccc.org,docker-centos7}]
+                             [--port PORT]
+                             {post,get,delete} ...
 
 optional arguments:
   --host {0.0.0.0,central-gateway.ccc.org,docker-centos7}
@@ -32,8 +31,8 @@ action:
 --------
 | post |
 --------
-usage: ccc_client.py dts post [-h] --filepath FILEPATH [FILEPATH ...] --user
-                              USER --site {central,dfci,ohsu,oicr}
+usage: ccc_client_dev.py dts post [-h] --filepath FILEPATH [FILEPATH ...]
+                                  --user USER --site {central,dfci,ohsu,oicr}
 
 optional arguments:
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
@@ -45,7 +44,7 @@ optional arguments:
 -------
 | get |
 -------
-usage: ccc_client.py dts get [-h] --cccId CCCID [CCCID ...]
+usage: ccc_client_dev.py dts get [-h] --cccId CCCID [CCCID ...]
 
 optional arguments:
   --cccId CCCID [CCCID ...]
@@ -54,7 +53,7 @@ optional arguments:
 ----------
 | delete |
 ----------
-usage: ccc_client.py dts delete [-h] --cccId CCCID [CCCID ...]
+usage: ccc_client_dev.py dts delete [-h] --cccId CCCID [CCCID ...]
 
 optional arguments:
   --cccId CCCID [CCCID ...]
@@ -63,10 +62,10 @@ optional arguments:
 ============================================================
 app-repo
 ============================================================
-usage: ccc_client.py app-repo [-h]
-                              [--host {0.0.0.0,central-gateway.ccc.org,docker-centos7}]
-                              [--port PORT]
-                              {post,put,get,delete} ...
+usage: ccc_client_dev.py app-repo [-h]
+                                  [--host {0.0.0.0,central-gateway.ccc.org,docker-centos7}]
+                                  [--port PORT]
+                                  {post,put,get,delete} ...
 
 optional arguments:
   --host {0.0.0.0,central-gateway.ccc.org,docker-centos7}
@@ -79,12 +78,13 @@ action:
 --------
 | post |
 --------
-usage: ccc_client.py app-repo post [-h] [--filepath FILEPATH]
-                                   [--imageName IMAGENAME]
-                                   [--imageTag IMAGETAG] [--metadata METADATA]
+usage: ccc_client_dev.py app-repo post [-h] [--imageBlob IMAGEBLOB]
+                                       [--imageName IMAGENAME]
+                                       [--imageTag IMAGETAG]
+                                       [--metadata METADATA]
 
 optional arguments:
-  --filepath FILEPATH, -f FILEPATH
+  --imageBlob IMAGEBLOB, -b IMAGEBLOB
                         name of file or path
   --imageName IMAGENAME, -n IMAGENAME
                         name of docker image
@@ -96,8 +96,8 @@ optional arguments:
 -------
 | put |
 -------
-usage: ccc_client.py app-repo put [-h] [--metadata METADATA]
-                                  [--imageId IMAGEID]
+usage: ccc_client_dev.py app-repo put [-h] [--metadata METADATA]
+                                      [--imageId IMAGEID]
 
 optional arguments:
   --metadata METADATA, -m METADATA
@@ -108,7 +108,7 @@ optional arguments:
 -------
 | get |
 -------
-usage: ccc_client.py app-repo get [-h] [--imageId IMAGEID]
+usage: ccc_client_dev.py app-repo get [-h] [--imageId IMAGEID]
 
 optional arguments:
   --imageId IMAGEID, -i IMAGEID
@@ -117,7 +117,7 @@ optional arguments:
 ----------
 | delete |
 ----------
-usage: ccc_client.py app-repo delete [-h] [--imageId IMAGEID]
+usage: ccc_client_dev.py app-repo delete [-h] [--imageId IMAGEID]
 
 optional arguments:
   --imageId IMAGEID, -i IMAGEID
@@ -126,10 +126,10 @@ optional arguments:
 ============================================================
 exec-engine
 ============================================================
-usage: ccc_client.py exec-engine [-h]
-                                 [--host {0.0.0.0,central-gateway.ccc.org,docker-centos7}]
-                                 [--port PORT]
-                                 {submit,status,outputs,metadata} ...
+usage: ccc_client_dev.py exec-engine [-h]
+                                     [--host {0.0.0.0,central-gateway.ccc.org,docker-centos7}]
+                                     [--port PORT]
+                                     {submit,status,outputs,metadata} ...
 
 optional arguments:
   --host {0.0.0.0,central-gateway.ccc.org,docker-centos7}
@@ -142,9 +142,9 @@ action:
 ----------
 | submit |
 ----------
-usage: ccc_client.py exec-engine submit [-h] [--wdlSource WDLSOURCE]
-                                        [--workflowInputs WORKFLOWINPUTS]
-                                        [--workflowOptions WORKFLOWOPTIONS]
+usage: ccc_client_dev.py exec-engine submit [-h] [--wdlSource WDLSOURCE]
+                                            [--workflowInputs WORKFLOWINPUTS]
+                                            [--workflowOptions WORKFLOWOPTIONS]
 
 optional arguments:
   --wdlSource WDLSOURCE, -s WDLSOURCE
@@ -157,7 +157,7 @@ optional arguments:
 ----------
 | status |
 ----------
-usage: ccc_client.py exec-engine status [-h] [--workflowId WORKFLOWID]
+usage: ccc_client_dev.py exec-engine status [-h] [--workflowId WORKFLOWID]
 
 optional arguments:
   --workflowId WORKFLOWID, -i WORKFLOWID
@@ -166,7 +166,7 @@ optional arguments:
 -----------
 | outputs |
 -----------
-usage: ccc_client.py exec-engine outputs [-h] [--workflowId WORKFLOWID]
+usage: ccc_client_dev.py exec-engine outputs [-h] [--workflowId WORKFLOWID]
 
 optional arguments:
   --workflowId WORKFLOWID, -i WORKFLOWID
@@ -175,8 +175,9 @@ optional arguments:
 ------------
 | metadata |
 ------------
-usage: ccc_client.py exec-engine metadata [-h] [--workflowId WORKFLOWID]
+usage: ccc_client_dev.py exec-engine metadata [-h] [--workflowId WORKFLOWID]
 
 optional arguments:
   --workflowId WORKFLOWID, -i WORKFLOWID
                         workflow uuid
+

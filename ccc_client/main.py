@@ -172,7 +172,7 @@ def setup_parser():
     # api/v1/tool/
     ar_post = ar_sub.add_parser("post")
     ar_post.add_argument(
-        "--filepath", "-f", type=str, help="name of file or path"
+        "--imageBlob", "-b", type=str, help="name of file or path"
     )
     ar_post.add_argument(
         "--imageName", "-n", type=str, help="name of docker image"
