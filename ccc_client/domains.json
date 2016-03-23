@@ -1,0 +1,86 @@
+{
+    "patient": {
+        "keyField": "patient_id",
+        "docType": "patient",
+        "idx": 0,
+        "fieldDescriptors": {
+            "patient_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["icgc_donor_id", "donor_id", "patientId", "subjectId", "patient", "subject_id", "individualId", "individual_id", "individual"]},
+            "project_code": {"missingValue": "Not Provided", "dataType": "string"},
+            "study_donor_involved_in": {"missingValue": "Not Provided", "dataType": "string"},
+            "submitted_donor_id": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_sex": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_vital_status": {"missingValue": "Not Provided", "dataType": "string"},
+            "disease_status_last_followup": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_relapse_type": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_age_at_diagnosis": {"dataType": "int"},
+            "donor_age_at_enrollment": {"dataType": "int"},
+            "donor_age_at_last_followup": {"dataType": "int"},
+            "donor_relapse_interval": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_diagnosis_icd10": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_tumour_staging_system_at_diagnosis": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_tumour_stage_at_diagnosis": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_tumour_stage_at_diagnosis_supplemental": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_survival_time": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_interval_of_last_followup": {"missingValue": "Not Provided", "dataType": "string"},
+            "prior_malignancy": {"missingValue": "Not Provided", "dataType": "string"},
+            "cancer_type_prior_malignancy": {"missingValue": "Not Provided", "dataType": "string"},
+            "cancer_history_first_degree_relative": {"missingValue": "Not Provided", "dataType": "string"}
+        }
+    },
+    "specimen": {
+        "keyField": "specimen_id",
+        "docType": "specimen",
+        "idx": 1,
+        "fieldDescriptors": {
+            "specimen_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["specimenId"]},
+            "project_code": {"missingValue": "Not Provided", "dataType": "string"},
+            "donor_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["icgc_donor_id"]},
+            "submitted_donor_id": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_type": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_type_other": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_interval": {"dataType": "int"},
+            "specimen_donor_treatment_type": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_donor_treatment_type_other": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_processing": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_processing_other": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_storage": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_storage_other": {"missingValue": "Not Provided", "dataType": "string"},
+            "tumour_confirmed": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_biobank": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_biobank_id": {"missingValue": "Not Provided", "dataType": "string"},
+            "specimen_available": {"missingValue": "Not Provided", "dataType": "string"},
+            "tumour_histological_type": {"missingValue": "Not Provided", "dataType": "string"},
+            "tumour_grading_system": {"missingValue": "Not Provided", "dataType": "string"},
+            "tumour_grade": {"missingValue": "Not Provided", "dataType": "string"},
+            "tumour_grade_supplemental": {"missingValue": "Not Provided", "dataType": "string"},
+            "tumour_stage_system": {"missingValue": "Not Provided", "dataType": "string"},
+            "tumour_stage": {"missingValue": "Not Provided", "dataType": "string"},
+            "tumour_stage_supplemental": {"missingValue": "Not Provided", "dataType": "string"},
+            "digital_image_of_stained_section": {"missingValue": "Not Provided", "dataType": "string"},
+            "percentage_cellularity": {"dataType": "float"},
+            "level_of_cellularity": {"dataType": "float"},
+            "gleason_core": {"dataType": "float"}
+        }
+    },
+    "sample": {
+        "keyField": "sample_id",
+        "docType": "sample",
+        "idx": 2,
+        "fieldDescriptors": {
+
+        }
+    },
+    "resource": {
+        "keyField": "ccc_did",
+        "docType": "resource",
+        "idx": 3,
+        "fieldDescriptors": {
+            "ccc_did": {},
+            "ccc_filepath": {},
+            "filename": {},
+            "filepath": {},
+            "filetype": {},
+            "extention": {}
+        }
+    }
+}
