@@ -44,25 +44,21 @@ class DtsRunner(object):
                     "dfci": "10.73.127.18",
                     "oicr": "10.73.127.14"}
 
-        file_list = list(itertools.chain.from_iterable(
-            [glob.glob(os.path.abspath(f)) for f in filepath]
-        ))
-
-        for ifile in file_list:
-            if not os.path.isfile(ifile):
-                raise RuntimeError(
-                    "{0} was not found on the file system".format(ifile)
-                )
+        file_list = glob.glob(os.path.abspath(filepath))
+        for file_iter in file_list:
+            if not os.path.isfile(file_iter):
+                msg = "{0} was not found on the file system".format(file_iter)
+                raise RuntimeError(msg)
 
             data = {}
 
-            data['cccId'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, ifile))
-            data['name'] = os.path.basename(ifile)
-            data['size'] = os.path.getsize(ifile)
+            data['cccId'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, file_iter))
+            data['name'] = os.path.basename(file_iter)
+            data['size'] = os.path.getsize(file_iter)
             location = {}
             location['site'] = site_map[site]
-            location['path'] = os.path.dirname(ifile)
-            location['timestampUpdated'] = os.stat(ifile)[-2]
+            location['path'] = os.path.dirname(file_iter)
+            location['timestampUpdated'] = os.stat(file_iter)[-2]
             location['user'] = {"name": user}
             data['location'] = [location]
 
@@ -72,13 +68,13 @@ class DtsRunner(object):
             response = requests.post(endpoint, data=json.dumps(data),
                                      headers=headers)
 
-            if response.status_code == 201:
-                print("{0}    {1}".format(os.path.abspath(ifile),
+            if response.status_code // 100 == 2:
+                print("{0}    {1}".format(os.path.abspath(file_iter),
                                           data['cccId']))
             else:
                 sys.stderr.write(
                     "Registration with the DTS failed for:    {0}\n".format(
-                        os.path.abspath(ifile)
+                        os.path.abspath(file_iter)
                     )
                 )
         return response

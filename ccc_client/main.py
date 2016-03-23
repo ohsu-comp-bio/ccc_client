@@ -4,6 +4,7 @@ Command line utility for interacting with CCC services.
 from __future__ import print_function
 
 import argparse
+import re
 import sys
 
 import ccc_client
@@ -96,9 +97,6 @@ def setup_parser():
     dts.add_argument("--host",
                      type=str,
                      default="central-gateway.ccc.org",
-                     choices=["0.0.0.0",
-                              "central-gateway.ccc.org",
-                              "docker-centos7"],
                      help="host")
     dts.add_argument("--port",
                      type=str,
@@ -157,9 +155,6 @@ def setup_parser():
     ar.add_argument("--host",
                     type=str,
                     default="docker-centos7",
-                    choices=["0.0.0.0",
-                             "central-gateway.ccc.org",
-                             "docker-centos7"],
                     help="host")
     ar.add_argument("--port",
                     type=str,
@@ -219,9 +214,6 @@ def setup_parser():
     ee.add_argument("--host",
                     type=str,
                     default="0.0.0.0",
-                    choices=["0.0.0.0",
-                             "central-gateway.ccc.org",
-                             "docker-centos7"],
                     help="host")
     ee.add_argument("--port",
                     type=str,
@@ -357,6 +349,6 @@ def client_main():
         if r.status_code // 100 == 2:
             if not (args.service == "dts" and args.action == "post"):
                 print(r.text)
-            else:
-                sys.stderr.write("[STATUS CODE - {0}]    {1}\n".format(
-                    r.status_code, r.text))
+        else:
+            sys.stderr.write("[STATUS CODE - {0}]    {1}\n".format(
+                r.status_code, r.text))
