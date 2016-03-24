@@ -19,8 +19,16 @@ class DtsRunner(object):
     Send requests to the DTS
     """
     def __init__(self, args):
-        self.host = args.host
-        self.port = args.port
+        if args.host is not None:
+            self.host = args.host
+        else:
+            self.host = "central-gateway.ccc.org"
+
+        if args.host is not None:
+            self.port = args.port
+        else:
+            self.port = "9510"
+
         self.endpoint = "api/v1/dts/file"
 
     def get(self, cccId):
@@ -85,8 +93,16 @@ class AppRepoRunner(object):
     Send requests to the AppRepo
     """
     def __init__(self, args):
-        self.host = args.host
-        self.port = args.port
+        if args.host is not None:
+            self.host = args.host
+        else:
+            self.host = "docker-centos7"
+
+        if args.host is not None:
+            self.port = args.port
+        else:
+            self.port = "8082"
+
         self.endpoint = "api/v1/tool"
 
     def post(self, imageBlob, imageName, imageTag):
@@ -149,8 +165,16 @@ class ExecEngineRunner(object):
     Send requests to the Execution Engine
     """
     def __init__(self, args):
-        self.host = args.host
-        self.port = args.port
+        if args.host is not None:
+            self.host = args.host
+        else:
+            self.host = "0.0.0.0"
+
+        if args.host is not None:
+            self.port = args.port
+        else:
+            self.port = "8000"
+
         self.endpoint = "api/workflows/v1"
 
     def submit_workflow(self, wdlSource, workflowInputs, workflowOptions):

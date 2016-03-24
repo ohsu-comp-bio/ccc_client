@@ -13,8 +13,7 @@ from ccc_service_runners import DtsRunner, AppRepoRunner, ExecEngineRunner
 
 def display_help(parser):
     """
-    This function is called from customParser to "hijack" the help message
-    :return:
+    This function is called to provide an extended help message
     """
     # Print main help message
     print(parser.format_help())
@@ -39,7 +38,7 @@ def display_help(parser):
             print("=" * 60)
             print("{0}".format(choice))
             print("=" * 60)
-            print(find_options(subparser.format_help()))
+            print(find_options(subparser.format_help(), strip_n=1))
 
             # Iterate through the actions for a service
             for method_subparser_action in method_subparser_actions:
@@ -48,66 +47,68 @@ def display_help(parser):
                     print("-" * len("| {0} |".format(method_choice)))
                     print("| {0} |".format(method_choice))
                     print("-" * len("| {0} |".format(method_choice)))
-                    print(find_options(method_subparser.format_help()))
+                    print(find_options(method_subparser.format_help(), strip_n=6))
 
 
-def find_options(helptext, show_help=False, show_usage=True):
+def find_options(helptext, show_usage=True, strip_n=0):
     """
     Return a substring with the optional arguments
-    :param helptext: Help text, as it"s called
-    :return:
     """
     helplist = helptext.split("\n")
 
+    arg_index = helplist.index("optional arguments:")
+
     # Remove usage info
     if not show_usage:
-        helplist = helplist[helplist.index("optional arguments:"):]
+        helplist = helplist[arg_index:]
 
     # Remove help flag info
-    if not show_help:
-        del helplist[helplist.index("optional arguments:") + 1]
+    del helplist[(arg_index + 1):(arg_index + 1 + strip_n)]
 
     # Handle cases where there are no optional arguments
-    if helplist[helplist.index("optional arguments:") + 1] == "":
-        del helplist[helplist.index("optional arguments:") + 1]
-        del helplist[helplist.index("optional arguments:")]
+    if helplist[arg_index + 1] == "":
+        del helplist[arg_index + 1]
+        del helplist[arg_index]
 
     return "\n".join(helplist)
 
 
 def setup_parser():
-    parser = argparse.ArgumentParser(description="CCC client")
-    parser.add_argument("--version", action='version',
-                        version=str(ccc_client.__version__))
-    parser.add_argument("--debug",
-                        default=False,
-                        action="store_true",
-                        help="debug flag")
-    parser.add_argument("--help-long",
-                        default=False,
-                        action="store_true",
-                        help="Show help message for all services and actions")
+    # Options shared among all subparsers
+    common_parser = argparse.ArgumentParser(add_help=False)
+    common_parser.add_argument("--host",
+                               type=str,
+                               help="host")
+    common_parser.add_argument("--port",
+                               type=str,
+                               help="port")
+    common_parser.add_argument("--version", action='version',
+                               version=str(ccc_client.__version__))
+    common_parser.add_argument("--debug",
+                               default=False,
+                               action="store_true",
+                               help="debug flag")
+    common_parser.add_argument("--help-long",
+                               default=False,
+                               action="store_true",
+                               help="Show help message for all services and actions")
 
+    # Main parser
+    parser = argparse.ArgumentParser(description="CCC client", parents=[common_parser])
     subparsers = parser.add_subparsers(title="service", dest="service")
 
     # ------------------------
     # DTS Options
     # ------------------------
     dts = subparsers.add_parser("dts")
-    dts.add_argument("--host",
-                     type=str,
-                     default="central-gateway.ccc.org",
-                     help="host")
-    dts.add_argument("--port",
-                     type=str,
-                     default="9510",
-                     help="port")
+    dts.set_defaults(host="central-gateway.ccc.org")
+    dts.set_defaults(port="9510")
     dts.set_defaults(runner=DtsRunner)
 
     dts_sub = dts.add_subparsers(title="action", dest="action")
 
     # api/v1/dts/file
-    dts_post = dts_sub.add_parser("post")
+    dts_post = dts_sub.add_parser("post", parents=[common_parser])
     dts_post.add_argument(
         "--filepath", "-f",
         required=True,
@@ -129,7 +130,7 @@ def setup_parser():
     )
 
     # api/v1/dts/file/<uuid>
-    dts_get = dts_sub.add_parser("get")
+    dts_get = dts_sub.add_parser("get", parents=[common_parser])
     dts_get.add_argument(
         "--cccId",
         required=True,
@@ -139,7 +140,7 @@ def setup_parser():
     )
 
     # api/v1/dts/file/<uuid>
-    dts_delete = dts_sub.add_parser("delete")
+    dts_delete = dts_sub.add_parser("delete", parents=[common_parser])
     dts_delete.add_argument(
         "--cccId",
         required=True,
@@ -152,20 +153,14 @@ def setup_parser():
     # App Repo Options
     # ------------------------
     ar = subparsers.add_parser("app-repo")
-    ar.add_argument("--host",
-                    type=str,
-                    default="docker-centos7",
-                    help="host")
-    ar.add_argument("--port",
-                    type=str,
-                    default="8082",
-                    help="port")
+    ar.set_defaults(host="docker-centos7")
+    ar.set_defaults(port="8082")
     ar.set_defaults(runner=AppRepoRunner)
 
     ar_sub = ar.add_subparsers(title="action", dest="action")
 
     # api/v1/tool/
-    ar_post = ar_sub.add_parser("post")
+    ar_post = ar_sub.add_parser("post", parents=[common_parser])
     ar_post.add_argument(
         "--imageBlob", "-b", type=str, help="name of file or path"
     )
@@ -182,7 +177,7 @@ def setup_parser():
     )
 
     # api/v1/tool/<uuid>
-    ar_put = ar_sub.add_parser("put")
+    ar_put = ar_sub.add_parser("put", parents=[common_parser])
     ar_put.add_argument(
         "--metadata", "-m", type=str,
         help="tool metadata"
@@ -194,14 +189,14 @@ def setup_parser():
 
     # api/v1/tool/<uuid>
     # api/v1/tool/<tool_name>/data
-    ar_get = ar_sub.add_parser("get")
+    ar_get = ar_sub.add_parser("get", parents=[common_parser])
     ar_get.add_argument(
         "--imageId", "-i", type=str,
         help="docker image id"
     )
 
     # api/v1/tool/<uuid>
-    ar_delete = ar_sub.add_parser("delete")
+    ar_delete = ar_sub.add_parser("delete", parents=[common_parser])
     ar_delete.add_argument(
         "--imageId", "-i", type=str,
         help="docker image id"
@@ -211,20 +206,14 @@ def setup_parser():
     # Exec Engine Options
     # ------------------------
     ee = subparsers.add_parser("exec-engine")
-    ee.add_argument("--host",
-                    type=str,
-                    default="0.0.0.0",
-                    help="host")
-    ee.add_argument("--port",
-                    type=str,
-                    default="8000",
-                    help="port")    
+    ar.set_defaults(host="0.0.0.0")
+    ar.set_defaults(port="8000")
     ee.set_defaults(runner=ExecEngineRunner)
 
     ee_sub = ee.add_subparsers(title="action", dest="action")
 
     # api/workflows/v1/
-    ee_post = ee_sub.add_parser("submit")
+    ee_post = ee_sub.add_parser("submit", parents=[common_parser])
     ee_post.add_argument(
         "--wdlSource", "-s",
         type=str,
@@ -243,7 +232,7 @@ def setup_parser():
     )
 
     # api/workflows/v1/<uuid>/status
-    ee_status = ee_sub.add_parser("status")
+    ee_status = ee_sub.add_parser("status", parents=[common_parser])
     ee_status.add_argument(
         "--workflowId", "-i",
         type=str,
@@ -251,7 +240,7 @@ def setup_parser():
     )
 
     # api/workflows/v1/<uuid>/outputs
-    ee_outputs = ee_sub.add_parser("outputs")
+    ee_outputs = ee_sub.add_parser("outputs", parents=[common_parser])
     ee_outputs.add_argument(
         "--workflowId", "-i",
         type=str,
@@ -259,7 +248,7 @@ def setup_parser():
     )
 
     # api/workflows/v1/<uuid>/metadata
-    ee_meta = ee_sub.add_parser("metadata")
+    ee_meta = ee_sub.add_parser("metadata", parents=[common_parser])
     ee_meta.add_argument(
         "--workflowId", "-i",
         type=str,
@@ -272,7 +261,10 @@ def setup_parser():
 def client_main():
     parser = setup_parser()
 
-    if "--help-long" in sys.argv[1:]:
+    if len(sys.argv) == 1:
+        return parser.print_help()
+
+    if "--help-long" in sys.argv[1]:
         return display_help(parser)
 
     args = parser.parse_args()
