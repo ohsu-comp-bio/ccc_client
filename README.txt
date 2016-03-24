@@ -1,16 +1,16 @@
-usage: ccc_client_dev.py [-h] [--help-long] [--version] [--debug]
-                         [--host HOST] [--port PORT]
+usage: ccc_client_dev.py [-h] [--debug] [--host HOST] [--port PORT]
+                         [--help-long] [--version]
                          {dts,app-repo,exec-engine} ...
 
 CCC client
 
 optional arguments:
   -h, --help            show this help message and exit
-  --help-long           Show help message for all services and actions
-  --version             show program's version number and exit
   --debug               debug flag
   --host HOST           host
   --port PORT           port
+  --help-long           Show help message for all services and actions
+  --version             show program's version number and exit
 
 service:
   {dts,app-repo,exec-engine}
@@ -26,10 +26,9 @@ action:
 --------
 | post |
 --------
-usage: ccc_client_dev.py dts post [-h] [--help-long] [--version] [--debug]
-                                  [--host HOST] [--port PORT] --filepath
-                                  FILEPATH [FILEPATH ...] --user USER --site
-                                  {central,dfci,ohsu,oicr}
+usage: ccc_client_dev.py dts post [-h] [--debug] [--host HOST] [--port PORT]
+                                  --filepath FILEPATH [FILEPATH ...] --user
+                                  USER --site {central,dfci,ohsu,oicr}
 
 optional arguments:
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
@@ -41,9 +40,8 @@ optional arguments:
 -------
 | get |
 -------
-usage: ccc_client_dev.py dts get [-h] [--help-long] [--version] [--debug]
-                                 [--host HOST] [--port PORT] --cccId CCCID
-                                 [CCCID ...]
+usage: ccc_client_dev.py dts get [-h] [--debug] [--host HOST] [--port PORT]
+                                 --cccId CCCID [CCCID ...]
 
 optional arguments:
   --cccId CCCID [CCCID ...]
@@ -52,9 +50,8 @@ optional arguments:
 ----------
 | delete |
 ----------
-usage: ccc_client_dev.py dts delete [-h] [--help-long] [--version] [--debug]
-                                    [--host HOST] [--port PORT] --cccId CCCID
-                                    [CCCID ...]
+usage: ccc_client_dev.py dts delete [-h] [--debug] [--host HOST] [--port PORT]
+                                    --cccId CCCID [CCCID ...]
 
 optional arguments:
   --cccId CCCID [CCCID ...]
@@ -71,9 +68,8 @@ action:
 --------
 | post |
 --------
-usage: ccc_client_dev.py app-repo post [-h] [--help-long] [--version]
-                                       [--debug] [--host HOST] [--port PORT]
-                                       [--imageBlob IMAGEBLOB]
+usage: ccc_client_dev.py app-repo post [-h] [--debug] [--host HOST]
+                                       [--port PORT] [--imageBlob IMAGEBLOB]
                                        [--imageName IMAGENAME]
                                        [--imageTag IMAGETAG]
                                        [--metadata METADATA]
@@ -91,9 +87,8 @@ optional arguments:
 -------
 | put |
 -------
-usage: ccc_client_dev.py app-repo put [-h] [--help-long] [--version] [--debug]
-                                      [--host HOST] [--port PORT]
-                                      [--metadata METADATA]
+usage: ccc_client_dev.py app-repo put [-h] [--debug] [--host HOST]
+                                      [--port PORT] [--metadata METADATA]
                                       [--imageId IMAGEID]
 
 optional arguments:
@@ -105,9 +100,8 @@ optional arguments:
 -------
 | get |
 -------
-usage: ccc_client_dev.py app-repo get [-h] [--help-long] [--version] [--debug]
-                                      [--host HOST] [--port PORT]
-                                      [--imageId IMAGEID]
+usage: ccc_client_dev.py app-repo get [-h] [--debug] [--host HOST]
+                                      [--port PORT] [--imageId IMAGEID]
 
 optional arguments:
   --imageId IMAGEID, -i IMAGEID
@@ -116,9 +110,8 @@ optional arguments:
 ----------
 | delete |
 ----------
-usage: ccc_client_dev.py app-repo delete [-h] [--help-long] [--version]
-                                         [--debug] [--host HOST] [--port PORT]
-                                         [--imageId IMAGEID]
+usage: ccc_client_dev.py app-repo delete [-h] [--debug] [--host HOST]
+                                         [--port PORT] [--imageId IMAGEID]
 
 optional arguments:
   --imageId IMAGEID, -i IMAGEID
@@ -135,8 +128,7 @@ action:
 ----------
 | submit |
 ----------
-usage: ccc_client_dev.py exec-engine submit [-h] [--help-long] [--version]
-                                            [--debug] [--host HOST]
+usage: ccc_client_dev.py exec-engine submit [-h] [--debug] [--host HOST]
                                             [--port PORT]
                                             [--wdlSource WDLSOURCE]
                                             [--workflowInputs WORKFLOWINPUTS]
@@ -153,8 +145,7 @@ optional arguments:
 ----------
 | status |
 ----------
-usage: ccc_client_dev.py exec-engine status [-h] [--help-long] [--version]
-                                            [--debug] [--host HOST]
+usage: ccc_client_dev.py exec-engine status [-h] [--debug] [--host HOST]
                                             [--port PORT]
                                             [--workflowId WORKFLOWID]
 
@@ -165,8 +156,7 @@ optional arguments:
 -----------
 | outputs |
 -----------
-usage: ccc_client_dev.py exec-engine outputs [-h] [--help-long] [--version]
-                                             [--debug] [--host HOST]
+usage: ccc_client_dev.py exec-engine outputs [-h] [--debug] [--host HOST]
                                              [--port PORT]
                                              [--workflowId WORKFLOWID]
 
@@ -177,8 +167,7 @@ optional arguments:
 ------------
 | metadata |
 ------------
-usage: ccc_client_dev.py exec-engine metadata [-h] [--help-long] [--version]
-                                              [--debug] [--host HOST]
+usage: ccc_client_dev.py exec-engine metadata [-h] [--debug] [--host HOST]
                                               [--port PORT]
                                               [--workflowId WORKFLOWID]
 
