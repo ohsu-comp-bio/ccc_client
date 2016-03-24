@@ -76,22 +76,22 @@ def find_options(helptext, show_usage=True, strip_n=0):
 def setup_parser():
     # Options shared among all subparsers
     common_parser = argparse.ArgumentParser(add_help=False)
-    common_parser.add_argument("--host",
-                               type=str,
-                               help="host")
-    common_parser.add_argument("--port",
-                               type=str,
-                               help="port")
+    common_parser.add_argument("--help-long",
+                               default=False,
+                               action="store_true",
+                               help="Show help message for all services and actions")
     common_parser.add_argument("--version", action='version',
                                version=str(ccc_client.__version__))
     common_parser.add_argument("--debug",
                                default=False,
                                action="store_true",
                                help="debug flag")
-    common_parser.add_argument("--help-long",
-                               default=False,
-                               action="store_true",
-                               help="Show help message for all services and actions")
+    common_parser.add_argument("--host",
+                               type=str,
+                               help="host")
+    common_parser.add_argument("--port",
+                               type=str,
+                               help="port")
 
     # Main parser
     parser = argparse.ArgumentParser(description="CCC client", parents=[common_parser])
