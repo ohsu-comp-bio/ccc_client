@@ -47,7 +47,7 @@ def display_help(parser):
                     print("-" * len("| {0} |".format(method_choice)))
                     print("| {0} |".format(method_choice))
                     print("-" * len("| {0} |".format(method_choice)))
-                    print(find_options(method_subparser.format_help(), strip_n=6))
+                    print(find_options(method_subparser.format_help(), strip_n=4))
 
 
 def find_options(helptext, show_usage=True, strip_n=0):
@@ -76,12 +76,6 @@ def find_options(helptext, show_usage=True, strip_n=0):
 def setup_parser():
     # Options shared among all subparsers
     common_parser = argparse.ArgumentParser(add_help=False)
-    common_parser.add_argument("--help-long",
-                               default=False,
-                               action="store_true",
-                               help="Show help message for all services and actions")
-    common_parser.add_argument("--version", action='version',
-                               version=str(ccc_client.__version__))
     common_parser.add_argument("--debug",
                                default=False,
                                action="store_true",
@@ -95,6 +89,12 @@ def setup_parser():
 
     # Main parser
     parser = argparse.ArgumentParser(description="CCC client", parents=[common_parser])
+    parser.add_argument("--help-long",
+                        default=False,
+                        action="store_true",
+                        help="Show help message for all services and actions")
+    parser.add_argument("--version", action='version',
+                        version=str(ccc_client.__version__))
     subparsers = parser.add_subparsers(title="service", dest="service")
 
     # ------------------------
@@ -264,7 +264,7 @@ def client_main():
     if len(sys.argv) == 1:
         return parser.print_help()
 
-    if "--help-long" in sys.argv[1]:
+    if "--help-long" in sys.argv[1:]:
         return display_help(parser)
 
     args = parser.parse_args()
