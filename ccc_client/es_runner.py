@@ -9,16 +9,21 @@ from elasticsearch import Elasticsearch
 
 
 class EsRunner(object):
-    def __init__(self, host, port, token=None):
-        self.host = host
-        self.port = port
-        self.token = token
+    def __init__(self, args):
+        if args.host is not None:
+            self.host = args.host
+        else:
+            # TODO: figure out what the correct defualt should be
+            self.host = "0.0.0.0"
+
+        if args.port is not None:
+            self.port = args.port
+        else:
+            self.port = "9200"
+
+        self.token = args.token
         self.readDomainDescriptors()
-
-        if "ELASTIC_SEARCH" not in os.environ:
-            raise RuntimeError("ELASTIC_SEARCH environment variable not set")
-
-        self.es = Elasticsearch([os.environ['ELASTIC_SEARCH']])
+        self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
 
     # Note: this creates the opportunity to allow externally provided field
     # definitions, or potentially a different schema at runtime

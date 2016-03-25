@@ -24,7 +24,7 @@ class DtsRunner(object):
         else:
             self.host = "central-gateway.ccc.org"
 
-        if args.host is not None:
+        if args.port is not None:
             self.port = args.port
         else:
             self.port = "9510"
@@ -98,7 +98,7 @@ class AppRepoRunner(object):
         else:
             self.host = "docker-centos7"
 
-        if args.host is not None:
+        if args.port is not None:
             self.port = args.port
         else:
             self.port = "8082"
@@ -170,7 +170,7 @@ class ExecEngineRunner(object):
         else:
             self.host = "0.0.0.0"
 
-        if args.host is not None:
+        if args.port is not None:
             self.port = args.port
         else:
             self.port = "8000"
