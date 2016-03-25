@@ -267,7 +267,7 @@ def client_main():
         parser.print_help()
         raise RuntimeError()
 
-    runner = args.runner(args)
+    runner = args.runner(args.host, args.port)
     responses = []
 
     # ------------------------
