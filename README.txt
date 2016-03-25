@@ -1,6 +1,6 @@
 usage: ccc_client_dev.py [-h] [--debug] [--host HOST] [--port PORT]
                          [--help-long] [--version]
-                         {dts,app-repo,exec-engine} ...
+                         {dts,app-repo,exec-engine,elasticsearch} ...
 
 CCC client
 
@@ -13,7 +13,7 @@ optional arguments:
   --version             show program's version number and exit
 
 service:
-  {dts,app-repo,exec-engine}
+  {dts,app-repo,exec-engine,elasticsearch}
 
 ============================================================
 dts
@@ -33,7 +33,7 @@ usage: ccc_client_dev.py dts post [-h] [--debug] [--host HOST] [--port PORT]
 optional arguments:
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
                         name of file(s) or pattern to glob on
-  --user USER, -u USER  site user
+  --user USER, -u USER  user identity
   --site {central,dfci,ohsu,oicr}, -s {central,dfci,ohsu,oicr}
                         site the data resides at
 
@@ -174,4 +174,97 @@ usage: ccc_client_dev.py exec-engine metadata [-h] [--debug] [--host HOST]
 optional arguments:
   --workflowId WORKFLOWID, -i WORKFLOWID
                         workflow uuid
+
+============================================================
+elasticsearch
+============================================================
+usage: ccc_client_dev.py elasticsearch [-h]
+                                       {query,publish-batch,publish-resource}
+                                       ...
+
+action:
+  {query,publish-batch,publish-resource}
+
+---------
+| query |
+---------
+usage: ccc_client_dev.py elasticsearch query [-h] [--debug] [--host HOST]
+                                             [--port PORT] [--token TOKEN]
+                                             [--domain {patient,specimen,sample,resource}]
+                                             [--query-terms QUERY_TERMS [QUERY_TERMS ...]]
+
+optional arguments:
+  --token TOKEN, -T TOKEN
+                        auth token
+  --domain {patient,specimen,sample,resource}, -d {patient,specimen,sample,resource}
+                        target domain of query
+  --query-terms QUERY_TERMS [QUERY_TERMS ...], -q QUERY_TERMS [QUERY_TERMS ...]
+                        The search terms on which to query. Can be specified
+                        multiple times. Should be supplied in the form
+                        'FieldName:Term'
+
+-----------------
+| publish-batch |
+-----------------
+usage: ccc_client_dev.py elasticsearch publish-batch [-h] [--debug]
+                                                     [--host HOST]
+                                                     [--port PORT]
+                                                     [--token TOKEN]
+                                                     [--tsv TSV]
+                                                     [--site {central,dfci,ohsu,oicr}]
+                                                     [--user USER]
+                                                     [--project PROJECT]
+                                                     [--domain {patient,specimen,sample,resource}]
+
+optional arguments:
+  --token TOKEN, -T TOKEN
+                        auth token
+  --tsv TSV, -t TSV     input tab delimited file
+  --site {central,dfci,ohsu,oicr}, -s {central,dfci,ohsu,oicr}
+                        site this data is associated with
+  --user USER, -u USER  user identity
+  --project PROJECT, -p PROJECT
+                        The project this data is associated with
+  --domain {patient,specimen,sample,resource}, -d {patient,specimen,sample,resource}
+                        target domain to register the data to
+
+--------------------
+| publish-resource |
+--------------------
+usage: ccc_client_dev.py elasticsearch publish-resource [-h] [--debug]
+                                                        [--host HOST]
+                                                        [--port PORT]
+                                                        [--token TOKEN]
+                                                        [--filepath FILEPATH]
+                                                        [--filetype FILETYPE]
+                                                        [--inheritFrom INHERITFROM]
+                                                        [--property-override PROPERTY_OVERRIDE [PROPERTY_OVERRIDE ...]]
+                                                        [--site {central,dfci,ohsu,oicr}]
+                                                        [--user USER]
+                                                        [--project PROJECT]
+                                                        [--workflowId WORKFLOWID]
+
+optional arguments:
+  --token TOKEN, -T TOKEN
+                        auth token
+  --filepath FILEPATH, -f FILEPATH
+                        file to be registered in ES index
+  --filetype FILETYPE, -t FILETYPE
+                        the MIME type of the file
+  --inheritFrom INHERITFROM, -i INHERITFROM
+                        a cccId - if provided, the fields of this existing
+                        record will be queried and applied to the incoming
+                        resource. Any values provided using --property-
+                        override will override these
+  --property-override PROPERTY_OVERRIDE [PROPERTY_OVERRIDE ...], -o PROPERTY_OVERRIDE [PROPERTY_OVERRIDE ...]
+                        One or more fields to apply to the incoming resource.
+                        The values should be supplied in the form
+                        'FieldName:Value'
+  --site {central,dfci,ohsu,oicr}, -s {central,dfci,ohsu,oicr}
+                        site this file is associated with
+  --user USER, -u USER  user identity
+  --project PROJECT, -p PROJECT
+                        The project this file is associated with
+  --workflowId WORKFLOWID, -w WORKFLOWID
+                        The workflow this file was generated by
 

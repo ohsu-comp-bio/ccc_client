@@ -9,6 +9,7 @@ import sys
 
 import ccc_client
 from ccc_service_runners import DtsRunner, AppRepoRunner, ExecEngineRunner
+from es_runner import ElasticSearchRunner
 
 
 def display_help(parser):
@@ -101,8 +102,6 @@ def setup_parser():
     # DTS Options
     # ------------------------
     dts = subparsers.add_parser("dts")
-    dts.set_defaults(host="central-gateway.ccc.org")
-    dts.set_defaults(port="9510")
     dts.set_defaults(runner=DtsRunner)
 
     dts_sub = dts.add_subparsers(title="action", dest="action")
@@ -120,7 +119,7 @@ def setup_parser():
         "--user", "-u",
         required=True,
         type=str,
-        help="site user")
+        help="user identity")
     dts_post.add_argument(
         "--site", "-s",
         required=True,
@@ -153,8 +152,6 @@ def setup_parser():
     # App Repo Options
     # ------------------------
     ar = subparsers.add_parser("app-repo")
-    ar.set_defaults(host="docker-centos7")
-    ar.set_defaults(port="8082")
     ar.set_defaults(runner=AppRepoRunner)
 
     ar_sub = ar.add_subparsers(title="action", dest="action")
@@ -206,8 +203,6 @@ def setup_parser():
     # Exec Engine Options
     # ------------------------
     ee = subparsers.add_parser("exec-engine")
-    ar.set_defaults(host="0.0.0.0")
-    ar.set_defaults(port="8000")
     ee.set_defaults(runner=ExecEngineRunner)
 
     ee_sub = ee.add_subparsers(title="action", dest="action")
@@ -253,6 +248,122 @@ def setup_parser():
         "--workflowId", "-i",
         type=str,
         help="workflow uuid"
+    )
+
+    # ------------------------
+    # Elastic Search Options
+    # ------------------------
+    es = subparsers.add_parser("elasticsearch")
+    es.set_defaults(runner=ElasticSearchRunner)
+
+    es_sub = es.add_subparsers(title="action", dest="action")
+
+    es_query = es_sub.add_parser("query", parents=[common_parser])
+    es_query.add_argument(
+        "--token", "-T",
+        type=str,
+        help="auth token"
+    )
+    es_query.add_argument(
+        "--domain", "-d",
+        type=str,
+        choices=["patient", "specimen", "sample", "resource"],
+        help="target domain of query"
+    )
+    es_query.add_argument(
+        "--query-terms", "-q",
+        type=str,
+        nargs="+",
+        help="The search terms on which to query. Can be specified multiple \
+        times. Should be supplied in the form 'FieldName:Term'"
+    )
+
+    es_publish_batch = es_sub.add_parser("publish-batch",
+                                         parents=[common_parser])
+    es_publish_batch.add_argument(
+        "--token", "-T",
+        type=str,
+        help="auth token"
+    )
+    es_publish_batch.add_argument(
+        "--tsv", "-t",
+        type=str,
+        help="input tab delimited file"
+    )
+    es_publish_batch.add_argument(
+        "--site", "-s",
+        type=str,
+        choices=["central", "dfci", "ohsu", "oicr"],
+        help="site this data is associated with"
+    )
+    es_publish_batch.add_argument(
+        "--user", "-u",
+        type=str,
+        help="user identity"
+    )
+    es_publish_batch.add_argument(
+        "--project", "-p",
+        type=str,
+        help="The project this data is associated with"
+    )
+    es_publish_batch.add_argument(
+        "--domain", "-d",
+        type=str,
+        choices=["patient", "specimen", "sample", "resource"],
+        help="target domain to register the data to"
+    )
+
+    es_publish_resource = es_sub.add_parser("publish-resource",
+                                            parents=[common_parser])
+    es_publish_resource.add_argument(
+        "--token", "-T",
+        type=str,
+        help="auth token"
+    )
+    es_publish_resource.add_argument(
+        "--filepath", "-f",
+        type=str,
+        help="file to be registered in ES index"
+    )
+    es_publish_resource.add_argument(
+        "--filetype", "-t",
+        type=str,
+        help="the MIME type of the file"
+    )
+    es_publish_resource.add_argument(
+        "--inheritFrom", "-i",
+        type=str,
+        help="a cccId - if provided, the fields of this existing record will \
+        be queried and applied to the incoming resource. Any values provided \
+        using --property-override will override these"
+    )
+    es_publish_resource.add_argument(
+        "--property-override", "-o",
+        type=str,
+        nargs="+",
+        help="One or more fields to apply to the incoming resource. The values \
+        should be supplied in the form 'FieldName:Value'"
+    )
+    es_publish_resource.add_argument(
+        "--site", "-s",
+        type=str,
+        choices=["central", "dfci", "ohsu", "oicr"],
+        help="site this file is associated with"
+    )
+    es_publish_resource.add_argument(
+        "--user", "-u",
+        type=str,
+        help="user identity"
+    )
+    es_publish_resource.add_argument(
+        "--project", "-p",
+        type=str,
+        help="The project this file is associated with"
+    )
+    es_publish_resource.add_argument(
+        "--workflowId", "-w",
+        type=str,
+        help="The workflow this file was generated by"
     )
 
     return parser
@@ -330,6 +441,21 @@ def client_main():
             responses.append(r)
         elif args.action == "outputs":
             r = runner.get_outputs(args.workflowId)
+            responses.append(r)
+
+    # ------------------------
+    # Elastic Search
+    # ------------------------
+    elif args.service == "elasticsearch":
+        if args.action == "query":
+            r = runner.query(args.domain, args.query, args.output)
+            responses.append(r)
+        elif args.action == "publish-batch":
+            r = runner.publish_batch(args.tsv, args.site, args.user,
+                                     args.project, args.domain)
+            responses.append(r)
+        elif args.action == "publish-resource":
+            r = runner.publish_resource(args.filepath, args.site, args.user, args.project, args.workflowId, args.filetype, 'resource', args.inheritFrom, args.property_override)
             responses.append(r)
 
     # ------------------------

@@ -8,7 +8,7 @@ import os
 from elasticsearch import Elasticsearch
 
 
-class EsRunner(object):
+class ElasticSearchRunner(object):
     def __init__(self, args):
         if args.host is not None:
             self.host = args.host
