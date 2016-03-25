@@ -128,8 +128,11 @@ class AppRepoRunner(object):
                                                    self.endpoint,
                                                    imageId)
 
-        with open(metadata) as metadata_filehandle:
-            loaded_metadata = json.loads(metadata_filehandle)
+        if os.path.isfile(metadata):
+            with open(metadata) as metadata_filehandle:
+                loaded_metadata = json.loads(metadata_filehandle.read())
+        else:
+            loaded_metadata = json.loads(metadata)
 
         if imageId is None:
             if metadata['id'] == '':
