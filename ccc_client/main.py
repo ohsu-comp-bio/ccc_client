@@ -101,8 +101,6 @@ def setup_parser():
     # DTS Options
     # ------------------------
     dts = subparsers.add_parser("dts")
-    dts.set_defaults(host="central-gateway.ccc.org")
-    dts.set_defaults(port="9510")
     dts.set_defaults(runner=DtsRunner)
 
     dts_sub = dts.add_subparsers(title="action", dest="action")
@@ -153,8 +151,6 @@ def setup_parser():
     # App Repo Options
     # ------------------------
     ar = subparsers.add_parser("app-repo")
-    ar.set_defaults(host="docker-centos7")
-    ar.set_defaults(port="8082")
     ar.set_defaults(runner=AppRepoRunner)
 
     ar_sub = ar.add_subparsers(title="action", dest="action")
@@ -206,8 +202,6 @@ def setup_parser():
     # Exec Engine Options
     # ------------------------
     ee = subparsers.add_parser("exec-engine")
-    ar.set_defaults(host="0.0.0.0")
-    ar.set_defaults(port="8000")
     ee.set_defaults(runner=ExecEngineRunner)
 
     ee_sub = ee.add_subparsers(title="action", dest="action")
