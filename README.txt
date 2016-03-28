@@ -1,6 +1,6 @@
-usage: ccc_client_dev.py [-h] [--debug] [--host HOST] [--port PORT]
-                         [--help-long] [--version]
-                         {dts,app-repo,exec-engine,elasticsearch} ...
+usage: ccc_client [-h] [--debug] [--host HOST] [--port PORT] [--help-long]
+                  [--version]
+                  {dts,app-repo,exec-engine} ...
 
 CCC client
 
@@ -18,7 +18,7 @@ service:
 ============================================================
 dts
 ============================================================
-usage: ccc_client_dev.py dts [-h] {post,get,delete} ...
+usage: ccc_client dts [-h] {post,get,delete} ...
 
 action:
   {post,get,delete}
@@ -26,9 +26,9 @@ action:
 --------
 | post |
 --------
-usage: ccc_client_dev.py dts post [-h] [--debug] [--host HOST] [--port PORT]
-                                  --filepath FILEPATH [FILEPATH ...] --user
-                                  USER --site {central,dfci,ohsu,oicr}
+usage: ccc_client dts post [-h] [--debug] [--host HOST] [--port PORT]
+                           --filepath FILEPATH [FILEPATH ...] --user USER
+                           --site {central,dfci,ohsu,oicr}
 
 optional arguments:
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
@@ -40,8 +40,8 @@ optional arguments:
 -------
 | get |
 -------
-usage: ccc_client_dev.py dts get [-h] [--debug] [--host HOST] [--port PORT]
-                                 --cccId CCCID [CCCID ...]
+usage: ccc_client dts get [-h] [--debug] [--host HOST] [--port PORT] --cccId
+                          CCCID [CCCID ...]
 
 optional arguments:
   --cccId CCCID [CCCID ...]
@@ -50,8 +50,8 @@ optional arguments:
 ----------
 | delete |
 ----------
-usage: ccc_client_dev.py dts delete [-h] [--debug] [--host HOST] [--port PORT]
-                                    --cccId CCCID [CCCID ...]
+usage: ccc_client dts delete [-h] [--debug] [--host HOST] [--port PORT]
+                             --cccId CCCID [CCCID ...]
 
 optional arguments:
   --cccId CCCID [CCCID ...]
@@ -60,7 +60,7 @@ optional arguments:
 ============================================================
 app-repo
 ============================================================
-usage: ccc_client_dev.py app-repo [-h] {post,put,get,delete} ...
+usage: ccc_client app-repo [-h] {post,put,get,delete} ...
 
 action:
   {post,put,get,delete}
@@ -68,11 +68,10 @@ action:
 --------
 | post |
 --------
-usage: ccc_client_dev.py app-repo post [-h] [--debug] [--host HOST]
-                                       [--port PORT] [--imageBlob IMAGEBLOB]
-                                       [--imageName IMAGENAME]
-                                       [--imageTag IMAGETAG]
-                                       [--metadata METADATA]
+usage: ccc_client app-repo post [-h] [--debug] [--host HOST] [--port PORT]
+                                [--imageBlob IMAGEBLOB]
+                                [--imageName IMAGENAME] [--imageTag IMAGETAG]
+                                [--metadata METADATA]
 
 optional arguments:
   --imageBlob IMAGEBLOB, -b IMAGEBLOB
@@ -87,9 +86,8 @@ optional arguments:
 -------
 | put |
 -------
-usage: ccc_client_dev.py app-repo put [-h] [--debug] [--host HOST]
-                                      [--port PORT] [--metadata METADATA]
-                                      [--imageId IMAGEID]
+usage: ccc_client app-repo put [-h] [--debug] [--host HOST] [--port PORT]
+                               [--metadata METADATA] [--imageId IMAGEID]
 
 optional arguments:
   --metadata METADATA, -m METADATA
@@ -100,8 +98,8 @@ optional arguments:
 -------
 | get |
 -------
-usage: ccc_client_dev.py app-repo get [-h] [--debug] [--host HOST]
-                                      [--port PORT] [--imageId IMAGEID]
+usage: ccc_client app-repo get [-h] [--debug] [--host HOST] [--port PORT]
+                               [--imageId IMAGEID]
 
 optional arguments:
   --imageId IMAGEID, -i IMAGEID
@@ -110,8 +108,8 @@ optional arguments:
 ----------
 | delete |
 ----------
-usage: ccc_client_dev.py app-repo delete [-h] [--debug] [--host HOST]
-                                         [--port PORT] [--imageId IMAGEID]
+usage: ccc_client app-repo delete [-h] [--debug] [--host HOST] [--port PORT]
+                                  [--imageId IMAGEID]
 
 optional arguments:
   --imageId IMAGEID, -i IMAGEID
@@ -120,7 +118,7 @@ optional arguments:
 ============================================================
 exec-engine
 ============================================================
-usage: ccc_client_dev.py exec-engine [-h] {submit,status,outputs,metadata} ...
+usage: ccc_client exec-engine [-h] {submit,status,outputs,metadata} ...
 
 action:
   {submit,status,outputs,metadata}
@@ -128,11 +126,10 @@ action:
 ----------
 | submit |
 ----------
-usage: ccc_client_dev.py exec-engine submit [-h] [--debug] [--host HOST]
-                                            [--port PORT]
-                                            [--wdlSource WDLSOURCE]
-                                            [--workflowInputs WORKFLOWINPUTS]
-                                            [--workflowOptions WORKFLOWOPTIONS]
+usage: ccc_client exec-engine submit [-h] [--debug] [--host HOST]
+                                     [--port PORT] [--wdlSource WDLSOURCE]
+                                     [--workflowInputs WORKFLOWINPUTS]
+                                     [--workflowOptions WORKFLOWOPTIONS]
 
 optional arguments:
   --wdlSource WDLSOURCE, -s WDLSOURCE
@@ -145,9 +142,8 @@ optional arguments:
 ----------
 | status |
 ----------
-usage: ccc_client_dev.py exec-engine status [-h] [--debug] [--host HOST]
-                                            [--port PORT]
-                                            [--workflowId WORKFLOWID]
+usage: ccc_client exec-engine status [-h] [--debug] [--host HOST]
+                                     [--port PORT] [--workflowId WORKFLOWID]
 
 optional arguments:
   --workflowId WORKFLOWID, -i WORKFLOWID
@@ -156,9 +152,8 @@ optional arguments:
 -----------
 | outputs |
 -----------
-usage: ccc_client_dev.py exec-engine outputs [-h] [--debug] [--host HOST]
-                                             [--port PORT]
-                                             [--workflowId WORKFLOWID]
+usage: ccc_client exec-engine outputs [-h] [--debug] [--host HOST]
+                                      [--port PORT] [--workflowId WORKFLOWID]
 
 optional arguments:
   --workflowId WORKFLOWID, -i WORKFLOWID
@@ -167,9 +162,8 @@ optional arguments:
 ------------
 | metadata |
 ------------
-usage: ccc_client_dev.py exec-engine metadata [-h] [--debug] [--host HOST]
-                                              [--port PORT]
-                                              [--workflowId WORKFLOWID]
+usage: ccc_client exec-engine metadata [-h] [--debug] [--host HOST]
+                                       [--port PORT] [--workflowId WORKFLOWID]
 
 optional arguments:
   --workflowId WORKFLOWID, -i WORKFLOWID
@@ -178,7 +172,7 @@ optional arguments:
 ============================================================
 elasticsearch
 ============================================================
-usage: ccc_client_dev.py elasticsearch [-h]
+usage: ccc_client elasticsearch [-h]
                                        {query,publish-batch,publish-resource}
                                        ...
 
@@ -188,7 +182,7 @@ action:
 ---------
 | query |
 ---------
-usage: ccc_client_dev.py elasticsearch query [-h] [--debug] [--host HOST]
+usage: ccc_client elasticsearch query [-h] [--debug] [--host HOST]
                                              [--port PORT] [--token TOKEN]
                                              [--domain {patient,specimen,sample,resource}]
                                              [--query-terms QUERY_TERMS [QUERY_TERMS ...]]
@@ -206,7 +200,7 @@ optional arguments:
 -----------------
 | publish-batch |
 -----------------
-usage: ccc_client_dev.py elasticsearch publish-batch [-h] [--debug]
+usage: ccc_client elasticsearch publish-batch [-h] [--debug]
                                                      [--host HOST]
                                                      [--port PORT]
                                                      [--token TOKEN]
@@ -231,7 +225,7 @@ optional arguments:
 --------------------
 | publish-resource |
 --------------------
-usage: ccc_client_dev.py elasticsearch publish-resource [-h] [--debug]
+usage: ccc_client elasticsearch publish-resource [-h] [--debug]
                                                         [--host HOST]
                                                         [--port PORT]
                                                         [--token TOKEN]

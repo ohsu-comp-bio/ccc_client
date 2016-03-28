@@ -170,7 +170,7 @@ def setup_parser():
     )
     ar_post.add_argument(
         "--metadata", "-m", type=str,
-        help="tool metadata"
+        help="tool metadata; can be a filepath or json string"
     )
 
     # api/v1/tool/<uuid>
@@ -384,7 +384,7 @@ def client_main():
         parser.print_help()
         raise RuntimeError()
 
-    runner = args.runner(args)
+    runner = args.runner(args.host, args.port)
     responses = []
 
     # ------------------------
