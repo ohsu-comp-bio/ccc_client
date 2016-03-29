@@ -27,7 +27,7 @@ setup(
     install_requires=["requests==2.9.1"],
     entry_points={
         'console_scripts': [
-            'ccc_client=ccc_client.main:client_main'
+            'ccc_client=ccc_client.cli:cli_main'
         ]
     },
     # Use setuptools_scm to set the version number automatically from Git
