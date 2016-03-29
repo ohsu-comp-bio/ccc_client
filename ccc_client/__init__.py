@@ -1,10 +1,15 @@
 """
-Command line interface to CCC services
+Interact with CCC services
 """
+from ccc_client.DtsRunner import DtsRunner
+from ccc_client.AppRepoRunner import AppRepoRunner
+from ccc_client.ExecEngineRunner import ExecEngineRunner
+
+__all__ = ["DtsRunner", "AppRepoRunner", "ExecEngineRunner"]
 
 __version__ = "undefined"
 try:
-    import _version
-    __version__ = _version.version
+    import ccc_client._version
+    __version__ = ccc_client._version.version
 except ImportError:
     pass

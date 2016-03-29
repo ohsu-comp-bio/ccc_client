@@ -8,7 +8,6 @@ import re
 import sys
 
 import ccc_client
-from ccc_service_runners import DtsRunner, AppRepoRunner, ExecEngineRunner
 
 
 def display_help(parser):
@@ -101,7 +100,7 @@ def setup_parser():
     # DTS Options
     # ------------------------
     dts = subparsers.add_parser("dts")
-    dts.set_defaults(runner=DtsRunner)
+    dts.set_defaults(runner=ccc_client.DtsRunner)
 
     dts_sub = dts.add_subparsers(title="action", dest="action")
 
@@ -151,7 +150,7 @@ def setup_parser():
     # App Repo Options
     # ------------------------
     ar = subparsers.add_parser("app-repo")
-    ar.set_defaults(runner=AppRepoRunner)
+    ar.set_defaults(runner=ccc_client.AppRepoRunner)
 
     ar_sub = ar.add_subparsers(title="action", dest="action")
 
@@ -202,7 +201,7 @@ def setup_parser():
     # Exec Engine Options
     # ------------------------
     ee = subparsers.add_parser("exec-engine")
-    ee.set_defaults(runner=ExecEngineRunner)
+    ee.set_defaults(runner=ccc_client.ExecEngineRunner)
 
     ee_sub = ee.add_subparsers(title="action", dest="action")
 
@@ -252,7 +251,7 @@ def setup_parser():
     return parser
 
 
-def client_main():
+def cli_main():
     parser = setup_parser()
 
     if len(sys.argv) == 1:
