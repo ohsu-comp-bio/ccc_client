@@ -98,11 +98,11 @@ class DtsRunner(object):
                 gresponse = self.get(data['cccId'])
                 if gresponse.status_code // 100 == 2:
                     sys.stderr.write(
-                        "[ERROR] The cccId {} was already found in the DTS\n".format(
+                        "[ERROR] The cccId {0} was already found in the DTS\n".format(
                             data['cccId']
                         )
                     )
-                    sys.stderr.write("{}\n".format(gresponse.text))
+                    sys.stderr.write("{0}\n".format(gresponse.text))
 
                 sys.stderr.write(
                     "Registration with the DTS failed for: {0}\n".format(
