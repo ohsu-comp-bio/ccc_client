@@ -65,10 +65,11 @@ class AppRepoRunner(object):
 
         assert imageId == metadata['id']
 
-        headers = {'Content-Type': 'application/json'}
-        response = requests.put(endpoint,
-                                data=json.dumps(loaded_metadata),
-                                headers=headers)
+        response = requests.put(
+            endpoint,
+            data=json.dumps(loaded_metadata),
+            headers={'Content-Type': 'application/json'}
+        )
         return response
 
     def delete(self, imageId):
@@ -76,7 +77,8 @@ class AppRepoRunner(object):
                                                    self.port,
                                                    self.endpoint,
                                                    imageId)
-        headers = {'Content-Type': 'application/json'}
-        response = requests.delete(endpoint,
-                                   headers=headers)
+        response = requests.delete(
+            endpoint,
+            headers={'Content-Type': 'application/json'}
+        )
         return response

@@ -28,15 +28,33 @@ class DtsRunner(object):
     def get(self, cccId):
         endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
                                                    self.endpoint, cccId)
-        headers = {'Content-Type': 'application/json'}
-        response = requests.get(endpoint, headers=headers)
+        response = requests.get(
+            endpoint,
+            headers={'Content-Type': 'application/json'}
+        )
         return response
 
     def delete(self, cccId):
         endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
                                                    self.endpoint, cccId)
-        headers = {'Content-Type': 'application/json'}
-        response = requests.delete(endpoint, headers=headers)
+        response = requests.delete(
+            endpoint,
+            headers={'Content-Type': 'application/json'}
+        )
+        return response
+
+    def put(self, filepath, site, user, cccId):
+        # TODO
+        raise Exception("Not Implemented")
+
+        endpoint = "http://{0}:{1}/{2}".format(self.host, self.port,
+                                               self.endpoint)
+        data = {}
+        response = requests.put(
+            endpoint,
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
         return response
 
     def post(self, filepath, site, user):
@@ -66,16 +84,28 @@ class DtsRunner(object):
 
             endpoint = "http://{0}:{1}/{2}".format(self.host, self.port,
                                                    self.endpoint)
-            headers = {'Content-Type': 'application/json'}
-            response = requests.post(endpoint, data=json.dumps(data),
-                                     headers=headers)
+
+            response = requests.post(
+                endpoint,
+                data=json.dumps(data),
+                headers={'Content-Type': 'application/json'}
+            )
 
             if response.status_code // 100 == 2:
                 print("{0}    {1}".format(os.path.abspath(file_iter),
                                           data['cccId']))
             else:
+                gresponse = self.get(data['cccId'])
+                if gresponse.status_code // 100 == 2:
+                    sys.stderr.write(
+                        "[ERROR] The cccId {} was already found in the DTS\n".format(
+                            data['cccId']
+                        )
+                    )
+                    sys.stderr.write("{}\n".format(gresponse.text))
+
                 sys.stderr.write(
-                    "Registration with the DTS failed for:    {0}\n".format(
+                    "Registration with the DTS failed for: {0}\n".format(
                         os.path.abspath(file_iter)
                     )
                 )
