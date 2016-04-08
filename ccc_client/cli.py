@@ -126,6 +126,28 @@ def setup_parser():
         help="site the data resides at"
     )
 
+    # api/v1/dts/file
+    dts_put = dts_sub.add_parser("put", parents=[common_parser])
+    dts_put.add_argument(
+        "--filepath", "-f",
+        required=True,
+        type=str,
+        nargs="+",
+        help="name of file(s) or pattern to glob on"
+    )
+    dts_put.add_argument(
+        "--user", "-u",
+        required=True,
+        type=str,
+        help="site user")
+    dts_put.add_argument(
+        "--site", "-s",
+        required=True,
+        type=str,
+        choices=["central", "dfci", "ohsu", "oicr"],
+        help="site the data resides at"
+    )
+
     # api/v1/dts/file/<uuid>
     dts_get = dts_sub.add_parser("get", parents=[common_parser])
     dts_get.add_argument(
@@ -144,6 +166,22 @@ def setup_parser():
         type=str,
         nargs="+",
         help="cccId entry to DELETE"
+    )
+
+    dts_infer = dts_sub.add_parser("infer-cccId", parents=[common_parser])
+    dts_infer.add_argument(
+        "--filepath", "-f",
+        required=True,
+        type=str,
+        nargs="+",
+        help="name of file(s) or pattern to glob on"
+    )
+    dts_infer.add_argument(
+        "--strategy", "-s",
+        type=str,
+        default="SHA-1",
+        choices=["MD5", "SHA-1"],
+        help="hashing strategy to use to generate the cccId (default: SHA-1)"
     )
 
     # ------------------------
@@ -277,6 +315,10 @@ def cli_main():
             for f in args.filepath:
                 r = runner.post(f, args.site, args.user)
                 responses.append(r)
+        elif args.action == "put":
+            for f in args.filepath:
+                r = runner.put(f, args.site, args.user)
+                responses.append(r)
         elif args.action == "get":
             for cccId in args.cccId:
                 r = runner.get(cccId)
@@ -285,6 +327,10 @@ def cli_main():
             for cccId in args.cccId:
                 r = runner.delete(cccId)
                 responses.append(r)
+        elif args.action == "infer-cccId":
+            for f in args.filepath:
+                runner.infer_cccId(f, args.strategy)
+            return None
 
     # ------------------------
     # App Repo
@@ -335,5 +381,5 @@ def cli_main():
             if not (args.service == "dts" and args.action == "post"):
                 print(r.text)
         else:
-            sys.stderr.write("[STATUS CODE - {0}]    {1}\n".format(
+            sys.stderr.write("[STATUS CODE - {0}] {1}\n".format(
                 r.status_code, r.text))
