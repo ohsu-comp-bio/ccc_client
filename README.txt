@@ -18,10 +18,10 @@ service:
 ============================================================
 dts
 ============================================================
-usage: ccc_client dts [-h] {post,get,delete} ...
+usage: ccc_client dts [-h] {post,put,get,delete,infer-cccId} ...
 
 action:
-  {post,get,delete}
+  {post,put,get,delete,infer-cccId}
 
 --------
 | post |
@@ -29,6 +29,20 @@ action:
 usage: ccc_client dts post [-h] [--debug] [--host HOST] [--port PORT]
                            --filepath FILEPATH [FILEPATH ...] --user USER
                            --site {central,dfci,ohsu,oicr}
+
+optional arguments:
+  --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
+                        name of file(s) or pattern to glob on
+  --user USER, -u USER  site user
+  --site {central,dfci,ohsu,oicr}, -s {central,dfci,ohsu,oicr}
+                        site the data resides at
+
+-------
+| put |
+-------
+usage: ccc_client dts put [-h] [--debug] [--host HOST] [--port PORT]
+                          --filepath FILEPATH [FILEPATH ...] --user USER
+                          --site {central,dfci,ohsu,oicr}
 
 optional arguments:
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
@@ -57,6 +71,20 @@ optional arguments:
   --cccId CCCID [CCCID ...]
                         cccId entry to DELETE
 
+---------------
+| infer-cccId |
+---------------
+usage: ccc_client dts infer-cccId [-h] [--debug] [--host HOST] [--port PORT]
+                                  --filepath FILEPATH [FILEPATH ...]
+                                  [--strategy {MD5,SHA-1}]
+
+optional arguments:
+  --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
+                        name of file(s) or pattern to glob on
+  --strategy {MD5,SHA-1}, -s {MD5,SHA-1}
+                        hashing strategy to use to generate the cccId
+                        (default: SHA-1)
+
 ============================================================
 app-repo
 ============================================================
@@ -81,7 +109,7 @@ optional arguments:
   --imageTag IMAGETAG, -t IMAGETAG
                         docker image version tag
   --metadata METADATA, -m METADATA
-                        tool metadata
+                        tool metadata; can be a filepath or json string
 
 -------
 | put |
