@@ -381,5 +381,5 @@ def cli_main():
             if not (args.service == "dts" and args.action == "post"):
                 print(r.text)
         else:
-            sys.stderr.write("[STATUS CODE - {0}] {1}\n".format(
-                r.status_code, r.text))
+            print("[STATUS CODE - {0}] {1}".format(r.status_code, r.text),
+                  file=sys.stderr)

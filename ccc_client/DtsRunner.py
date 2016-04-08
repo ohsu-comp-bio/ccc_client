@@ -43,22 +43,52 @@ class DtsRunner(object):
         )
         return response
 
-    def put(self, filepath, site, user, cccId):
+    def put(self, cccId, filepath=None, site=None, user=None):
         # TODO
         raise Exception("Not Implemented")
 
+        site_map = {"central": "10.73.127.1",
+                    "ohsu": "10.73.127.6",
+                    "dfci": "10.73.127.18",
+                    "oicr": "10.73.127.14"}
+
+        resp = self.get(cccId)
+        data = resp.json()
+
+        if filepath is not None:
+            file_iter = os.path.abspath(filepath)
+            if not os.path.isfile(file_iter):
+                print("[ERROR]", file_iter, "was not found on the file system",
+                      file=sys.stderr)
+                raise
+
+            data['name'] = os.path.basename(file_iter)
+            data['size'] = os.path.getsize(file_iter)
+            data['location']['path'] = os.path.dirname(file_iter)
+            data['location']['timestampUpdated'] = os.stat(file_iter)[-2]
+
+        if site is not None:
+            data['location']['site'] = site_map[site]
+
+        if user is not None:
+            data['location']['user'] = {"name": user}
+
         endpoint = "http://{0}:{1}/{2}".format(self.host, self.port,
                                                self.endpoint)
-        data = {}
+
         response = requests.put(
             endpoint,
             data=json.dumps(data),
             headers={'Content-Type': 'application/json'}
         )
+
+        if response.status_code // 100 != 2:
+            print("Update of DTS entry:", data['cccId'], "failed",
+                  file=sys.stderr)
+
         return response
 
     def post(self, filepath, site, user):
-        # remap site name to IP
         site_map = {"central": "10.73.127.1",
                     "ohsu": "10.73.127.6",
                     "dfci": "10.73.127.18",
@@ -67,11 +97,11 @@ class DtsRunner(object):
         file_list = glob.glob(os.path.abspath(filepath))
         for file_iter in file_list:
             if not os.path.isfile(file_iter):
-                msg = "{0} was not found on the file system".format(file_iter)
-                raise RuntimeError(msg)
+                print(file_iter, "was not found on the file system",
+                      file=sys.stderr)
+                raise
 
             data = {}
-
             data['cccId'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, file_iter))
             data['name'] = os.path.basename(file_iter)
             data['size'] = os.path.getsize(file_iter)
@@ -97,18 +127,14 @@ class DtsRunner(object):
             else:
                 gresponse = self.get(data['cccId'])
                 if gresponse.status_code // 100 == 2:
-                    sys.stderr.write(
-                        "[ERROR] The cccId {0} was already found in the DTS\n".format(
-                            data['cccId']
-                        )
-                    )
-                    sys.stderr.write("{0}\n".format(gresponse.text))
+                    print("[ERROR] The cccId", data['cccId'],
+                          "was already found in the DTS",
+                          file=sys.stderr)
+                    print(gresponse.text, file=sys.stderr)
 
-                sys.stderr.write(
-                    "Registration with the DTS failed for: {0}\n".format(
-                        os.path.abspath(file_iter)
-                    )
-                )
+                print("Registration with the DTS failed for:",
+                      os.path.abspath(file_iter),
+                      file=sys.stderr)
         return response
 
     def infer_cccId(self, filepath, uuid_strategy="SHA-1"):
