@@ -2,6 +2,7 @@
     "patient": {
         "keyField": "patient_id",
         "docType": "patient",
+        "indexPrefix": "patient",
         "idx": 0,
         "fieldDescriptors": {
             "patient_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["icgc_donor_id", "donor_id", "patientId", "subjectId", "patient", "subject_id", "individualId", "individual_id", "individual"]},
@@ -30,6 +31,7 @@
     "specimen": {
         "keyField": "specimen_id",
         "docType": "specimen",
+        "indexPrefix": "specimen",
         "idx": 1,
         "fieldDescriptors": {
             "specimen_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["specimenId"]},
@@ -65,20 +67,23 @@
     "sample": {
         "keyField": "sample_id",
         "docType": "sample",
+        "indexPrefix": "sample",
         "idx": 2,
         "fieldDescriptors": {
-
+            "sample_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["sampleId"]}
         }
     },
     "resource": {
         "keyField": "ccc_did",
         "docType": "resource",
+        "indexPrefix": "aggregated-resource",
+        "useKeyFieldAsIndexKey": true,
         "idx": 3,
         "fieldDescriptors": {
-            "ccc_did": {},
+            "ccc_did": {"aliases": ["cccdid"]},
             "ccc_filepath": {},
             "filename": {},
-            "filepath": {},
+            "filepath": {"aliases": ["file_path"]},
             "filetype": {},
             "extention": {}
         }

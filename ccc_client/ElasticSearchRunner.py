@@ -1,28 +1,31 @@
 from __future__ import print_function
 
 import csv
-import sys
 import json
 import os
+import sys
+import uuid
+
 from elasticsearch import Elasticsearch
+
+import ccc_client
 
 
 class ElasticSearchRunner(object):
-    def __init__(self, args):
-        if args.host is not None:
-            self.host = args.host
+    def __init__(self, host=None, port=None, token=None):
+        if host is not None:
+            self.host = host
         else:
-            # TODO: figure out what the correct defualt should be
             self.host = "0.0.0.0"
 
-        if args.port is not None:
-            self.port = args.port
+        if port is not None:
+            self.port = port
         else:
             self.port = "9200"
 
-        self.token = args.token
-        self.readDomainDescriptors()
+        self.authToken = token
         self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
+        self.readDomainDescriptors()
 
     # Note: this creates the opportunity to allow externally provided field
     # definitions, or potentially a different schema at runtime
@@ -78,9 +81,7 @@ class ElasticSearchRunner(object):
             print(ret)
 
     # @classmethod
-    def publish_resource(self, filePath, ccc_did, siteId, projectName,
-                         workflowId, fileType, domainName, inheritFrom,
-                         properties):
+    def publish_resource(self, filePath, siteId, user, projectCode, workflowId, mimeType, domainName, inheritFrom, properties, isMock):
         rowMap = {}
 
         if (inheritFrom):
@@ -111,21 +112,24 @@ class ElasticSearchRunner(object):
                 if ("_source" in hit.keys()):
                     rowMap.update(hit["_source"])
             else:
-                raise RuntimeError("Unable to find existing resource with id: " + inheritFrom)
-
-        rowMap['ccc_did'] = ccc_did
-        rowMap['filePath'] = filePath
-        rowMap['siteId'] = siteId
-        rowMap['projectName'] = projectName
-        rowMap['workflowId'] = workflowId
-        rowMap['fileType'] = fileType
+                raise RuntimeError(
+                    "Unable to find existing resource with id: " + inheritFrom
+            )
 
         for prop in properties:
             tokens = prop.split(":")
             rowMap[tokens[0]] = tokens[1]
 
-        rowParser = self.RowParser(rowMap.keys(), siteId, projectName,
-                                   'resource', self.es, self.DomainDescriptors)
+        # NOTE: these should always supersede the properties argument
+        rowMap['filepath'] = filePath
+        rowMap['siteId'] = siteId
+        rowMap['projectCode'] = projectCode
+        rowMap['workflowId'] = workflowId
+        rowMap['mimetype'] = mimeType
+
+        rowParser = self.RowParser(rowMap.keys(), siteId, user, projectCode,
+                                   'resource', self.es, self.DomainDescriptors,
+                                   self.authToken, isMock)
         rowParser.pushMapToElastic(rowMap)
 
     # @classmethod
@@ -134,54 +138,54 @@ class ElasticSearchRunner(object):
             raise RuntimeError("Unknown domain: " + domainName)
 
         domain = self.DomainDescriptors[domainName]
-        print(domain)
+        sys.stdout.write(domain)
 
     # @classmethod
-    def publish_batch(self, tsv, siteId, projectName, domainName):
+    def publish_batch(self, tsv, siteId, user, projectCode, domainName, isMock):
         if not self.DomainDescriptors[domainName]:
             raise RuntimeError("Unknown domain: " + domainName)
 
-        self._processRows(tsv, siteId, projectName, domainName)
-
-    def _processRows(self, tsv, siteId, projectName, domainName):
         read_mode = 'rb' if sys.version_info[0] < 3 else 'r'
         i = 0
         with open(tsv, mode=read_mode) as infile:
             reader = csv.reader(infile, delimiter='\t')
             for row in reader:
                 if i == 0:
-                    rowParser = self.RowParser(row, siteId, projectName,
+                    rowParser = self.RowParser(row, siteId, user, projectCode,
                                                domainName, self.es,
-                                               self.DomainDescriptors)
+                                               self.DomainDescriptors,
+                                               self.authToken, isMock)
                 else:
                     rowParser.pushArrToElastic(row)
 
-                i =+ 1
+                i += 1
 
-    # @classmethod
-    def merge(self):
-        raise NotImplementedError()
-
-
-    # Responsible for inspecting the header and normalizing/augmenting field names
-    class RowParser(object):
+    # Responsible for inspecting the header and normalizing/augmenting field
+    # names
+    class RowParser(object):  
         # array of raw data
         fileHeader = None
         siteId = None
+        user = None
         aliasMap = {}
         domainName = None
         es = None
         domainDescriptors = None
+        isMock = False
 
-        def __init__(self, fileHeader=None, siteId=None, projectName=None,
-                     domainName=None, es=None, domainDescriptors=None):
+        def __init__(self, fileHeader=None, siteId=None, user=None,
+                     projectCode=None, domainName=None, es=None,
+                     domainDescriptors=None, authToken=None, isMock=False):
             self.fileHeader = fileHeader
             self.siteId = siteId
-            self.projectName = projectName
+            self.user = user
+            self.projectCode = projectCode
             self.domainName = domainName
             self.es = es
+            self.authToken = authToken
             self.domainDescriptors = domainDescriptors
             self.aliasMap = self.getAliases(fileHeader)
+            self.isMock = isMock
 
         def getAliases(self, fileHeader):
             aliasMap = {}
@@ -191,17 +195,15 @@ class ElasticSearchRunner(object):
                     field = fds[fieldName]
                     if "aliases" in field.keys():
                         for alias in field["aliases"]:
-                            if alias in fileHeader:
-                                aliasMap[alias] = fieldName
+                            aliasMap[alias.lower()] = fieldName
 
             return aliasMap
 
-        def generateRowMap(self, rowArr):
-            rowMap = {'siteId': self.siteId}
-
+        def generateRowMapFromArr(self, rowArr):
             if not rowArr:
                 raise RuntimeError("empty row")
 
+            ret = {}
             i = 0
             for token in self.fileHeader:
                 if i >= len(rowArr):
@@ -211,9 +213,22 @@ class ElasticSearchRunner(object):
                 val = rowArr[i]
                 i += 1
 
+                ret[token] = val
+
+            return ret
+
+        def processRowMap(self, rowMap):
+            rowMap['siteId'] = self.siteId
+
+            keys = list(rowMap.keys())
+            for token in keys:
+                # TODO: consider case sensitivity?
+
+                val = rowMap[token]
+
                 # append known aliases
-                if token in self.aliasMap:
-                    cannonicalName = self.aliasMap[token]
+                if token.lower() in self.aliasMap:
+                    cannonicalName = self.aliasMap[token.lower()]
                 else:
                     cannonicalName = token
 
@@ -231,14 +246,17 @@ class ElasticSearchRunner(object):
                         elif type == 'float':
                             val = float(val)
                     except Exception:
-                        raise RuntimeError("Unable to convert field: " +
-                                           token + " to type: " + type +
-                                           " for value [" + val + "]")
+                        raise RuntimeError(
+                            "Unable to convert field: " + token + " to type: " +
+                            type + " for value [" + val + "]")
 
                 # finally append value
                 rowMap[token] = val
                 if token != cannonicalName:
                     rowMap[cannonicalName] = val
+
+            # process filepath/ccc_did
+            self.validateOrRegisterWithDts(rowMap)
 
             # append fields from other domains (denormalize)
             idx = self.domainDescriptors[self.domainName]['idx']
@@ -261,7 +279,7 @@ class ElasticSearchRunner(object):
                     domain = self.domainDescriptors[dn]
 
                     hits = self.es.search(
-                        index=self.getIndexNameForDomain(rowMap, dn),
+                        index=self.getIndexNameForDomain(dn),
                         doc_type=domain['docType'],
                         ignore_unavailable=True,
                         body={
@@ -283,43 +301,89 @@ class ElasticSearchRunner(object):
                         rowMap.update(hit["_source"])
 
                 except:
-                    print(rowMap)
-                    print("index: " + self.getIndexName(rowMap))
-                    print("key: " + self.generateKey(rowMap))
+                    print('exception:', file=sys.stderr)
+                    print(rowMap, file=sys.stderr)
+                    print("index: " + self.getIndexName(rowMap), file=sys.stderr)
+                    print("key: " + self.generateKey(rowMap), file=sys.stderr)
                     raise
 
         def generateKey(self, rowMap):
             return self.generateKeyForDomain(rowMap, self.domainName)
 
         def generateKeyForDomain(self, rowMap, domainName):
-            keyField = self.domainDescriptors[domainName]['keyField']
+            domain = self.domainDescriptors[domainName]
+            keyField = domain['keyField']
 
             if keyField not in rowMap:
+                print('exception', file=sys.stderr)
+                print(json.dumps(rowMap), file=sys.stderr)
                 raise RuntimeError("Row lacks key field: " + keyField)
 
-            return (self.projectName + "-" + domainName + "-" +
-                    rowMap[keyField]).lower()
+            if 'useKeyFieldAsIndexKey' in domain.keys() and domain['useKeyFieldAsIndexKey']:
+                return (rowMap[keyField]).lower()
+            else:
+                return (self.projectCode + "-" + domainName + "-" + rowMap[keyField]).lower()
 
         def getIndexName(self, rowMap):
-            return self.getIndexNameForDomain(rowMap, self.domainName)
+            return self.getIndexNameForDomain(self.domainName)
 
-        def getIndexNameForDomain(self, rowMap, domainName):
-            return (self.projectName + "-" + domainName).lower()
+        def getIndexNameForDomain(self, domainName):
+            domain = self.domainDescriptors[domainName]
+            return (self.projectCode + "-" + domain['indexPrefix']).lower()
 
         def pushArrToElastic(self, row):
-            rowMap = self.generateRowMap(row)
+            rowMap = self.generateRowMapFromArr(row)
             self.pushMapToElastic(rowMap)
 
         def pushMapToElastic(self, rowMap):
+            rowMap = self.processRowMap(rowMap)
+
             try:
-                self.es.index(
-                    index=self.getIndexName(rowMap),
-                    body=rowMap,
-                    doc_type=self.domainDescriptors[self.domainName]['docType'],
-                    id=self.generateKey(rowMap)
-                )
+                if self.isMock:
+                    sys.stdout.write(json.dumps(rowMap))
+                else:
+                    self.es.index(
+                        index=self.getIndexName(rowMap),
+                        body=rowMap,
+                        doc_type=self.domainDescriptors[self.domainName]['docType'],
+                        id=self.generateKey(rowMap)
+                    )
             except:
-                print(rowMap)
-                print("index: " + self.getIndexName(rowMap))
-                print("key: " + self.generateKey(rowMap))
+                print('exception', file=sys.stderr)
+                print(rowMap, file=sys.stderr)
+                print("index: " + self.getIndexName(rowMap), file=sys.stderr)
+                print("key: " + self.generateKey(rowMap), file=sys.stderr)
                 raise
+
+        def validateOrRegisterWithDts(self, rowMap):
+            if 'ccc_did' in rowMap.keys() and 'filepath' not in rowMap.keys():
+                self.validateCccDid(rowMap['ccc_did'], None)
+            elif 'ccc_did' in rowMap.keys() and 'filepath' in rowMap.keys():
+                self.validateCccDid(rowMap['ccc_did'], rowMap['filepath'])
+            elif 'ccc_did' not in rowMap.keys() and 'filepath' in rowMap.keys():
+                self.registerWithDts(rowMap)
+
+        def registerWithDts(self, rowMap):
+            if self.isMock:
+                print("Assigning a mock CCC_DID", file=sys.stderr)
+                rowMap['ccc_did'] = str(uuid.uuid5(uuid.NAMESPACE_DNS,
+                                                   rowMap['filepath']))
+                return
+
+            dts = ccc_client.DtsRunner()
+            rowMap['ccc_did'] = dts.post(rowMap['filepath'],
+                                         self.siteId,
+                                         self.user)
+
+        def validateCccDid(self, ccc_did, filepath):
+            if self.isMock:
+                print("Skipping DTS check because this is a mock import",
+                      file=sys.stderr)
+                return
+
+            dts = ccc_client.DtsRunner()
+            response = dts.get(ccc_did)
+            if response.status_code // 100 != 2:
+                raise RuntimeError("CCC_DID not found: " + ccc_did)
+            else:
+                print(response, file=sys.stderr)
