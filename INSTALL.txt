@@ -1,0 +1,27 @@
+============================================================
+Installation
+============================================================
+
+----------
+| Global |
+----------
+
+python setup.py install
+
+---------
+| Local |
+---------
+
+python setup.py install --prefix=$HOME
+
+which will install into:
+
+$HOME/lib/pythonX.Y/site-packages
+
+You will need to manually create:
+
+$HOME/local/lib/pythonX.Y/site-packages
+
+and add it to your PYTHONPATH environment variable (otherwise you will get an 
+error -- btw run the command above once to find the correct value for X.Y).
+
