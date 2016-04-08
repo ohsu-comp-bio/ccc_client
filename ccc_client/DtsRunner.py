@@ -61,6 +61,8 @@ class DtsRunner(object):
                 print("[ERROR]", file_iter, "was not found on the file system",
                       file=sys.stderr)
                 raise
+            assert data['cccId'] == str(uuid.uuid5(uuid.NAMESPACE_DNS,
+                                                   file_iter))
 
             data['name'] = os.path.basename(file_iter)
             data['size'] = os.path.getsize(file_iter)

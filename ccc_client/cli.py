@@ -129,20 +129,22 @@ def setup_parser():
     # api/v1/dts/file
     dts_put = dts_sub.add_parser("put", parents=[common_parser])
     dts_put.add_argument(
-        "--filepath", "-f",
+        "--cccId",
         required=True,
         type=str,
-        nargs="+",
-        help="name of file(s) or pattern to glob on"
+        help="cccId entry to update"
+    )
+    dts_put.add_argument(
+        "--filepath", "-f",
+        type=str,
+        help="filepath"
     )
     dts_put.add_argument(
         "--user", "-u",
-        required=True,
         type=str,
         help="site user")
     dts_put.add_argument(
         "--site", "-s",
-        required=True,
         type=str,
         choices=["central", "dfci", "ohsu", "oicr"],
         help="site the data resides at"
