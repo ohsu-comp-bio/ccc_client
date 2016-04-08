@@ -97,7 +97,7 @@ class ElasticSearchRunner(object):
                         "bool": {
                             "must": {
                                 "match_phrase": {
-                                    "ccc_did": inheritFrom
+                                    "ccc_id": inheritFrom
                                 }
                             }
                         }
@@ -114,7 +114,7 @@ class ElasticSearchRunner(object):
             else:
                 raise RuntimeError(
                     "Unable to find existing resource with id: " + inheritFrom
-            )
+                )
 
         for prop in properties:
             tokens = prop.split(":")
@@ -138,7 +138,7 @@ class ElasticSearchRunner(object):
             raise RuntimeError("Unknown domain: " + domainName)
 
         domain = self.DomainDescriptors[domainName]
-        sys.stdout.write(domain)
+        print(domain)
 
     # @classmethod
     def publish_batch(self, tsv, siteId, user, projectCode, domainName, isMock):
@@ -255,7 +255,7 @@ class ElasticSearchRunner(object):
                 if token != cannonicalName:
                     rowMap[cannonicalName] = val
 
-            # process filepath/ccc_did
+            # process filepath/ccc_id
             self.validateOrRegisterWithDts(rowMap)
 
             # append fields from other domains (denormalize)
@@ -303,8 +303,8 @@ class ElasticSearchRunner(object):
                 except:
                     print('exception:', file=sys.stderr)
                     print(rowMap, file=sys.stderr)
-                    print("index: " + self.getIndexName(rowMap), file=sys.stderr)
-                    print("key: " + self.generateKey(rowMap), file=sys.stderr)
+                    print("index:", self.getIndexName(rowMap), file=sys.stderr)
+                    print("key:", self.generateKey(rowMap), file=sys.stderr)
                     raise
 
         def generateKey(self, rowMap):
@@ -315,7 +315,7 @@ class ElasticSearchRunner(object):
             keyField = domain['keyField']
 
             if keyField not in rowMap:
-                print('exception', file=sys.stderr)
+                print('exception:', file=sys.stderr)
                 print(json.dumps(rowMap), file=sys.stderr)
                 raise RuntimeError("Row lacks key field: " + keyField)
 
@@ -340,7 +340,7 @@ class ElasticSearchRunner(object):
 
             try:
                 if self.isMock:
-                    sys.stdout.write(json.dumps(rowMap))
+                    print(json.dumps(rowMap))
                 else:
                     self.es.index(
                         index=self.getIndexName(rowMap),
@@ -356,34 +356,37 @@ class ElasticSearchRunner(object):
                 raise
 
         def validateOrRegisterWithDts(self, rowMap):
-            if 'ccc_did' in rowMap.keys() and 'filepath' not in rowMap.keys():
-                self.validateCccDid(rowMap['ccc_did'], None)
-            elif 'ccc_did' in rowMap.keys() and 'filepath' in rowMap.keys():
-                self.validateCccDid(rowMap['ccc_did'], rowMap['filepath'])
-            elif 'ccc_did' not in rowMap.keys() and 'filepath' in rowMap.keys():
+            if 'ccc_id' in rowMap.keys() and 'filepath' not in rowMap.keys():
+                self.validateCccId(rowMap['ccc_id'], None)
+            elif 'ccc_id' in rowMap.keys() and 'filepath' in rowMap.keys():
+                self.validateCccId(rowMap['ccc_id'], rowMap['filepath'])
+            elif 'ccc_id' not in rowMap.keys() and 'filepath' in rowMap.keys():
                 self.registerWithDts(rowMap)
 
         def registerWithDts(self, rowMap):
             if self.isMock:
-                print("Assigning a mock CCC_DID", file=sys.stderr)
-                rowMap['ccc_did'] = str(uuid.uuid5(uuid.NAMESPACE_DNS,
-                                                   rowMap['filepath']))
+                print("Assigning a mock CCC_ID", file=sys.stderr)
+                rowMap['ccc_id'] = str(uuid.uuid5(uuid.NAMESPACE_DNS,
+                                                  rowMap['filepath']))
                 return
 
             dts = ccc_client.DtsRunner()
-            rowMap['ccc_did'] = dts.post(rowMap['filepath'],
-                                         self.siteId,
-                                         self.user)
+            rowMap['ccc_id'] = dts.post(rowMap['filepath'],
+                                        self.siteId,
+                                        self.user)
 
-        def validateCccDid(self, ccc_did, filepath):
+        def validateCccId(self, ccc_id, filepath):
             if self.isMock:
                 print("Skipping DTS check because this is a mock import",
                       file=sys.stderr)
                 return
 
             dts = ccc_client.DtsRunner()
-            response = dts.get(ccc_did)
+            response = dts.get(ccc_id)
             if response.status_code // 100 != 2:
-                raise RuntimeError("CCC_DID not found: " + ccc_did)
-            else:
-                print(response, file=sys.stderr)
+                raise RuntimeError("CCC_ID not found: " + ccc_id)
+            if filepath is not None:
+                data = response.json()
+                assert data['name'] == os.path.basename(filepath)
+                assert data['path'] == os.path.dirname(filepath)
+            return True
