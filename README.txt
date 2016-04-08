@@ -33,7 +33,7 @@ usage: ccc_client dts post [-h] [--debug] [--host HOST] [--port PORT]
 optional arguments:
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
                         name of file(s) or pattern to glob on
-  --user USER, -u USER  site user
+  --user USER, -u USER  user identity
   --site {central,dfci,ohsu,oicr}, -s {central,dfci,ohsu,oicr}
                         site the data resides at
 
@@ -200,9 +200,8 @@ optional arguments:
 ============================================================
 elasticsearch
 ============================================================
-usage: ccc_client_dev.py elasticsearch [-h]
-                                       {query,publish-batch,publish-resource}
-                                       ...
+usage: ccc_client elasticsearch [-h]
+                                {query,publish-batch,publish-resource} ...
 
 action:
   {query,publish-batch,publish-resource}
@@ -210,10 +209,10 @@ action:
 ---------
 | query |
 ---------
-usage: ccc_client_dev.py elasticsearch query [-h] [--debug] [--host HOST]
-                                             [--port PORT] [--token TOKEN]
-                                             [--domain {patient,specimen,sample,resource}]
-                                             [--query-terms QUERY_TERMS [QUERY_TERMS ...]]
+usage: ccc_client elasticsearch query [-h] [--debug] [--host HOST]
+                                      [--port PORT] [--token TOKEN]
+                                      [--domain {patient,specimen,sample,resource}]
+                                      [--query-terms QUERY_TERMS [QUERY_TERMS ...]]
 
 optional arguments:
   --token TOKEN, -T TOKEN
@@ -228,15 +227,15 @@ optional arguments:
 -----------------
 | publish-batch |
 -----------------
-usage: ccc_client_dev.py elasticsearch publish-batch [-h] [--debug]
-                                                     [--host HOST]
-                                                     [--port PORT]
-                                                     [--token TOKEN]
-                                                     [--tsv TSV]
-                                                     [--site {central,dfci,ohsu,oicr}]
-                                                     [--user USER]
-                                                     [--project PROJECT]
-                                                     [--domain {patient,specimen,sample,resource}]
+usage: ccc_client elasticsearch publish-batch [-h] [--debug]
+                                              [--host HOST]
+                                              [--port PORT]
+                                              [--token TOKEN]
+                                              [--tsv TSV]
+                                              [--site {central,dfci,ohsu,oicr}]
+                                              [--user USER]
+                                              [--project PROJECT]
+                                              [--domain {patient,specimen,sample,resource}]
 
 optional arguments:
   --token TOKEN, -T TOKEN
@@ -253,18 +252,18 @@ optional arguments:
 --------------------
 | publish-resource |
 --------------------
-usage: ccc_client_dev.py elasticsearch publish-resource [-h] [--debug]
-                                                        [--host HOST]
-                                                        [--port PORT]
-                                                        [--token TOKEN]
-                                                        [--filepath FILEPATH]
-                                                        [--filetype FILETYPE]
-                                                        [--inheritFrom INHERITFROM]
-                                                        [--property-override PROPERTY_OVERRIDE [PROPERTY_OVERRIDE ...]]
-                                                        [--site {central,dfci,ohsu,oicr}]
-                                                        [--user USER]
-                                                        [--project PROJECT]
-                                                        [--workflowId WORKFLOWID]
+usage: ccc_client elasticsearch publish-resource [-h] [--debug]
+                                                 [--host HOST]
+                                                 [--port PORT]
+                                                 [--token TOKEN]
+                                                 [--filepath FILEPATH]
+                                                 [--filetype FILETYPE]
+                                                 [--inheritFrom INHERITFROM]
+                                                 [--property-override PROPERTY_OVERRIDE [PROPERTY_OVERRIDE ...]]
+                                                 [--site {central,dfci,ohsu,oicr}]
+                                                 [--user USER]
+                                                 [--project PROJECT]
+                                                 [--workflowId WORKFLOWID]
 
 optional arguments:
   --token TOKEN, -T TOKEN
