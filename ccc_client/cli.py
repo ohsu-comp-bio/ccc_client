@@ -4,6 +4,8 @@ Command line utility for interacting with CCC services.
 from __future__ import print_function
 
 import argparse
+import glob
+import os
 import re
 import sys
 
@@ -315,12 +317,26 @@ def cli_main():
     if args.service == "dts":
         if args.action == "post":
             for f in args.filepath:
-                r = runner.post(f, args.site, args.user)
-                responses.append(r)
+                file_list = glob.glob(os.path.abspath(f))
+                for file_iter in file_list:
+                    if not os.path.isfile(file_iter):
+                        print(file_iter, "was not found on the file system",
+                              file=sys.stderr)
+                        raise
+                    else:
+                        r = runner.post(file_iter, args.site, args.user)
+                        responses.append(r)
         elif args.action == "put":
             for f in args.filepath:
-                r = runner.put(f, args.site, args.user)
-                responses.append(r)
+                file_list = glob.glob(os.path.abspath(f))
+                for file_iter in file_list:
+                    if not os.path.isfile(file_iter):
+                        print(file_iter, "was not found on the file system",
+                              file=sys.stderr)
+                        raise
+                    else:
+                        r = runner.put(file_iter, args.site, args.user)
+                        responses.append(r)
         elif args.action == "get":
             for cccId in args.cccId:
                 r = runner.get(cccId)
@@ -331,7 +347,14 @@ def cli_main():
                 responses.append(r)
         elif args.action == "infer-cccId":
             for f in args.filepath:
-                runner.infer_cccId(f, args.strategy)
+                file_list = glob.glob(os.path.abspath(f))
+                for file_iter in file_list:
+                    if not os.path.isfile(file_iter):
+                        print(file_iter, "was not found on the file system",
+                              file=sys.stderr)
+                        raise
+                    else:
+                        runner.infer_cccId(file_iter, args.strategy)
             return None
 
     # ------------------------
