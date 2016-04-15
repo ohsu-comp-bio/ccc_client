@@ -127,6 +127,13 @@ def setup_parser():
         choices=["central", "dfci", "ohsu", "oicr"],
         help="site the data resides at"
     )
+    dts_post.add_argument(
+        "--cccId",
+        required=False,
+        default=None,
+        type=str,
+        help="cccId to assign"
+    )
 
     # api/v1/dts/file
     dts_put = dts_sub.add_parser("put", parents=[common_parser])
@@ -324,7 +331,8 @@ def cli_main():
                               file=sys.stderr)
                         raise
                     else:
-                        r = runner.post(file_iter, args.site, args.user)
+                        r = runner.post(file_iter, args.site,
+                                        args.user, args.cccId)
                         responses.append(r)
         elif args.action == "put":
             for f in args.filepath:

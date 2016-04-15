@@ -86,7 +86,7 @@ class DtsRunner(object):
 
         return response
 
-    def post(self, filepath, site, user):
+    def post(self, filepath, site, user, cccId=None):
         site_map = {"central": "10.73.127.1",
                     "ohsu": "10.73.127.6",
                     "dfci": "10.73.127.18",
@@ -95,7 +95,15 @@ class DtsRunner(object):
         filepath = os.path.abspath(filepath)
 
         data = {}
-        data['cccId'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, filepath))
+        if cccId is not None:
+            if self.get(cccId).status_code // 100 != 2:
+                data['cccId'] = cccId
+            else:
+                print("[ERROR] The cccId", data['cccId'],
+                      "was already found in the DTS",
+                      file=sys.stderr)
+        else:
+            data['cccId'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, filepath))
         data['name'] = os.path.basename(filepath)
         data['size'] = os.path.getsize(filepath)
         location = {}
