@@ -4,6 +4,8 @@ Command line utility for interacting with CCC services.
 from __future__ import print_function
 
 import argparse
+import glob
+import os
 import re
 import sys
 
@@ -126,24 +128,33 @@ def setup_parser():
         choices=["central", "dfci", "ohsu", "oicr"],
         help="site the data resides at"
     )
+    dts_post.add_argument(
+        "--cccId",
+        required=False,
+        default=None,
+        type=str,
+        help="cccId; if not given one will be generated automatically"
+    )
 
     # api/v1/dts/file
     dts_put = dts_sub.add_parser("put", parents=[common_parser])
     dts_put.add_argument(
-        "--filepath", "-f",
+        "--cccId",
         required=True,
         type=str,
-        nargs="+",
-        help="name of file(s) or pattern to glob on"
+        help="cccId entry to update"
+    )
+    dts_put.add_argument(
+        "--filepath", "-f",
+        type=str,
+        help="filepath"
     )
     dts_put.add_argument(
         "--user", "-u",
-        required=True,
         type=str,
         help="site user")
     dts_put.add_argument(
         "--site", "-s",
-        required=True,
         type=str,
         choices=["central", "dfci", "ohsu", "oicr"],
         help="site the data resides at"
@@ -430,12 +441,27 @@ def cli_main():
     if args.service == "dts":
         if args.action == "post":
             for f in args.filepath:
-                r = runner.post(f, args.site, args.user)
-                responses.append(r)
+                file_list = glob.glob(os.path.abspath(f))
+                for file_iter in file_list:
+                    if not os.path.isfile(file_iter):
+                        print(file_iter, "was not found on the file system",
+                              file=sys.stderr)
+                        raise
+                    else:
+                        r = runner.post(file_iter, args.site,
+                                        args.user, args.cccId)
+                        responses.append(r)
         elif args.action == "put":
             for f in args.filepath:
-                r = runner.put(f, args.site, args.user)
-                responses.append(r)
+                file_list = glob.glob(os.path.abspath(f))
+                for file_iter in file_list:
+                    if not os.path.isfile(file_iter):
+                        print(file_iter, "was not found on the file system",
+                              file=sys.stderr)
+                        raise
+                    else:
+                        r = runner.put(file_iter, args.site, args.user)
+                        responses.append(r)
         elif args.action == "get":
             for cccId in args.cccId:
                 r = runner.get(cccId)
@@ -446,7 +472,14 @@ def cli_main():
                 responses.append(r)
         elif args.action == "infer-cccId":
             for f in args.filepath:
-                runner.infer_cccId(f, args.strategy)
+                file_list = glob.glob(os.path.abspath(f))
+                for file_iter in file_list:
+                    if not os.path.isfile(file_iter):
+                        print(file_iter, "was not found on the file system",
+                              file=sys.stderr)
+                        raise
+                    else:
+                        runner.infer_cccId(file_iter, args.strategy)
             return None
 
     # ------------------------
@@ -517,5 +550,5 @@ def cli_main():
             if not (args.service == "dts" and args.action == "post"):
                 print(r.text)
         else:
-            sys.stderr.write("[STATUS CODE - {0}] {1}\n".format(
-                r.status_code, r.text))
+            print("[STATUS CODE - {0}] {1}".format(r.status_code, r.text),
+                  file=sys.stderr)
