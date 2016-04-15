@@ -132,7 +132,7 @@ def setup_parser():
         required=False,
         default=None,
         type=str,
-        help="cccId to assign"
+        help="cccId; if not given one will be generated automatically"
     )
 
     # api/v1/dts/file
