@@ -34,7 +34,7 @@
         "indexPrefix": "specimen",
         "idx": 1,
         "fieldDescriptors": {
-            "specimen_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["specimenId"]},
+            "specimen_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["specimenId", "icgc_specimen_id"]},
             "project_code": {"missingValue": "Not Provided", "dataType": "string"},
             "donor_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["icgc_donor_id"]},
             "submitted_donor_id": {"missingValue": "Not Provided", "dataType": "string"},
@@ -70,7 +70,7 @@
         "indexPrefix": "sample",
         "idx": 2,
         "fieldDescriptors": {
-            "sample_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["sampleId"]}
+            "sample_id": {"missingValue": "Not Provided", "dataType": "string", "aliases": ["sampleId", "icgc_sample_id"]}
         }
     },
     "resource": {
