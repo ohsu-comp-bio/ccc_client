@@ -25,3 +25,6 @@ $HOME/local/lib/pythonX.Y/site-packages
 and add it to your PYTHONPATH environment variable (otherwise you will get an 
 error -- btw run the command above once to find the correct value for X.Y).
 
+If using pip, the following should work; however, you will need to enter credentials:
+
+pip install git+https://github.com/ohsu-computational-biology/ccc_client
