@@ -241,7 +241,7 @@ class ElasticSearchRunner(object):
                     val = fds[cannonicalName]['missingValue']
 
                 # datatype conversion:
-                if cannonicalName in fds.keys() and 'dataType' in fds[cannonicalName].keys():
+                if cannonicalName in fds.keys() and 'dataType' in fds[cannonicalName].keys() and val:
                     type =  fds[cannonicalName]['dataType']
                     try:
                         if type == 'int':
