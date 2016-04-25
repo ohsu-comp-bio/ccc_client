@@ -80,3 +80,7 @@ coverage.xml
 
 # PyBuilder
 target/
+
+#intellij
+.idea
+*.iml

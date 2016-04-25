@@ -5,14 +5,11 @@ import json
 import os
 import sys
 import uuid
-
+import ccc_client.DtsRunner
 from elasticsearch import Elasticsearch
 
-import ccc_client
-
-
 class ElasticSearchRunner(object):
-    def __init__(self, host=None, port=None, token=None):
+    def __init__(self, host=None, port=None, token=None, es=None):
         if host is not None:
             self.host = host
         else:
@@ -24,14 +21,18 @@ class ElasticSearchRunner(object):
             self.port = "9200"
 
         self.authToken = token
-        self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
+        if es == None:
+            self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
+        else:
+            self.es = es
+
         self.readDomainDescriptors()
 
     # Note: this creates the opportunity to allow externally provided field
     # definitions, or potentially a different schema at runtime
     def readDomainDescriptors(self):
         ddFile = os.path.dirname(os.path.realpath(__file__))
-        ddFile = ddFile + "/domains.json"
+        ddFile = ddFile + "/resources/domains.json"
         with open(ddFile) as json_data:
             self.DomainDescriptors = json.load(json_data)
 
@@ -131,6 +132,8 @@ class ElasticSearchRunner(object):
                                    'resource', self.es, self.DomainDescriptors,
                                    self.authToken, isMock)
         rowParser.pushMapToElastic(rowMap)
+
+        return rowMap
 
     # @classmethod
     def print_domain(self, domainName):

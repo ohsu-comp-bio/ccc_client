@@ -1,3 +1,9 @@
+This tool provides a command line interface to services within the CCC, along with python libraries suitable for
+direct use from other python scripts.  Documentation of the command line options is below.  For registration of
+resources with DMS/Search (i.e. elasticsearch), you might consider the ccc_import tool, which is based on the same
+python modules, but provides a slightly streamlined command line interface.
+
+
 usage: ccc_client [-h] [--debug] [--host HOST] [--port PORT] [--help-long]
                   [--version]
                   {dts,app-repo,exec-engine,elasticsearch} ...

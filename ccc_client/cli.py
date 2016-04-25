@@ -10,7 +10,7 @@ import re
 import sys
 
 import ccc_client
-from es_runner import ElasticSearchRunner
+
 
 
 def display_help(parser):
@@ -302,7 +302,7 @@ def setup_parser():
     # Elastic Search Options
     # ------------------------
     es = subparsers.add_parser("elasticsearch")
-    es.set_defaults(runner=ElasticSearchRunner)
+    es.set_defaults(runner=ccc_client.ElasticSearchRunner)
 
     es_sub = es.add_subparsers(title="action", dest="action")
 
@@ -446,7 +446,7 @@ def cli_main():
                     if not os.path.isfile(file_iter):
                         print(file_iter, "was not found on the file system",
                               file=sys.stderr)
-                        raise
+                        raise "Error"
                     else:
                         r = runner.post(file_iter, args.site,
                                         args.user, args.cccId)
@@ -458,7 +458,7 @@ def cli_main():
                     if not os.path.isfile(file_iter):
                         print(file_iter, "was not found on the file system",
                               file=sys.stderr)
-                        raise
+                        raise "Error"
                     else:
                         r = runner.put(file_iter, args.site, args.user)
                         responses.append(r)
@@ -477,7 +477,7 @@ def cli_main():
                     if not os.path.isfile(file_iter):
                         print(file_iter, "was not found on the file system",
                               file=sys.stderr)
-                        raise
+                        raise "Error"
                     else:
                         runner.infer_cccId(file_iter, args.strategy)
             return None
