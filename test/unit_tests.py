@@ -50,27 +50,50 @@ class TestCccClient(unittest.TestCase):
         self.assertEqual(rowMap["mimetype"], "application/text")
 
         #test mock inheritance
-        rowMap = ccc.publish_resource('mock/file.txt', self.getSiteId(), self.getUser(), self.getProject(), None, "application/text", 'resource', 'abc', {}, True)
+        rowMap = ccc.publish_resource('mock/file.txt', self.getSiteId(), self.getUser(), self.getProject(), None, "application/text", 'resource', 'abc', [], True)
         self.assertEqual(rowMap["inherit1"], "a")
         self.assertEqual(rowMap["inherit2"], "b")
 
+        #test inheritance from other domain
+        rowMap = ccc.publish_resource('mock/file.txt', self.getSiteId(), self.getUser(), self.getProject(), None, "application/text", 'resource', None, [
+            "patient_id:patient1"
+        ], True)
+        self.assertFalse("inherit1" in rowMap.keys())
+        self.assertFalse("inherit2" in rowMap.keys())
+        self.assertEqual(rowMap["patientField1"], "a")
+        self.assertEqual(rowMap["patientField2"], "b")
+
+
     class MockEs(object):
         def search(self, index=None, doc_type=None, ignore_unavailable=True, allow_no_indices=True,body=None):
-            return {
-                "hits": {
-                    "hits": [{
-                        "_source": {
-                            "inherit1": "a",
-                            "inherit2": "b"
-                        }
-                    }]
+            if "bool" in body["query"].keys():
+                #this is called when searching for specific CCC_DID
+                return {
+                    "hits": {
+                        "hits": [{
+                            "_source": {
+                                "inherit1": "a",
+                                "inherit2": "b"
+                            }
+                        }]
+                    }
                 }
-            }
+            elif "query_string" in body["query"].keys():
+                #called when searching by patient_id
+                return {
+                    "hits": {
+                        "hits": [{
+                             "_source": {
+                                 "patientField1": "a",
+                                 "patientField2": "b"
+                             }
+                         }]
+                    }
+                }
 
 
-        def index(self):
-            print('indexing!')
-
+    def index(self):
+        print('indexing!')
 
 
     def generateAuthToken(self):
