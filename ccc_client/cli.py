@@ -12,7 +12,6 @@ import sys
 import ccc_client
 
 
-
 def display_help(parser):
     """
     This function is called to provide an extended help message
@@ -526,7 +525,7 @@ def cli_main():
     # ------------------------
     elif args.service == "elasticsearch":
         if args.action == "query":
-            r = runner.query(args.domain, args.query, args.output)
+            r = runner.query(args.domain, args.query_terms, args.output)
             responses.append(r)
         elif args.action == "publish-batch":
             r = runner.publish_batch(args.tsv, args.site, args.user,

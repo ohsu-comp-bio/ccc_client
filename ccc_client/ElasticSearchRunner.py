@@ -8,6 +8,7 @@ import uuid
 import ccc_client.DtsRunner
 from elasticsearch import Elasticsearch
 
+
 class ElasticSearchRunner(object):
     def __init__(self, host=None, port=None, token=None, es=None):
         if host is not None:
