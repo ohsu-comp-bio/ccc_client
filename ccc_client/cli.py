@@ -324,6 +324,11 @@ def setup_parser():
         help="The search terms on which to query. Can be specified multiple \
         times. Should be supplied in the form 'FieldName:Term'"
     )
+    es_query.add_argument(
+        "--output-file", "-o",
+        type=str,
+        help="output query results to this file"
+    )
 
     es_publish_batch = es_sub.add_parser("publish-batch",
                                          parents=[common_parser])
@@ -525,19 +530,19 @@ def cli_main():
     # ------------------------
     elif args.service == "elasticsearch":
         if args.action == "query":
-            r = runner.query(args.domain, args.query_terms, args.output)
-            responses.append(r)
+            r = runner.query(args.domain, args.query_terms, args.output_file)
+            # responses.append(r)
         elif args.action == "publish-batch":
             r = runner.publish_batch(args.tsv, args.site, args.user,
                                      args.project, args.domain)
-            responses.append(r)
+            # responses.append(r)
         elif args.action == "publish-resource":
             r = runner.publish_resource(args.filepath, args.site, args.user,
                                         args.project, args.workflowId,
                                         args.filetype, 'resource',
                                         args.inheritFrom,
                                         args.property_override)
-            responses.append(r)
+            # responses.append(r)
 
     # ------------------------
     # Response Handling

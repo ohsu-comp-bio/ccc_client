@@ -40,7 +40,7 @@ class ElasticSearchRunner(object):
             json_data.close()
 
     # @classmethod
-    def query(self, domainName, queries, output):
+    def query(self, domainName, queries, output=None):
         terms = []
         for query in queries:
             vals = query.split(":")
@@ -76,14 +76,15 @@ class ElasticSearchRunner(object):
             for hit in hits:
                 ret.append(hit['_source'])
 
-        if (output):
+        if output is not None:
             with open(output, 'w') as outfile:
                 outfile.write(json.dumps(ret))
         else:
             print(ret)
 
     # @classmethod
-    def publish_resource(self, filePath, siteId, user, projectCode, workflowId, mimeType, domainName, inheritFrom, properties, isMock):
+    def publish_resource(self, filePath, siteId, user, projectCode, workflowId,
+                         mimeType, domainName, inheritFrom, properties, isMock):
         rowMap = {}
 
         if (inheritFrom):
