@@ -274,6 +274,10 @@ class ElasticSearchRunner(object):
             for dn in domainsToAppend:
                 self.appendFieldsForDomain(rowMap, dn)
 
+            # NOTE: these should always supersede the previous properties
+            rowMap['siteId'] = self.siteId
+            rowMap['projectCode'] = self.projectCode
+
             return rowMap
 
         def appendFieldsForDomain(self, rowMap, dn):
