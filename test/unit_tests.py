@@ -43,7 +43,7 @@ class TestCccClient(unittest.TestCase):
         token = self.generateAuthToken()
         ccc = ccc_client.ElasticSearchRunner(None, None, token, self.MockEs())
 
-        #test not lack of errors
+        #test lack of errors
         fp = "mock/file.txt"
         rowMap = ccc.publish_resource(fp, self.getSiteId(), self.getUser(), self.getProject(), None, "application/text", "resource", None, {}, True)
         self.assertEqual(rowMap["filepath"], fp)

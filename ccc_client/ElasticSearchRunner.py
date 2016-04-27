@@ -363,22 +363,25 @@ class ElasticSearchRunner(object):
                 raise
 
         def validateOrRegisterWithDts(self, rowMap):
-            if 'ccc_id' in rowMap.keys() and 'filepath' not in rowMap.keys():
+            if 'ccc_id' in rowMap.keys() and 'filepath' not in rowMap.keys() and 'url' not in rowMap.keys():
                 self.validateCccId(rowMap['ccc_id'], None)
             elif 'ccc_id' in rowMap.keys() and 'filepath' in rowMap.keys():
                 self.validateCccId(rowMap['ccc_id'], rowMap['filepath'])
             elif 'ccc_id' not in rowMap.keys() and 'filepath' in rowMap.keys():
                 self.registerWithDts(rowMap)
+            elif 'ccc_id' not in rowMap.keys() and 'url' in rowMap.keys():
+                self.registerWithDts(rowMap)
 
         def registerWithDts(self, rowMap):
+            path = rowMap['filepath'] if 'filepath' in rowMap.keys() else rowMap['url']
+
             if self.isMock:
                 print("Assigning a mock CCC_ID", file=sys.stderr)
-                rowMap['ccc_id'] = str(uuid.uuid5(uuid.NAMESPACE_DNS,
-                                                  rowMap['filepath']))
+                rowMap['ccc_id'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, path))
                 return
 
             dts = ccc_client.DtsRunner()
-            rowMap['ccc_id'] = dts.post(rowMap['filepath'],
+            rowMap['ccc_id'] = dts.post(path,
                                         self.siteId,
                                         self.user)
 
