@@ -534,14 +534,15 @@ def cli_main():
             # responses.append(r)
         elif args.action == "publish-batch":
             r = runner.publish_batch(args.tsv, args.site, args.user,
-                                     args.project, args.domain)
+                                     args.project, args.domain, False)
             # responses.append(r)
         elif args.action == "publish-resource":
             r = runner.publish_resource(args.filepath, args.site, args.user,
                                         args.project, args.workflowId,
                                         args.filetype, 'resource',
                                         args.inheritFrom,
-                                        args.property_override)
+                                        args.property_override, 
+                                        False)
             # responses.append(r)
 
     # ------------------------
