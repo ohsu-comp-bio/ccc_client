@@ -11,18 +11,20 @@ class AppRepoRunner(object):
     """
     Send requests to the AppRepo
     """
-    def __init__(self, host=None, port=None):
-        if host is not None:
-            self.host = host
-        else:
-            self.host = "docker-centos7"
+    def __init__(self,
+                 host="docker-centos7",
+                 port="8082",
+                 token=None):
 
-        if port is not None:
-            self.port = port
+        if not isinstance(port, str):
+            self.port = str(port)
         else:
-            self.port = "8082"
+            self.port = port
 
         self.endpoint = "api/v1/tool"
+        self.headers = {
+            "Authorization": " ".join(["Bearer", token])
+        }
 
     def post(self, imageBlob, imageName, imageTag):
         endpoint = "http://{0}:{1}/{2}".format(self.host,
@@ -37,8 +39,9 @@ class AppRepoRunner(object):
                      "imageName": (None, imageName),
                      "imageTag": (None, imageTag)}
 
-        response = requests.post(endpoint, files=form_data)
-
+        response = requests.post(endpoint,
+                                 files=form_data,
+                                 headers=self.headers)
         return response
 
     def put(self, imageId, metadata):
@@ -65,10 +68,11 @@ class AppRepoRunner(object):
 
         assert imageId == metadata['id']
 
+        headers = self.headers.update({'Content-Type': 'application/json'})
         response = requests.put(
             endpoint,
             data=json.dumps(loaded_metadata),
-            headers={'Content-Type': 'application/json'}
+            headers=headers
         )
         return response
 
@@ -77,8 +81,9 @@ class AppRepoRunner(object):
                                                    self.port,
                                                    self.endpoint,
                                                    imageId)
+        headers = self.headers.update({'Content-Type': 'application/json'})
         response = requests.delete(
             endpoint,
-            headers={'Content-Type': 'application/json'}
+            headers=headers
         )
         return response

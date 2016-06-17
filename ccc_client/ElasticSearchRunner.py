@@ -10,23 +10,18 @@ from elasticsearch import Elasticsearch
 
 
 class ElasticSearchRunner(object):
-    def __init__(self, host=None, port=None, token=None, es=None):
-        if host is not None:
-            self.host = host
-        else:
-            self.host = "0.0.0.0"
+    def __init__(self,
+                 host="0.0.0.0",
+                 port="9200",
+                 token=None):
 
-        if port is not None:
+        if not isinstance(port, str):
+            self.port = str(port)
+        else:
             self.port = port
-        else:
-            self.port = "9200"
 
+        self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
         self.authToken = token
-        if es == None:
-            self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
-        else:
-            self.es = es
-
         self.readDomainDescriptors()
 
     # Note: this creates the opportunity to allow externally provided field
@@ -36,7 +31,6 @@ class ElasticSearchRunner(object):
         ddFile = ddFile + "/resources/domains.json"
         with open(ddFile) as json_data:
             self.DomainDescriptors = json.load(json_data)
-
             json_data.close()
 
     # @classmethod
@@ -167,7 +161,7 @@ class ElasticSearchRunner(object):
 
     # Responsible for inspecting the header and normalizing/augmenting field
     # names
-    class RowParser(object):  
+    class RowParser(object):
         # array of raw data
         fileHeader = None
         siteId = None

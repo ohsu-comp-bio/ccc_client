@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import glob
 import json
 import os
 import requests
@@ -12,25 +11,32 @@ class DtsRunner(object):
     """
     Send requests to the DTS
     """
-    def __init__(self, host=None, port=None):
-        if host is not None:
-            self.host = host
-        else:
-            self.host = "central-gateway.ccc.org"
+    def __init__(self,
+                 host="central-gateway.ccc.org",
+                 port="9510",
+                 token=None):
 
-        if port is not None:
-            self.port = port
+        if not isinstance(port, str):
+            self.port = str(port)
         else:
-            self.port = "9510"
+            self.port = port
 
         self.endpoint = "api/v1/dts/file"
+        self.headers = {
+            'Content-Type': 'application/json',
+            "Authorization": " ".join(["Bearer", token])
+        }
+        self.site_map = {"central": "http://10.73.127.1",
+                         "ohsu": "http://10.73.127.6",
+                         "dfci": "http://10.73.127.18",
+                         "oicr": "http://10.73.127.14"}
 
     def get(self, cccId):
         endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
                                                    self.endpoint, cccId)
         response = requests.get(
             endpoint,
-            headers={'Content-Type': 'application/json'}
+            headers=self.headers
         )
         return response
 
@@ -39,18 +45,15 @@ class DtsRunner(object):
                                                    self.endpoint, cccId)
         response = requests.delete(
             endpoint,
-            headers={'Content-Type': 'application/json'}
+            headers=self.headers
         )
         return response
 
     def put(self, cccId, filepath=None, site=None, user=None):
-        # TODO
-        raise Exception("Not Implemented")
-
-        site_map = {"central": "10.73.127.1",
-                    "ohsu": "10.73.127.6",
-                    "dfci": "10.73.127.18",
-                    "oicr": "10.73.127.14"}
+        if all(v is None for v in [filepath, site, user]):
+            print("At least one of: filepath, site, user must not be None",
+                  file=sys.stderr)
+            raise
 
         resp = self.get(cccId)
         data = resp.json()
@@ -66,18 +69,17 @@ class DtsRunner(object):
             data['location']['timestampUpdated'] = os.stat(filepath)[-2]
 
         if site is not None:
-            data['location']['site'] = site_map[site]
+            data['location']['site'] = self.site_map[site]
 
         if user is not None:
             data['location']['user'] = {"name": user}
 
         endpoint = "http://{0}:{1}/{2}".format(self.host, self.port,
                                                self.endpoint)
-
         response = requests.put(
             endpoint,
             data=json.dumps(data),
-            headers={'Content-Type': 'application/json'}
+            headers=self.headers
         )
 
         if response.status_code // 100 != 2:
@@ -87,45 +89,42 @@ class DtsRunner(object):
         return response
 
     def post(self, filepath, site, user, cccId=None):
-        site_map = {"central": "10.73.127.1",
-                    "ohsu": "10.73.127.6",
-                    "dfci": "10.73.127.18",
-                    "oicr": "10.73.127.14"}
-
         filepath = os.path.abspath(filepath)
-
         data = {}
+
         if cccId is not None:
-            if self.get(cccId).status_code // 100 != 2:
-                data['cccId'] = cccId
-            else:
-                print("[ERROR] The cccId", data['cccId'],
+            cccId_check_response = self.get(cccId)
+            if cccId_check_response.status_code // 100 == 2:
+                print("[ERROR] The cccId", cccId,
                       "was already found in the DTS",
                       file=sys.stderr)
+                print(cccId_check_response.text, file=sys.stderr)
+                raise
+            else:
+                data['cccId'] = cccId
         else:
             data['cccId'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, filepath))
+
         data['name'] = os.path.basename(filepath)
         data['size'] = os.path.getsize(filepath)
         location = {}
-        location['site'] = site_map[site]
+        location['site'] = self.site_map[site]
         location['path'] = os.path.dirname(filepath)
         location['timestampUpdated'] = os.stat(filepath)[-2]
         location['user'] = {"name": user}
         data['location'] = [location]
 
-        endpoint = "http://{0}:{1}/{2}".format(self.host, self.port,
+        endpoint = "http://{0}:{1}/{2}".format(self.host,
+                                               self.port,
                                                self.endpoint)
 
         response = requests.post(
             endpoint,
             data=json.dumps(data),
-            headers={'Content-Type': 'application/json'}
+            headers=self.headers
         )
 
-        if response.status_code // 100 == 2:
-            print("{0}\t{1}".format(os.path.abspath(filepath),
-                                    data['cccId']))
-        else:
+        if response.status_code // 100 != 2:
             print("Registration with the DTS failed for:",
                   filepath,
                   file=sys.stderr)
@@ -149,4 +148,4 @@ class DtsRunner(object):
                     uuid_strategy
                 )
             )
-        print("{0}\t{1}".format(filepath, cccId))
+        return cccId

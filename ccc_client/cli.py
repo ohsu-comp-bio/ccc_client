@@ -87,9 +87,13 @@ def setup_parser():
     common_parser.add_argument("--port",
                                type=str,
                                help="port")
+    common_parser.add_argument("--token", "-T",
+                               type=str,
+                               help="authorization token")
 
     # Main parser
-    parser = argparse.ArgumentParser(description="CCC client", parents=[common_parser])
+    parser = argparse.ArgumentParser(description="CCC client",
+                                     parents=[common_parser])
     parser.add_argument("--help-long",
                         default=False,
                         action="store_true",
@@ -307,11 +311,6 @@ def setup_parser():
 
     es_query = es_sub.add_parser("query", parents=[common_parser])
     es_query.add_argument(
-        "--token", "-T",
-        type=str,
-        help="auth token"
-    )
-    es_query.add_argument(
         "--domain", "-d",
         type=str,
         choices=["patient", "specimen", "sample", "resource"],
@@ -332,11 +331,6 @@ def setup_parser():
 
     es_publish_batch = es_sub.add_parser("publish-batch",
                                          parents=[common_parser])
-    es_publish_batch.add_argument(
-        "--token", "-T",
-        type=str,
-        help="auth token"
-    )
     es_publish_batch.add_argument(
         "--tsv", "-t",
         type=str,
@@ -367,11 +361,6 @@ def setup_parser():
 
     es_publish_resource = es_sub.add_parser("publish-resource",
                                             parents=[common_parser])
-    es_publish_resource.add_argument(
-        "--token", "-T",
-        type=str,
-        help="auth token"
-    )
     es_publish_resource.add_argument(
         "--filepath", "-f",
         type=str,
@@ -454,6 +443,8 @@ def cli_main():
                     else:
                         r = runner.post(file_iter, args.site,
                                         args.user, args.cccId)
+                        if r.status_code // 100 == 2:
+                            print("{0}\t{1}".format(file_iter, r.text))
                         responses.append(r)
         elif args.action == "put":
             for f in args.filepath:
@@ -483,7 +474,8 @@ def cli_main():
                               file=sys.stderr)
                         raise "Error"
                     else:
-                        runner.infer_cccId(file_iter, args.strategy)
+                        cccId = runner.infer_cccId(file_iter, args.strategy)
+                        print("{0}\t{1}".format(file_iter, cccId))
             return None
 
     # ------------------------
