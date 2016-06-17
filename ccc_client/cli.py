@@ -523,6 +523,7 @@ def cli_main():
     elif args.service == "elasticsearch":
         if args.action == "query":
             r = runner.query(args.domain, args.query_terms, args.output_file)
+            print(r)
             # responses.append(r)
         elif args.action == "publish-batch":
             r = runner.publish_batch(args.tsv, args.site, args.user,
@@ -533,7 +534,7 @@ def cli_main():
                                         args.project, args.workflowId,
                                         args.filetype, 'resource',
                                         args.inheritFrom,
-                                        args.property_override, 
+                                        args.property_override,
                                         False)
             # responses.append(r)
 

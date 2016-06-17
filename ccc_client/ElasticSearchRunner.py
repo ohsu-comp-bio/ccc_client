@@ -34,7 +34,7 @@ class ElasticSearchRunner(object):
             json_data.close()
 
     # @classmethod
-    def query(self, domainName, queries, output=None):
+    def query(self, domainName, queries):
         terms = []
         for query in queries:
             vals = query.split(":")
@@ -65,16 +65,12 @@ class ElasticSearchRunner(object):
         )
 
         hits = hits['hits']['hits']
-        ret = []
+        query_results = []
         if hits:
             for hit in hits:
-                ret.append(hit['_source'])
+                query_results.append(hit['_source'])
 
-        if output is not None:
-            with open(output, 'w') as outfile:
-                outfile.write(json.dumps(ret))
-        else:
-            print(ret)
+        return query_results
 
     # @classmethod
     def publish_resource(self, filePath, siteId, user, projectCode, workflowId,
@@ -132,12 +128,12 @@ class ElasticSearchRunner(object):
         return rowMap
 
     # @classmethod
-    def print_domain(self, domainName):
+    def get_domain(self, domainName):
         if not self.DomainDescriptors[domainName]:
             raise RuntimeError("Unknown domain: " + domainName)
 
         domain = self.DomainDescriptors[domainName]
-        print(domain)
+        return domain
 
     # @classmethod
     def publish_batch(self, tsv, siteId, user, projectCode, domainName, isMock):
