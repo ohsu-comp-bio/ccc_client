@@ -512,7 +512,7 @@ def cli_main():
             r = runner.put(args.imageId, args.metadata)
             responses.append(r)
         elif args.action == "get":
-            r = runner.put(args.imageId, args.imageName)
+            r = runner.get(args.imageId, args.imageName)
             responses.append(r)
         elif args.action == "delete":
             r = runner.delete(args.imageId)
