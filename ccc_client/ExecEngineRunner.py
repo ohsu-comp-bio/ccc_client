@@ -35,8 +35,10 @@ class ExecEngineRunner(object):
         endpoint = "http://{0}:{1}/{2}".format(self.host,
                                                self.port,
                                                self.endpoint)
-        form_data = {'wdlSource': open(self.wdlSource, 'rb'),
-                     'workflowInputs': open(self.workflowInputs, 'rb')}
+        
+        form_data = [('wdlSource', (wdlSource, open(wdlSource, 'rb')))]
+        form_data += [('workflowInputs', (f, open(f, 'rb'))) for f in workflowInputs]
+
         response = requests.post(endpoint,
                                  files=form_data,
                                  headers=self.headers)

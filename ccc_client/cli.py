@@ -281,19 +281,20 @@ def setup_parser():
         "--wdlSource", "-s",
         type=str,
         required=True,
-        help="name of file or path"
+        help="WDL source file defining a workflow"
     )
     ee_post.add_argument(
         "--workflowInputs", "-i",
         type=str,
+        nargs="+",
         required=True,
-        help="name of docker image"
+        help="json file(s) defining workflow input mappings"
     )
     ee_post.add_argument(
         "--workflowOptions", "-o",
         type=str,
         default="-",
-        help="docker image version tag"
+        help="workflow options"
     )
 
     # api/workflows/v1/<uuid>/status
