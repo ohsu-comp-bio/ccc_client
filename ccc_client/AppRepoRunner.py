@@ -74,8 +74,6 @@ class AppRepoRunner(object):
             if loaded_metadata['id'] == '':
                 loaded_metadata['id'] = imageId
 
-        assert imageId == metadata['id']
-
         headers = self.headers.update({'Content-Type': 'application/json'})
         response = requests.put(
             endpoint,
