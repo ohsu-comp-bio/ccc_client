@@ -210,13 +210,19 @@ def setup_parser():
     # api/v1/tool/
     ar_post = ar_sub.add_parser("post", parents=[common_parser])
     ar_post.add_argument(
-        "--imageBlob", "-b", type=str, help="name of file or path"
+        "--imageBlob", "-b",
+        type=str,
+        help="name of file or path"
     )
     ar_post.add_argument(
-        "--imageName", "-n", type=str, help="name of docker image"
+        "--imageName", "-n",
+        type=str,
+        help="name of docker image"
     )
     ar_post.add_argument(
-        "--imageTag", "-t", type=str, default="latest",
+        "--imageTag", "-t",
+        type=str,
+        default="latest",
         help="docker image version tag"
     )
     ar_post.add_argument(
@@ -227,11 +233,14 @@ def setup_parser():
     # api/v1/tool/<uuid>
     ar_put = ar_sub.add_parser("put", parents=[common_parser])
     ar_put.add_argument(
-        "--metadata", "-m", type=str,
+        "--metadata", "-m",
+        type=str,
+        required=True,
         help="tool metadata"
     )
     ar_put.add_argument(
-        "--imageId", "-i", type=str,
+        "--imageId", "-i",
+        type=str,
         help="docker image id"
     )
 
@@ -239,14 +248,22 @@ def setup_parser():
     # api/v1/tool/<tool_name>/data
     ar_get = ar_sub.add_parser("get", parents=[common_parser])
     ar_get.add_argument(
-        "--imageId", "-i", type=str,
+        "--imageId", "-i",
+        type=str,
         help="docker image id"
+    )
+    ar_get.add_argument(
+        "--imageName", "-n",
+        type=str,
+        help="docker image name"
     )
 
     # api/v1/tool/<uuid>
     ar_delete = ar_sub.add_parser("delete", parents=[common_parser])
     ar_delete.add_argument(
-        "--imageId", "-i", type=str,
+        "--imageId", "-i",
+        type=str,
+        required=True,
         help="docker image id"
     )
 
@@ -263,11 +280,13 @@ def setup_parser():
     ee_post.add_argument(
         "--wdlSource", "-s",
         type=str,
+        required=True,
         help="name of file or path"
     )
     ee_post.add_argument(
         "--workflowInputs", "-i",
         type=str,
+        required=True,
         help="name of docker image"
     )
     ee_post.add_argument(
@@ -282,6 +301,7 @@ def setup_parser():
     ee_status.add_argument(
         "--workflowId", "-i",
         type=str,
+        required=True,
         help="workflow uuid"
     )
 
@@ -290,6 +310,7 @@ def setup_parser():
     ee_outputs.add_argument(
         "--workflowId", "-i",
         type=str,
+        required=True,
         help="workflow uuid"
     )
 
@@ -298,6 +319,7 @@ def setup_parser():
     ee_meta.add_argument(
         "--workflowId", "-i",
         type=str,
+        required=True,
         help="workflow uuid"
     )
 
@@ -322,11 +344,6 @@ def setup_parser():
         nargs="+",
         help="The search terms on which to query. Can be specified multiple \
         times. Should be supplied in the form 'FieldName:Term'"
-    )
-    es_query.add_argument(
-        "--output-file", "-o",
-        type=str,
-        help="output query results to this file"
     )
 
     es_publish_batch = es_sub.add_parser("publish-batch",
@@ -493,6 +510,9 @@ def cli_main():
                 responses.append(r)
         elif args.action == "put":
             r = runner.put(args.imageId, args.metadata)
+            responses.append(r)
+        elif args.action == "get":
+            r = runner.put(args.imageId, args.imageName)
             responses.append(r)
         elif args.action == "delete":
             r = runner.delete(args.imageId)

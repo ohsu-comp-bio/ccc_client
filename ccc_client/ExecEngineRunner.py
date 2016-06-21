@@ -34,23 +34,23 @@ class ExecEngineRunner(object):
                                  headers=self.headers)
         return response
 
-    def get_status(self):
+    def get_status(self, workflowId):
         endpoint = "http://{0}:{1}/{2}/{3}/status".format(
-            self.host, self.secondary_port, self.endpoint, self.workflowId
+            self.host, self.secondary_port, self.endpoint, workflowId
         )
         response = requests.get(endpoint, headers=self.headers)
         return response
 
-    def get_metadata(self):
+    def get_metadata(self, workflowId):
         endpoint = "http://{0}:{1}/{2}/{3}/metadata".format(
-            self.host, self.secondary_port, self.endpoint, self.workflowId
+            self.host, self.secondary_port, self.endpoint, workflowId
         )
         response = requests.get(endpoint, headers=self.headers)
         return response
 
-    def get_outputs(self):
+    def get_outputs(self, workflowId):
         endpoint = "http://{0}:{1}/{2}/{3}/outputs".format(
-            self.host, self.secondary_port, self.endpoint, self.workflowId
+            self.host, self.secondary_port, self.endpoint, workflowId
         )
         response = requests.get(endpoint, headers=self.headers)
         return response

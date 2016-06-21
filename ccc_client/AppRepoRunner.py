@@ -57,14 +57,14 @@ class AppRepoRunner(object):
             loaded_metadata = json.loads(metadata)
 
         if imageId is None:
-            if metadata['id'] == '':
+            if loaded_metadata['id'] == '':
                 imageId = str(uuid.uuid4())
-                metadata['id'] = imageId
+                loaded_metadata['id'] = imageId
             else:
-                imageId = metadata['id']
+                imageId = loaded_metadata['id']
         else:
-            if metadata['id'] == '':
-                metadata['id'] = imageId
+            if loaded_metadata['id'] == '':
+                loaded_metadata['id'] = imageId
 
         assert imageId == metadata['id']
 
@@ -75,6 +75,26 @@ class AppRepoRunner(object):
             headers=headers
         )
         return response
+
+    def get(self, imageId, imageName):
+        if imageId is not None:
+            endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
+                                                       self.port,
+                                                       self.endpoint,
+                                                       imageId)
+        elif imageName is not None:
+            endpoint = "http://{0}:{1}/{2}/{3}/data".format(self.host,
+                                                            self.port,
+                                                            self.endpoint,
+                                                            imageName)
+
+        headers = self.headers.update({'Content-Type': 'application/json'})
+        response = requests.get(
+            endpoint,
+            headers=headers
+        )
+        return response
+
 
     def delete(self, imageId):
         endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
