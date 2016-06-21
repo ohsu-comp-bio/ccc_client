@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import glob
+import os
 import requests
 
 
@@ -35,9 +37,16 @@ class ExecEngineRunner(object):
         endpoint = "http://{0}:{1}/{2}".format(self.host,
                                                self.port,
                                                self.endpoint)
-        
+
         form_data = [('wdlSource', (wdlSource, open(wdlSource, 'rb')))]
-        form_data += [('workflowInputs', (f, open(f, 'rb'))) for f in workflowInputs]
+        # allow for pattern matching on workflow inputs file(s)
+        for f in workflowInputs:
+            file_list = glob.glob(os.path.abspath(f))
+            if file_list == []:
+                print("glob on", f, "did not return any files",
+                      file=sys.stderr)
+            else:
+                form_data += [('workflowInputs', (f, open(f, 'rb'))) for f in file_list]
 
         response = requests.post(endpoint,
                                  files=form_data,

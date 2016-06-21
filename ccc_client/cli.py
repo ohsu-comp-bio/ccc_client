@@ -453,12 +453,11 @@ def cli_main():
         if args.action == "post":
             for f in args.filepath:
                 file_list = glob.glob(os.path.abspath(f))
+                if file_list == []:
+                    print("glob on", f, "did not return any files",
+                          file=sys.stderr)
+                    raise "Error"
                 for file_iter in file_list:
-                    if not os.path.isfile(file_iter):
-                        print(file_iter, "was not found on the file system",
-                              file=sys.stderr)
-                        raise "Error"
-                    else:
                         r = runner.post(file_iter, args.site,
                                         args.user, args.cccId)
                         if r.status_code // 100 == 2:
@@ -467,12 +466,11 @@ def cli_main():
         elif args.action == "put":
             for f in args.filepath:
                 file_list = glob.glob(os.path.abspath(f))
+                if file_list == []:
+                    print("glob on", f, "did not return any files",
+                          file=sys.stderr)
+                    raise "Error"
                 for file_iter in file_list:
-                    if not os.path.isfile(file_iter):
-                        print(file_iter, "was not found on the file system",
-                              file=sys.stderr)
-                        raise "Error"
-                    else:
                         r = runner.put(file_iter, args.site, args.user)
                         responses.append(r)
         elif args.action == "get":
@@ -486,14 +484,15 @@ def cli_main():
         elif args.action == "infer-cccId":
             for f in args.filepath:
                 file_list = glob.glob(os.path.abspath(f))
+            for f in args.filepath:
+                file_list = glob.glob(os.path.abspath(f))
+                if file_list == []:
+                    print("glob on", f, "did not return any files",
+                          file=sys.stderr)
+                    raise "Error"
                 for file_iter in file_list:
-                    if not os.path.isfile(file_iter):
-                        print(file_iter, "was not found on the file system",
-                              file=sys.stderr)
-                        raise "Error"
-                    else:
-                        cccId = runner.infer_cccId(file_iter, args.strategy)
-                        print("{0}\t{1}".format(file_iter, cccId))
+                    cccId = runner.infer_cccId(file_iter, args.strategy)
+                    print("{0}\t{1}".format(file_iter, cccId))
             return None
 
     # ------------------------
