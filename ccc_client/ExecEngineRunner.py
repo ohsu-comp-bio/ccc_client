@@ -7,21 +7,29 @@ class ExecEngineRunner(object):
     """
     Send requests to the Execution Engine
     """
-    def __init__(self,
-                 host="0.0.0.0",
-                 port="9504",
-                 token=None):
+    def __init__(self, host, port, token):
 
-        if not isinstance(port, str):
+        if host is not None:
+            self.host = re.sub("^http[s]?:",  "", host)
+        else:
+            self.host = "compute-0-0"
+
+        if port is not None:
             self.port = str(port)
         else:
-            self.port = port
+            self.port = "9504"
+
+        if token is not None:
+            self.token = token
+        else:
+            self.token = ""
 
         # all other endpoints are mapped to this port
         self.secondary_port = "8000"
 
         self.endpoint = "api/workflows/v1"
-        self.headers = {"Authorization": " ".join(["Bearer", token])}
+
+        self.headers = {"Authorization": " ".join(["Bearer", self.token])}
 
     def submit_workflow(self, wdlSource, workflowInputs, workflowOptions):
         endpoint = "http://{0}:{1}/{2}".format(self.host,

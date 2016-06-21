@@ -442,7 +442,7 @@ def cli_main():
         parser.print_help()
         raise RuntimeError()
 
-    runner = args.runner(args.host, args.port)
+    runner = args.runner(host=args.host, port=args.port, token=args.token)
     responses = []
 
     # ------------------------

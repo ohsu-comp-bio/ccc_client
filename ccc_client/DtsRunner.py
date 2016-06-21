@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import json
 import os
+import re
 import requests
 import sys
 import uuid
@@ -11,21 +12,30 @@ class DtsRunner(object):
     """
     Send requests to the DTS
     """
-    def __init__(self,
-                 host="central-gateway.ccc.org",
-                 port="9510",
-                 token=None):
+    def __init__(self, host, port, token):
 
-        if not isinstance(port, str):
+        if host is not None:
+            self.host = re.sub("^http[s]?:",  "", host)
+        else:
+            self.host = "central-gateway.ccc.org"
+
+        if port is not None:
             self.port = str(port)
         else:
-            self.port = port
+            self.port = "9510"
 
-        self.endpoint = "api/v1/dts/file"
+        if token is not None:
+            self.token = token
+        else:
+            self.token = ""
+
         self.headers = {
             'Content-Type': 'application/json',
-            "Authorization": " ".join(["Bearer", token])
+            "Authorization": " ".join(["Bearer", self.token])
         }
+
+        self.endpoint = "api/v1/dts/file"
+
         self.site_map = {"central": "http://10.73.127.1",
                          "ohsu": "http://10.73.127.6",
                          "dfci": "http://10.73.127.18",

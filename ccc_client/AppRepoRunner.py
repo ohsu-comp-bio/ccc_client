@@ -11,19 +11,27 @@ class AppRepoRunner(object):
     """
     Send requests to the AppRepo
     """
-    def __init__(self,
-                 host="docker-centos7",
-                 port="8082",
-                 token=None):
+    def __init__(self, host, port, token):
 
-        if not isinstance(port, str):
+        if host is not None:
+            self.host = re.sub("^http[s]?:",  "", host)
+        else:
+            self.host = "docker-centos7"
+
+        if port is not None:
             self.port = str(port)
         else:
-            self.port = port
+            self.port = "8082"
+
+        if token is not None:
+            self.token = token
+        else:
+            self.token = ""
 
         self.endpoint = "api/v1/tool"
+
         self.headers = {
-            "Authorization": " ".join(["Bearer", token])
+            "Authorization": " ".join(["Bearer", self.token])
         }
 
     def post(self, imageBlob, imageName, imageTag):

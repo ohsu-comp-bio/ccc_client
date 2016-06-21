@@ -10,18 +10,24 @@ from elasticsearch import Elasticsearch
 
 
 class ElasticSearchRunner(object):
-    def __init__(self,
-                 host="0.0.0.0",
-                 port="9200",
-                 token=None):
+    def __init__(self, host, port, token):
 
-        if not isinstance(port, str):
+        if host is not None:
+            self.host = re.sub("^http[s]?:",  "", host)
+        else:
+            self.host = "0.0.0.0"
+
+        if port is not None:
             self.port = str(port)
         else:
-            self.port = port
+            self.port = "9200"
+
+        if token is not None:
+            self.token = token
+        else:
+            self.token = ""
 
         self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
-        self.authToken = token
         self.readDomainDescriptors()
 
     # Note: this creates the opportunity to allow externally provided field
@@ -122,7 +128,7 @@ class ElasticSearchRunner(object):
 
         rowParser = self.RowParser(rowMap.keys(), siteId, user, projectCode,
                                    'resource', self.es, self.DomainDescriptors,
-                                   self.authToken, isMock)
+                                   self.token, isMock)
         rowParser.pushMapToElastic(rowMap)
 
         return rowMap
@@ -149,7 +155,7 @@ class ElasticSearchRunner(object):
                     rowParser = self.RowParser(row, siteId, user, projectCode,
                                                domainName, self.es,
                                                self.DomainDescriptors,
-                                               self.authToken, isMock)
+                                               self.token, isMock)
                 else:
                     rowParser.pushArrToElastic(row)
 
@@ -170,14 +176,14 @@ class ElasticSearchRunner(object):
 
         def __init__(self, fileHeader=None, siteId=None, user=None,
                      projectCode=None, domainName=None, es=None,
-                     domainDescriptors=None, authToken=None, isMock=False):
+                     domainDescriptors=None, token=None, isMock=False):
             self.fileHeader = fileHeader
             self.siteId = siteId
             self.user = user
             self.projectCode = projectCode
             self.domainName = domainName
             self.es = es
-            self.authToken = authToken
+            self.token = token
             self.domainDescriptors = domainDescriptors
             self.aliasMap = self.getAliases(fileHeader)
             self.isMock = isMock
