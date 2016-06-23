@@ -12,7 +12,7 @@ class DtsRunner(object):
     """
     Send requests to the DTS
     """
-    def __init__(self, host, port, token):
+    def __init__(self, host=None, port=None, token=None):
 
         if host is not None:
             self.host = re.sub("^http[s]?:",  "", host)
