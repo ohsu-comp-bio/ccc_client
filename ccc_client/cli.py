@@ -5,9 +5,18 @@ from __future__ import print_function
 
 import argparse
 import glob
+import logging
 import os
 import re
+import requests
 import sys
+
+try:
+    import http.client as http_client
+except ImportError:
+    # Python 2
+    import httplib as http_client
+http_client.HTTPConnection.debuglevel = 1
 
 import ccc_client
 
@@ -446,6 +455,13 @@ def cli_main():
     runner = args.runner(host=args.host, port=args.port, token=args.token)
     responses = []
 
+    if args.debug:
+        logging.basicConfig()
+        logging.getLogger().setLevel(logging.DEBUG)
+        requests_log = logging.getLogger("requests.packages.urllib3")
+        requests_log.setLevel(logging.DEBUG)
+        requests_log.propagate = True
+
     # ------------------------
     # DTS
     # ------------------------
@@ -562,8 +578,8 @@ def cli_main():
     # Response Handling
     # ------------------------
     for r in responses:
-        if args.debug:
-            print(r.headers)
+        # if args.debug:
+        #     print(r.headers)
         if r.status_code // 100 == 2:
             if not (args.service == "dts" and args.action == "post"):
                 print(r.text)
