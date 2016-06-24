@@ -7,6 +7,8 @@ import requests
 import sys
 import uuid
 
+from ccc_client.utils import parseAuthToken
+
 
 class DtsRunner(object):
     """
@@ -25,7 +27,7 @@ class DtsRunner(object):
             self.port = "9510"
 
         if authToken is not None:
-            self.authToken = authToken
+            self.authToken = parseAuthToken(authToken)
         else:
             self.authToken = ""
 

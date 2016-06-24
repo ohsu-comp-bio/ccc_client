@@ -5,6 +5,7 @@ import os
 import re
 import requests
 import uuid
+from ccc_client.utils import parseAuthToken
 
 
 class AppRepoRunner(object):
@@ -24,7 +25,7 @@ class AppRepoRunner(object):
             self.port = "8082"
 
         if authToken is not None:
-            self.authToken = authToken
+            self.authToken = parseAuthToken(authToken)
         else:
             self.authToken = ""
 

@@ -5,6 +5,8 @@ import os
 import requests
 import sys
 
+from ccc_client.utils import parseAuthToken
+
 
 class ExecEngineRunner(object):
     """
@@ -23,7 +25,7 @@ class ExecEngineRunner(object):
             self.port = "9504"
 
         if authToken is not None:
-            self.authToken = authToken
+            self.authToken = parseAuthToken(authToken)
         else:
             self.authToken = ""
 

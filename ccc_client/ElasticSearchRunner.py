@@ -6,6 +6,7 @@ import os
 import sys
 import uuid
 import ccc_client.DtsRunner
+from ccc_client.utils import parseAuthToken
 from elasticsearch import Elasticsearch
 
 
@@ -23,7 +24,11 @@ class ElasticSearchRunner(object):
         else:
             self.port = "9200"
 
-        self.authToken = authToken
+        if authToken is not None:
+            self.authToken = parseAuthToken(authToken)
+        else:
+            self.authToken = ""
+
         self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
         self.readDomainDescriptors()
 
