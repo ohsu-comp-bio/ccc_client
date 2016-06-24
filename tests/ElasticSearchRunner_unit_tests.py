@@ -1,15 +1,7 @@
 #!/usr/bin/env python
 
-# for debugging
-import os
-import sys
 import unittest
 import ccc_client
-
-path = os.path.abspath(__file__)
-dir_path = os.path.dirname(path)
-dir_path = os.path.dirname(dir_path)
-sys.path.append(dir_path)
 
 # basic unit tests of the ccc_client services.
 # These should not depend on any of the services actually running.
@@ -19,7 +11,16 @@ class TestCccClient(unittest.TestCase):
 
     def test_index_names(self):
         ccc = ccc_client.ElasticSearchRunner()
-        rp = ccc_client.ElasticSearchRunner.RowParser(None, self.getSiteId(), self.getUser(), self.getProject(), 'resource', None, ccc.DomainDescriptors, True)
+        rp = ccc_client.ElasticSearchRunner.RowParser(
+            fileHeader=None,
+            siteId=self.getSiteId(),
+            user=self.getUser(),
+            projectCode=self.getProject(),
+            domainName='resource',
+            es=None,
+            domainDescriptors=ccc.DomainDescriptors,
+            isMock=True
+        )
 
         # index names
         self.assertEqual(rp.getIndexNameForDomain('resource'), self.getProject().lower() + '-' + 'aggregated-resource')
@@ -45,7 +46,18 @@ class TestCccClient(unittest.TestCase):
 
         # test lack of errors
         fp = "mock/file.txt"
-        rowMap = ccc.publish_resource(fp, self.getSiteId(), self.getUser(), self.getProject(), None, "application/text", "resource", None, {}, True)
+        rowMap = ccc.publish_resource(
+            filePath=fp,
+            siteId=self.getSiteId(),
+            user=self.getUser(),
+            projectCode=self.getProject(),
+            workflowId=None,
+            mimeType="application/text",
+            domainName="resource",
+            inheritFrom=None,
+            properties={},
+            isMock=True
+        )
         self.assertEqual(rowMap["filepath"], fp)
         self.assertEqual(rowMap["mimetype"], "application/text")
 
@@ -92,9 +104,6 @@ class TestCccClient(unittest.TestCase):
 
     def index(self):
         print('indexing!')
-
-    def getScriptPath(self):
-        return os.path.join(dir_path, './bin/ccc_import')
 
     def getSiteId(self):
         return 'testSite'

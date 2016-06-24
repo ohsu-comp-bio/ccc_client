@@ -139,7 +139,7 @@ class ElasticSearchRunner(object):
 
         rowParser = self.RowParser(rowMap.keys(), siteId, user, projectCode,
                                    'resource', self.es, self.DomainDescriptors,
-                                   self.authToken, isMock)
+                                   isMock)
         rowParser.pushMapToElastic(rowMap)
 
         return rowMap
@@ -166,7 +166,7 @@ class ElasticSearchRunner(object):
                     rowParser = self.RowParser(row, siteId, user, projectCode,
                                                domainName, self.es,
                                                self.DomainDescriptors,
-                                               self.authToken, isMock)
+                                               isMock)
                 else:
                     rowParser.pushArrToElastic(row)
 
