@@ -12,7 +12,7 @@ class DtsRunner(object):
     """
     Send requests to the DTS
     """
-    def __init__(self, host=None, port=None, token=None):
+    def __init__(self, host=None, port=None, authToken=None):
 
         if host is not None:
             self.host = re.sub("^http[s]?:",  "", host)
@@ -24,14 +24,14 @@ class DtsRunner(object):
         else:
             self.port = "9510"
 
-        if token is not None:
-            self.token = token
+        if authToken is not None:
+            self.authToken = authToken
         else:
-            self.token = ""
+            self.authToken = ""
 
         self.headers = {
             'Content-Type': 'application/json',
-            "Authorization": " ".join(["Bearer", self.token])
+            "Authorization": " ".join(["Bearer", self.authToken])
         }
 
         self.endpoint = "api/v1/dts/file"

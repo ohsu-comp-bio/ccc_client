@@ -3,13 +3,14 @@ from __future__ import print_function
 import glob
 import os
 import requests
+import sys
 
 
 class ExecEngineRunner(object):
     """
     Send requests to the Execution Engine
     """
-    def __init__(self, host=None, port=None, token=None):
+    def __init__(self, host=None, port=None, authToken=None):
 
         if host is not None:
             self.host = re.sub("^http[s]?:",  "", host)
@@ -21,17 +22,17 @@ class ExecEngineRunner(object):
         else:
             self.port = "9504"
 
-        if token is not None:
-            self.token = token
+        if authToken is not None:
+            self.authToken = authToken
         else:
-            self.token = ""
+            self.authToken = ""
 
         # all other endpoints are mapped to this port
         self.secondary_port = "8000"
 
         self.endpoint = "api/workflows/v1"
 
-        self.headers = {"Authorization": " ".join(["Bearer", self.token])}
+        self.headers = {"Authorization": " ".join(["Bearer", self.authToken])}
 
     def submit_workflow(self, wdlSource, workflowInputs, workflowOptions):
         endpoint = "http://{0}:{1}/{2}".format(self.host,

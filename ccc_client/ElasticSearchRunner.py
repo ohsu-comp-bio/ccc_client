@@ -10,24 +10,24 @@ from elasticsearch import Elasticsearch
 
 
 class ElasticSearchRunner(object):
-    def __init__(self, host=None, port=None, token=None):
-
+    def __init__(self, host=None, port=None, authToken=None, es=None):
         if host is not None:
-            self.host = re.sub("^http[s]?:",  "", host)
+            self.host = host
         else:
             self.host = "0.0.0.0"
 
         if port is not None:
-            self.port = str(port)
+            self.port = port
         else:
             self.port = "9200"
 
-        if token is not None:
-            self.token = token
-        else:
-            self.token = ""
+        self.authToken = authToken
 
-        self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
+        if es is None:
+            self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
+        else:
+            self.es = es
+
         self.readDomainDescriptors()
 
     # Note: this creates the opportunity to allow externally provided field
@@ -37,10 +37,11 @@ class ElasticSearchRunner(object):
         ddFile = ddFile + "/resources/domains.json"
         with open(ddFile) as json_data:
             self.DomainDescriptors = json.load(json_data)
+
             json_data.close()
 
     # @classmethod
-    def query(self, domainName, queries):
+    def query(self, domainName, queries, output=None):
         terms = []
         for query in queries:
             vals = query.split(":")
@@ -71,12 +72,16 @@ class ElasticSearchRunner(object):
         )
 
         hits = hits['hits']['hits']
-        query_results = []
+        ret = []
         if hits:
             for hit in hits:
-                query_results.append(hit['_source'])
+                ret.append(hit['_source'])
 
-        return query_results
+        if output is not None:
+            with open(output, 'w') as outfile:
+                outfile.write(json.dumps(ret))
+        else:
+            print(ret)
 
     # @classmethod
     def publish_resource(self, filePath, siteId, user, projectCode, workflowId,
@@ -128,18 +133,18 @@ class ElasticSearchRunner(object):
 
         rowParser = self.RowParser(rowMap.keys(), siteId, user, projectCode,
                                    'resource', self.es, self.DomainDescriptors,
-                                   self.token, isMock)
+                                   self.authToken, isMock)
         rowParser.pushMapToElastic(rowMap)
 
         return rowMap
 
     # @classmethod
-    def get_domain(self, domainName):
+    def print_domain(self, domainName):
         if not self.DomainDescriptors[domainName]:
             raise RuntimeError("Unknown domain: " + domainName)
 
         domain = self.DomainDescriptors[domainName]
-        return domain
+        print(domain)
 
     # @classmethod
     def publish_batch(self, tsv, siteId, user, projectCode, domainName, isMock):
@@ -155,7 +160,7 @@ class ElasticSearchRunner(object):
                     rowParser = self.RowParser(row, siteId, user, projectCode,
                                                domainName, self.es,
                                                self.DomainDescriptors,
-                                               self.token, isMock)
+                                               self.authToken, isMock)
                 else:
                     rowParser.pushArrToElastic(row)
 
@@ -176,14 +181,13 @@ class ElasticSearchRunner(object):
 
         def __init__(self, fileHeader=None, siteId=None, user=None,
                      projectCode=None, domainName=None, es=None,
-                     domainDescriptors=None, token=None, isMock=False):
+                     domainDescriptors=None, isMock=False):
             self.fileHeader = fileHeader
             self.siteId = siteId
             self.user = user
             self.projectCode = projectCode
             self.domainName = domainName
             self.es = es
-            self.token = token
             self.domainDescriptors = domainDescriptors
             self.aliasMap = self.getAliases(fileHeader)
             self.isMock = isMock

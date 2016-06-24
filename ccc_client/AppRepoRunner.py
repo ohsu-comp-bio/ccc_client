@@ -11,7 +11,7 @@ class AppRepoRunner(object):
     """
     Send requests to the AppRepo
     """
-    def __init__(self, host=None, port=None, token=None):
+    def __init__(self, host=None, port=None, authToken=None):
 
         if host is not None:
             self.host = re.sub("^http[s]?:",  "", host)
@@ -23,15 +23,15 @@ class AppRepoRunner(object):
         else:
             self.port = "8082"
 
-        if token is not None:
-            self.token = token
+        if authToken is not None:
+            self.authToken = authToken
         else:
-            self.token = ""
+            self.authToken = ""
 
         self.endpoint = "api/v1/tool"
 
         self.headers = {
-            "Authorization": " ".join(["Bearer", self.token])
+            "Authorization": " ".join(["Bearer", self.authToken])
         }
 
     def post(self, imageBlob, imageName, imageTag):

@@ -96,7 +96,7 @@ def setup_parser():
     common_parser.add_argument("--port",
                                type=str,
                                help="port")
-    common_parser.add_argument("--token", "-T",
+    common_parser.add_argument("--authToken", "-T",
                                type=str,
                                help="authorization token")
 
@@ -452,7 +452,7 @@ def cli_main():
         parser.print_help()
         raise RuntimeError()
 
-    runner = args.runner(host=args.host, port=args.port, token=args.token)
+    runner = args.runner(host=args.host, port=args.port, authToken=args.authToken)
     responses = []
 
     if args.debug:
