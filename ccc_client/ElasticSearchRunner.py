@@ -32,7 +32,7 @@ class ElasticSearchRunner(object):
         self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
         # see:
         # https://discuss.elastic.co/t/how-do-i-add-a-custom-http-header-using-the-python-client/38907
-        self.es.transport.connection_pool.connection.session.headers.update({'Authorization': 'Bearer ' + self.authToken})
+        self.es.transport.connection_pool.connection.headers.update({'Authorization': 'Bearer ' + self.authToken})
         self.readDomainDescriptors()
 
     # Note: this creates the opportunity to allow externally provided field
