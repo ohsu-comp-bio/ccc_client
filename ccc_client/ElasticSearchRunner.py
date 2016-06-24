@@ -10,7 +10,7 @@ from elasticsearch import Elasticsearch
 
 
 class ElasticSearchRunner(object):
-    domainFile = None
+    __domainFile = None
 
     def __init__(self, host=None, port=None, authToken=None, es=None):
         if host is not None:
@@ -35,16 +35,21 @@ class ElasticSearchRunner(object):
     # Note: this creates the opportunity to allow externally provided field
     # definitions, or potentially a different schema at runtime
     def readDomainDescriptors(self):
-        if self.domainFile == None:
+        if self.__domainFile is None:
             ddFile = os.path.dirname(os.path.realpath(__file__))
             ddFile = ddFile + "/resources/domains.json"
         else:
-            ddFile = self.domainFile
+            ddFile = self.__domainFile
 
         with open(ddFile) as json_data:
             self.DomainDescriptors = json.load(json_data)
 
             json_data.close()
+
+    # @classmethod
+    def setDomainDescriptors(self, domainFile):
+        self.__domainFile = domainFile
+        self.readDomainDescriptors()
 
     # @classmethod
     def query(self, domainName, queries, output=None):
