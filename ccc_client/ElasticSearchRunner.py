@@ -30,6 +30,9 @@ class ElasticSearchRunner(object):
             self.authToken = ""
 
         self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
+        # see:
+        # https://discuss.elastic.co/t/how-do-i-add-a-custom-http-header-using-the-python-client/38907
+        self.es.transport.connection_pool.connection.session.headers.update({'Authorization': 'Bearer ' + self.authToken})
         self.readDomainDescriptors()
 
     # Note: this creates the opportunity to allow externally provided field
@@ -168,7 +171,10 @@ class ElasticSearchRunner(object):
             reader = csv.reader(infile, delimiter='\t')
             for row in reader:
                 if i == 0:
-                    rowParser = self.RowParser(row, siteId, user, projectCode,
+                    rowParser = self.RowParser(row,
+                                               siteId,
+                                               user,
+                                               projectCode,
                                                domainName, self.es,
                                                self.DomainDescriptors,
                                                isMock)
