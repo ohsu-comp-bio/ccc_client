@@ -12,7 +12,7 @@ from elasticsearch import Elasticsearch
 class ElasticSearchRunner(object):
     __domainFile = None
 
-    def __init__(self, host=None, port=None, authToken=None, es=None):
+    def __init__(self, host=None, port=None, authToken=None):
         if host is not None:
             self.host = host
         else:
@@ -24,12 +24,7 @@ class ElasticSearchRunner(object):
             self.port = "9200"
 
         self.authToken = authToken
-
-        if es is None:
-            self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
-        else:
-            self.es = es
-
+        self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
         self.readDomainDescriptors()
 
     # Note: this creates the opportunity to allow externally provided field

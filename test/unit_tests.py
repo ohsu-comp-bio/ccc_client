@@ -4,13 +4,12 @@
 import os
 import sys
 import unittest
+import ccc_client
 
 path = os.path.abspath(__file__)
 dir_path = os.path.dirname(path)
 dir_path = os.path.dirname(dir_path)
 sys.path.append(dir_path)
-
-import ccc_client
 
 # basic unit tests of the ccc_client services.
 # These should not depend on any of the services actually running.
