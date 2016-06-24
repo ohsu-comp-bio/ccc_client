@@ -5,9 +5,18 @@ from __future__ import print_function
 
 import argparse
 import glob
+import logging
 import os
 import re
+import requests
 import sys
+
+try:
+    import http.client as http_client
+except ImportError:
+    # Python 2
+    import httplib as http_client
+http_client.HTTPConnection.debuglevel = 1
 
 import ccc_client
 
@@ -87,9 +96,13 @@ def setup_parser():
     common_parser.add_argument("--port",
                                type=str,
                                help="port")
+    common_parser.add_argument("--authToken", "-T",
+                               type=str,
+                               help="authorization token")
 
     # Main parser
-    parser = argparse.ArgumentParser(description="CCC client", parents=[common_parser])
+    parser = argparse.ArgumentParser(description="CCC client",
+                                     parents=[common_parser])
     parser.add_argument("--help-long",
                         default=False,
                         action="store_true",
@@ -206,13 +219,19 @@ def setup_parser():
     # api/v1/tool/
     ar_post = ar_sub.add_parser("post", parents=[common_parser])
     ar_post.add_argument(
-        "--imageBlob", "-b", type=str, help="name of file or path"
+        "--imageBlob", "-b",
+        type=str,
+        help="name of file or path"
     )
     ar_post.add_argument(
-        "--imageName", "-n", type=str, help="name of docker image"
+        "--imageName", "-n",
+        type=str,
+        help="name of docker image"
     )
     ar_post.add_argument(
-        "--imageTag", "-t", type=str, default="latest",
+        "--imageTag", "-t",
+        type=str,
+        default="latest",
         help="docker image version tag"
     )
     ar_post.add_argument(
@@ -223,11 +242,14 @@ def setup_parser():
     # api/v1/tool/<uuid>
     ar_put = ar_sub.add_parser("put", parents=[common_parser])
     ar_put.add_argument(
-        "--metadata", "-m", type=str,
+        "--metadata", "-m",
+        type=str,
+        required=True,
         help="tool metadata"
     )
     ar_put.add_argument(
-        "--imageId", "-i", type=str,
+        "--imageId", "-i",
+        type=str,
         help="docker image id"
     )
 
@@ -235,14 +257,22 @@ def setup_parser():
     # api/v1/tool/<tool_name>/data
     ar_get = ar_sub.add_parser("get", parents=[common_parser])
     ar_get.add_argument(
-        "--imageId", "-i", type=str,
+        "--imageId", "-i",
+        type=str,
         help="docker image id"
+    )
+    ar_get.add_argument(
+        "--imageName", "-n",
+        type=str,
+        help="docker image name"
     )
 
     # api/v1/tool/<uuid>
     ar_delete = ar_sub.add_parser("delete", parents=[common_parser])
     ar_delete.add_argument(
-        "--imageId", "-i", type=str,
+        "--imageId", "-i",
+        type=str,
+        required=True,
         help="docker image id"
     )
 
@@ -259,18 +289,21 @@ def setup_parser():
     ee_post.add_argument(
         "--wdlSource", "-s",
         type=str,
-        help="name of file or path"
+        required=True,
+        help="WDL source file defining a workflow"
     )
     ee_post.add_argument(
         "--workflowInputs", "-i",
         type=str,
-        help="name of docker image"
+        nargs="+",
+        required=True,
+        help="json file(s) defining workflow input mappings"
     )
     ee_post.add_argument(
         "--workflowOptions", "-o",
         type=str,
         default="-",
-        help="docker image version tag"
+        help="workflow options"
     )
 
     # api/workflows/v1/<uuid>/status
@@ -278,6 +311,7 @@ def setup_parser():
     ee_status.add_argument(
         "--workflowId", "-i",
         type=str,
+        required=True,
         help="workflow uuid"
     )
 
@@ -286,6 +320,7 @@ def setup_parser():
     ee_outputs.add_argument(
         "--workflowId", "-i",
         type=str,
+        required=True,
         help="workflow uuid"
     )
 
@@ -294,6 +329,7 @@ def setup_parser():
     ee_meta.add_argument(
         "--workflowId", "-i",
         type=str,
+        required=True,
         help="workflow uuid"
     )
 
@@ -307,11 +343,6 @@ def setup_parser():
 
     es_query = es_sub.add_parser("query", parents=[common_parser])
     es_query.add_argument(
-        "--token", "-T",
-        type=str,
-        help="auth token"
-    )
-    es_query.add_argument(
         "--domain", "-d",
         type=str,
         choices=["patient", "specimen", "sample", "resource"],
@@ -324,19 +355,9 @@ def setup_parser():
         help="The search terms on which to query. Can be specified multiple \
         times. Should be supplied in the form 'FieldName:Term'"
     )
-    es_query.add_argument(
-        "--output-file", "-o",
-        type=str,
-        help="output query results to this file"
-    )
 
     es_publish_batch = es_sub.add_parser("publish-batch",
                                          parents=[common_parser])
-    es_publish_batch.add_argument(
-        "--token", "-T",
-        type=str,
-        help="auth token"
-    )
     es_publish_batch.add_argument(
         "--tsv", "-t",
         type=str,
@@ -367,11 +388,6 @@ def setup_parser():
 
     es_publish_resource = es_sub.add_parser("publish-resource",
                                             parents=[common_parser])
-    es_publish_resource.add_argument(
-        "--token", "-T",
-        type=str,
-        help="auth token"
-    )
     es_publish_resource.add_argument(
         "--filepath", "-f",
         type=str,
@@ -436,8 +452,15 @@ def cli_main():
         parser.print_help()
         raise RuntimeError()
 
-    runner = args.runner(args.host, args.port)
+    runner = args.runner(host=args.host, port=args.port, authToken=args.authToken)
     responses = []
+
+    if args.debug:
+        logging.basicConfig()
+        logging.getLogger().setLevel(logging.DEBUG)
+        requests_log = logging.getLogger("requests.packages.urllib3")
+        requests_log.setLevel(logging.DEBUG)
+        requests_log.propagate = True
 
     # ------------------------
     # DTS
@@ -446,24 +469,24 @@ def cli_main():
         if args.action == "post":
             for f in args.filepath:
                 file_list = glob.glob(os.path.abspath(f))
+                if file_list == []:
+                    print("glob on", f, "did not return any files",
+                          file=sys.stderr)
+                    raise "Error"
                 for file_iter in file_list:
-                    if not os.path.isfile(file_iter):
-                        print(file_iter, "was not found on the file system",
-                              file=sys.stderr)
-                        raise "Error"
-                    else:
                         r = runner.post(file_iter, args.site,
                                         args.user, args.cccId)
+                        if r.status_code // 100 == 2:
+                            print("{0}\t{1}".format(file_iter, r.text))
                         responses.append(r)
         elif args.action == "put":
             for f in args.filepath:
                 file_list = glob.glob(os.path.abspath(f))
+                if file_list == []:
+                    print("glob on", f, "did not return any files",
+                          file=sys.stderr)
+                    raise "Error"
                 for file_iter in file_list:
-                    if not os.path.isfile(file_iter):
-                        print(file_iter, "was not found on the file system",
-                              file=sys.stderr)
-                        raise "Error"
-                    else:
                         r = runner.put(file_iter, args.site, args.user)
                         responses.append(r)
         elif args.action == "get":
@@ -477,13 +500,15 @@ def cli_main():
         elif args.action == "infer-cccId":
             for f in args.filepath:
                 file_list = glob.glob(os.path.abspath(f))
+            for f in args.filepath:
+                file_list = glob.glob(os.path.abspath(f))
+                if file_list == []:
+                    print("glob on", f, "did not return any files",
+                          file=sys.stderr)
+                    raise "Error"
                 for file_iter in file_list:
-                    if not os.path.isfile(file_iter):
-                        print(file_iter, "was not found on the file system",
-                              file=sys.stderr)
-                        raise "Error"
-                    else:
-                        runner.infer_cccId(file_iter, args.strategy)
+                    cccId = runner.infer_cccId(file_iter, args.strategy)
+                    print("{0}\t{1}".format(file_iter, cccId))
             return None
 
     # ------------------------
@@ -501,6 +526,9 @@ def cli_main():
                 responses.append(r)
         elif args.action == "put":
             r = runner.put(args.imageId, args.metadata)
+            responses.append(r)
+        elif args.action == "get":
+            r = runner.get(args.imageId, args.imageName)
             responses.append(r)
         elif args.action == "delete":
             r = runner.delete(args.imageId)
@@ -531,6 +559,7 @@ def cli_main():
     elif args.service == "elasticsearch":
         if args.action == "query":
             r = runner.query(args.domain, args.query_terms, args.output_file)
+            print(r)
             # responses.append(r)
         elif args.action == "publish-batch":
             r = runner.publish_batch(args.tsv, args.site, args.user,
@@ -541,7 +570,7 @@ def cli_main():
                                         args.project, args.workflowId,
                                         args.filetype, 'resource',
                                         args.inheritFrom,
-                                        args.property_override, 
+                                        args.property_override,
                                         False)
             # responses.append(r)
 
@@ -549,8 +578,8 @@ def cli_main():
     # Response Handling
     # ------------------------
     for r in responses:
-        if args.debug:
-            print(r.headers)
+        # if args.debug:
+        #     print(r.headers)
         if r.status_code // 100 == 2:
             if not (args.service == "dts" and args.action == "post"):
                 print(r.text)

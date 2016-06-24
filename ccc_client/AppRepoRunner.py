@@ -5,24 +5,35 @@ import os
 import re
 import requests
 import uuid
+from ccc_client.utils import parseAuthToken
 
 
 class AppRepoRunner(object):
     """
     Send requests to the AppRepo
     """
-    def __init__(self, host=None, port=None):
+    def __init__(self, host=None, port=None, authToken=None):
+
         if host is not None:
-            self.host = host
+            self.host = re.sub("^http[s]?:",  "", host)
         else:
             self.host = "docker-centos7"
 
         if port is not None:
-            self.port = port
+            self.port = str(port)
         else:
             self.port = "8082"
 
+        if authToken is not None:
+            self.authToken = parseAuthToken(authToken)
+        else:
+            self.authToken = ""
+
         self.endpoint = "api/v1/tool"
+
+        self.headers = {
+            "Authorization": " ".join(["Bearer", self.authToken])
+        }
 
     def post(self, imageBlob, imageName, imageTag):
         endpoint = "http://{0}:{1}/{2}".format(self.host,
@@ -37,8 +48,9 @@ class AppRepoRunner(object):
                      "imageName": (None, imageName),
                      "imageTag": (None, imageTag)}
 
-        response = requests.post(endpoint, files=form_data)
-
+        response = requests.post(endpoint,
+                                 files=form_data,
+                                 headers=self.headers)
         return response
 
     def put(self, imageId, metadata):
@@ -54,31 +66,51 @@ class AppRepoRunner(object):
             loaded_metadata = json.loads(metadata)
 
         if imageId is None:
-            if metadata['id'] == '':
+            if loaded_metadata['id'] == '':
                 imageId = str(uuid.uuid4())
-                metadata['id'] = imageId
+                loaded_metadata['id'] = imageId
             else:
-                imageId = metadata['id']
+                imageId = loaded_metadata['id']
         else:
-            if metadata['id'] == '':
-                metadata['id'] = imageId
+            if loaded_metadata['id'] == '':
+                loaded_metadata['id'] = imageId
 
-        assert imageId == metadata['id']
-
+        headers = self.headers.update({'Content-Type': 'application/json'})
         response = requests.put(
             endpoint,
             data=json.dumps(loaded_metadata),
-            headers={'Content-Type': 'application/json'}
+            headers=headers
         )
         return response
+
+    def get(self, imageId, imageName):
+        if imageId is not None:
+            endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
+                                                       self.port,
+                                                       self.endpoint,
+                                                       imageId)
+        elif imageName is not None:
+            endpoint = "http://{0}:{1}/{2}/{3}/data".format(self.host,
+                                                            self.port,
+                                                            self.endpoint,
+                                                            imageName)
+
+        headers = self.headers.update({'Content-Type': 'application/json'})
+        response = requests.get(
+            endpoint,
+            headers=headers
+        )
+        return response
+
 
     def delete(self, imageId):
         endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
                                                    self.port,
                                                    self.endpoint,
                                                    imageId)
+        headers = self.headers.update({'Content-Type': 'application/json'})
         response = requests.delete(
             endpoint,
-            headers={'Content-Type': 'application/json'}
+            headers=headers
         )
         return response

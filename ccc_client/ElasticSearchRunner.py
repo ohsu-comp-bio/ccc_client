@@ -6,11 +6,14 @@ import os
 import sys
 import uuid
 import ccc_client.DtsRunner
+from ccc_client.utils import parseAuthToken
 from elasticsearch import Elasticsearch
 
 
 class ElasticSearchRunner(object):
-    def __init__(self, host=None, port=None, token=None, es=None):
+    __domainFile = None
+
+    def __init__(self, host=None, port=None, authToken=None):
         if host is not None:
             self.host = host
         else:
@@ -21,36 +24,35 @@ class ElasticSearchRunner(object):
         else:
             self.port = "9200"
 
-        self.authToken = self.parseToken(token)
-        if es == None:
-            self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
-            # see:
-            # https://discuss.elastic.co/t/how-do-i-add-a-custom-http-header-using-the-python-client/38907
-            self.es.transport.connection_pool.connection.session.headers.update({'Authorization': 'Bearer ' + self.authToken})
+        if authToken is not None:
+            self.authToken = parseAuthToken(authToken)
         else:
-            self.es = es
+            self.authToken = ""
 
+        self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
+        # see:
+        # https://discuss.elastic.co/t/how-do-i-add-a-custom-http-header-using-the-python-client/38907
+        self.es.transport.connection_pool.connection.session.headers.update({'Authorization': 'Bearer ' + self.authToken})
         self.readDomainDescriptors()
-
-    def parseToken(self, token):
-        #if the token matches a filepath, read the file and use this
-        if os.path.isfile(token):
-            with open(token) as myfile:
-                ret="".join(line.rstrip() for line in myfile)
-                return ret
-        else:
-            #otherwise, use token as is
-            return token
 
     # Note: this creates the opportunity to allow externally provided field
     # definitions, or potentially a different schema at runtime
     def readDomainDescriptors(self):
-        ddFile = os.path.dirname(os.path.realpath(__file__))
-        ddFile = ddFile + "/resources/domains.json"
+        if self.__domainFile is None:
+            ddFile = os.path.dirname(os.path.realpath(__file__))
+            ddFile = ddFile + "/resources/domains.json"
+        else:
+            ddFile = self.__domainFile
+
         with open(ddFile) as json_data:
             self.DomainDescriptors = json.load(json_data)
 
             json_data.close()
+
+    # @classmethod
+    def setDomainDescriptors(self, domainFile):
+        self.__domainFile = domainFile
+        self.readDomainDescriptors()
 
     # @classmethod
     def query(self, domainName, queries, output=None):
@@ -144,7 +146,8 @@ class ElasticSearchRunner(object):
         rowMap['mimetype'] = mimeType
 
         rowParser = self.RowParser(rowMap.keys(), siteId, user, projectCode,
-                                   'resource', self.es, self.DomainDescriptors, isMock)
+                                   'resource', self.es, self.DomainDescriptors,
+                                   isMock)
         rowParser.pushMapToElastic(rowMap)
 
         return rowMap
@@ -168,9 +171,13 @@ class ElasticSearchRunner(object):
             reader = csv.reader(infile, delimiter='\t')
             for row in reader:
                 if i == 0:
-                    rowParser = self.RowParser(row, siteId, user, projectCode,
+                    rowParser = self.RowParser(row,
+                                               siteId,
+                                               user,
+                                               projectCode,
                                                domainName, self.es,
-                                               self.DomainDescriptors, isMock)
+                                               self.DomainDescriptors,
+                                               isMock)
                 else:
                     rowParser.pushArrToElastic(row)
 
@@ -178,7 +185,7 @@ class ElasticSearchRunner(object):
 
     # Responsible for inspecting the header and normalizing/augmenting field
     # names
-    class RowParser(object):  
+    class RowParser(object):
         # array of raw data
         fileHeader = None
         siteId = None
