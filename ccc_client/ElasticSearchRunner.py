@@ -21,13 +21,26 @@ class ElasticSearchRunner(object):
         else:
             self.port = "9200"
 
-        self.authToken = token
+        self.authToken = self.parseToken(token)
         if es == None:
             self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
+            # see:
+            # https://discuss.elastic.co/t/how-do-i-add-a-custom-http-header-using-the-python-client/38907
+            self.es.transport.connection_pool.connection.session.headers.update({'Authorization': 'Bearer ' + self.authToken})
         else:
             self.es = es
 
         self.readDomainDescriptors()
+
+    def parseToken(self, token):
+        #if the token matches a filepath, read the file and use this
+        if os.path.isfile(token):
+            with open(token) as myfile:
+                ret="".join(line.rstrip() for line in myfile)
+                return ret
+        else:
+            #otherwise, use token as is
+            return token
 
     # Note: this creates the opportunity to allow externally provided field
     # definitions, or potentially a different schema at runtime
@@ -131,8 +144,7 @@ class ElasticSearchRunner(object):
         rowMap['mimetype'] = mimeType
 
         rowParser = self.RowParser(rowMap.keys(), siteId, user, projectCode,
-                                   'resource', self.es, self.DomainDescriptors,
-                                   self.authToken, isMock)
+                                   'resource', self.es, self.DomainDescriptors, isMock)
         rowParser.pushMapToElastic(rowMap)
 
         return rowMap
@@ -158,8 +170,7 @@ class ElasticSearchRunner(object):
                 if i == 0:
                     rowParser = self.RowParser(row, siteId, user, projectCode,
                                                domainName, self.es,
-                                               self.DomainDescriptors,
-                                               self.authToken, isMock)
+                                               self.DomainDescriptors, isMock)
                 else:
                     rowParser.pushArrToElastic(row)
 
@@ -180,14 +191,13 @@ class ElasticSearchRunner(object):
 
         def __init__(self, fileHeader=None, siteId=None, user=None,
                      projectCode=None, domainName=None, es=None,
-                     domainDescriptors=None, authToken=None, isMock=False):
+                     domainDescriptors=None, isMock=False):
             self.fileHeader = fileHeader
             self.siteId = siteId
             self.user = user
             self.projectCode = projectCode
             self.domainName = domainName
             self.es = es
-            self.authToken = authToken
             self.domainDescriptors = domainDescriptors
             self.aliasMap = self.getAliases(fileHeader)
             self.isMock = isMock
