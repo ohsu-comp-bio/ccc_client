@@ -10,6 +10,8 @@ from elasticsearch import Elasticsearch
 
 
 class ElasticSearchRunner(object):
+    domainFile = None
+
     def __init__(self, host=None, port=None, authToken=None, es=None):
         if host is not None:
             self.host = host
@@ -33,8 +35,12 @@ class ElasticSearchRunner(object):
     # Note: this creates the opportunity to allow externally provided field
     # definitions, or potentially a different schema at runtime
     def readDomainDescriptors(self):
-        ddFile = os.path.dirname(os.path.realpath(__file__))
-        ddFile = ddFile + "/resources/domains.json"
+        if self.domainFile == None:
+            ddFile = os.path.dirname(os.path.realpath(__file__))
+            ddFile = ddFile + "/resources/domains.json"
+        else:
+            ddFile = self.domainFile
+
         with open(ddFile) as json_data:
             self.DomainDescriptors = json.load(json_data)
 
