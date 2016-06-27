@@ -54,7 +54,7 @@ def display_help(parser):
                     print("-" * len("| {0} |".format(method_choice)))
                     print("| {0} |".format(method_choice))
                     print("-" * len("| {0} |".format(method_choice)))
-                    print(find_options(method_subparser.format_help(), strip_n=4))
+                    print(find_options(method_subparser.format_help(), strip_n=5))
 
 
 def find_options(helptext, show_usage=True, strip_n=0):

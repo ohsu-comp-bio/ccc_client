@@ -37,7 +37,6 @@ usage: ccc_client dts post [-h] [--debug] [--host HOST] [--port PORT]
                                   {central,dfci,ohsu,oicr} [--cccId CCCID]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
                         name of file(s) or pattern to glob on
@@ -56,7 +55,6 @@ usage: ccc_client dts put [-h] [--debug] [--host HOST] [--port PORT]
                                  [--site {central,dfci,ohsu,oicr}]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --cccId CCCID         cccId entry to update
   --filepath FILEPATH, -f FILEPATH
@@ -73,7 +71,6 @@ usage: ccc_client dts get [-h] [--debug] [--host HOST] [--port PORT]
                                  [CCCID ...]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --cccId CCCID [CCCID ...]
                         cccId entry to GET
@@ -86,7 +83,6 @@ usage: ccc_client dts delete [-h] [--debug] [--host HOST] [--port PORT]
                                     [CCCID ...]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --cccId CCCID [CCCID ...]
                         cccId entry to DELETE
@@ -100,7 +96,6 @@ usage: ccc_client dts infer-cccId [-h] [--debug] [--host HOST]
                                          [--strategy {MD5,SHA-1}]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
                         name of file(s) or pattern to glob on
@@ -127,7 +122,6 @@ usage: ccc_client app-repo post [-h] [--debug] [--host HOST]
                                        [--metadata METADATA]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --imageBlob IMAGEBLOB, -b IMAGEBLOB
                         name of file or path
@@ -146,7 +140,6 @@ usage: ccc_client app-repo put [-h] [--debug] [--host HOST]
                                       --metadata METADATA [--imageId IMAGEID]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --metadata METADATA, -m METADATA
                         tool metadata
@@ -162,7 +155,6 @@ usage: ccc_client app-repo get [-h] [--debug] [--host HOST]
                                       [--imageName IMAGENAME]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --imageId IMAGEID, -i IMAGEID
                         docker image id
@@ -177,7 +169,6 @@ usage: ccc_client app-repo delete [-h] [--debug] [--host HOST]
                                          --imageId IMAGEID
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --imageId IMAGEID, -i IMAGEID
                         docker image id
@@ -202,7 +193,6 @@ usage: ccc_client exec-engine submit [-h] [--debug] [--host HOST]
                                             [--workflowOptions WORKFLOWOPTIONS]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --wdlSource WDLSOURCE, -s WDLSOURCE
                         WDL source file defining a workflow
@@ -220,7 +210,6 @@ usage: ccc_client exec-engine status [-h] [--debug] [--host HOST]
                                             --workflowId WORKFLOWID
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --workflowId WORKFLOWID, -i WORKFLOWID
                         workflow uuid
@@ -234,7 +223,6 @@ usage: ccc_client exec-engine outputs [-h] [--debug] [--host HOST]
                                              --workflowId WORKFLOWID
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --workflowId WORKFLOWID, -i WORKFLOWID
                         workflow uuid
@@ -248,7 +236,6 @@ usage: ccc_client exec-engine metadata [-h] [--debug] [--host HOST]
                                               --workflowId WORKFLOWID
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --workflowId WORKFLOWID, -i WORKFLOWID
                         workflow uuid
@@ -273,7 +260,6 @@ usage: ccc_client elasticsearch query [-h] [--debug] [--host HOST]
                                              [--query-terms QUERY_TERMS [QUERY_TERMS ...]]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --domain {patient,specimen,sample,resource}, -d {patient,specimen,sample,resource}
                         target domain of query
@@ -296,7 +282,6 @@ usage: ccc_client elasticsearch publish-batch [-h] [--debug]
                                                      [--domain {patient,specimen,sample,resource}]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --tsv TSV, -t TSV     input tab delimited file
   --site {central,dfci,ohsu,oicr}, -s {central,dfci,ohsu,oicr}
@@ -324,7 +309,6 @@ usage: ccc_client elasticsearch publish-resource [-h] [--debug]
                                                         [--workflowId WORKFLOWID]
 
 optional arguments:
-  --authToken AUTHTOKEN, -T AUTHTOKEN
                         authorization token
   --filepath FILEPATH, -f FILEPATH
                         file to be registered in ES index
