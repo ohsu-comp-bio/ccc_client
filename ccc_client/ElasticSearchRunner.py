@@ -267,6 +267,8 @@ class ElasticSearchRunner(object):
                             val = int(val)
                         elif type == 'float':
                             val = float(val)
+                        elif type == 'list':
+                            val = eval(val)
                     except Exception:
                         raise RuntimeError(
                             "Unable to convert field: " + token + " to type: " +
