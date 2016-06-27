@@ -19,7 +19,8 @@ class TestCccClient(unittest.TestCase):
             domainName='resource',
             es=None,
             domainDescriptors=ccc.DomainDescriptors,
-            isMock=True
+            isMock=True,
+            skipDtsRegistration=True
         )
 
         # index names
