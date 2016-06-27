@@ -12,6 +12,7 @@ from elasticsearch import Elasticsearch
 
 class ElasticSearchRunner(object):
     __domainFile = None
+    __skipDtsRegistration = False
 
     def __init__(self, host=None, port=None, authToken=None):
         if host is not None:
@@ -53,6 +54,9 @@ class ElasticSearchRunner(object):
     def setDomainDescriptors(self, domainFile):
         self.__domainFile = domainFile
         self.readDomainDescriptors()
+
+    def setSkipDtsRegistration(self, skipDtsRegistration):
+        self.__skipDtsRegistration = skipDtsRegistration
 
     # @classmethod
     def query(self, domainName, queries, output=None):
@@ -147,7 +151,7 @@ class ElasticSearchRunner(object):
 
         rowParser = self.RowParser(rowMap.keys(), siteId, user, projectCode,
                                    'resource', self.es, self.DomainDescriptors,
-                                   isMock)
+                                   isMock, self.__skipDtsRegistration)
         rowParser.pushMapToElastic(rowMap)
 
         return rowMap
@@ -177,7 +181,8 @@ class ElasticSearchRunner(object):
                                                projectCode,
                                                domainName, self.es,
                                                self.DomainDescriptors,
-                                               isMock)
+                                               isMock,
+                                               self.__skipDtsRegistration)
                 else:
                     rowParser.pushArrToElastic(row)
 
@@ -195,10 +200,11 @@ class ElasticSearchRunner(object):
         es = None
         domainDescriptors = None
         isMock = False
+        skipDtsRegistration = False
 
         def __init__(self, fileHeader=None, siteId=None, user=None,
                      projectCode=None, domainName=None, es=None,
-                     domainDescriptors=None, isMock=False):
+                     domainDescriptors=None, isMock=False, skipDtsRegistration=False):
             self.fileHeader = fileHeader
             self.siteId = siteId
             self.user = user
@@ -208,6 +214,7 @@ class ElasticSearchRunner(object):
             self.domainDescriptors = domainDescriptors
             self.aliasMap = self.getAliases(fileHeader)
             self.isMock = isMock
+            self.skipDtsRegistration = skipDtsRegistration
 
         def getAliases(self, fileHeader):
             aliasMap = {}
@@ -278,7 +285,8 @@ class ElasticSearchRunner(object):
                     rowMap[cannonicalName] = val
 
             # process filepath/ccc_id
-            self.validateOrRegisterWithDts(rowMap)
+            if not self.skipDtsRegistration:
+                self.validateOrRegisterWithDts(rowMap)
 
             # append fields from other domains (denormalize)
             idx = self.domainDescriptors[self.domainName]['idx']
