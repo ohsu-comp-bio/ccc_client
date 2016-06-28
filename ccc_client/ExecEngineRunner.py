@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import glob
 import os
+import re
 import requests
 import sys
 
