@@ -127,13 +127,15 @@ def setup_parser():
     )
     dts_post.add_argument(
         "--user", "-u",
-        required=True,
+        required=False,
         type=str,
-        help="user identity")
+        help="user identity"
+    )
     dts_post.add_argument(
         "--site", "-s",
         required=True,
         type=str,
+        nargs="+",
         choices=["central", "dfci", "ohsu", "oicr"],
         help="site the data resides at"
     )
@@ -155,16 +157,20 @@ def setup_parser():
     )
     dts_put.add_argument(
         "--filepath", "-f",
+        required=True,
         type=str,
         help="filepath"
     )
     dts_put.add_argument(
         "--user", "-u",
         type=str,
-        help="site user")
+        help="site user"
+    )
     dts_put.add_argument(
         "--site", "-s",
+        required=True,
         type=str,
+        nargs="+",
         choices=["central", "dfci", "ohsu", "oicr"],
         help="site the data resides at"
     )
@@ -468,23 +474,16 @@ def cli_main():
                 if file_list == []:
                     print("glob on", f, "did not return any files",
                           file=sys.stderr)
-                    raise "Error"
+                    raise
                 for file_iter in file_list:
-                        r = runner.post(file_iter, args.site,
-                                        args.user, args.cccId)
-                        if r.status_code // 100 == 2:
-                            print("{0}\t{1}".format(file_iter, r.text))
+                    r = runner.post(file_iter, args.site,
+                                    args.user, args.cccId)
+                    if r.status_code // 100 == 2:
+                        print("{0}\t{1}".format(file_iter, r.text))
                         responses.append(r)
         elif args.action == "put":
-            for f in args.filepath:
-                file_list = glob.glob(os.path.abspath(f))
-                if file_list == []:
-                    print("glob on", f, "did not return any files",
-                          file=sys.stderr)
-                    raise "Error"
-                for file_iter in file_list:
-                        r = runner.put(file_iter, args.site, args.user)
-                        responses.append(r)
+            r = runner.put(args.cccId, args.filepath, args.site, args.user)
+            responses.append(r)
         elif args.action == "get":
             for cccId in args.cccId:
                 r = runner.get(cccId)
@@ -501,7 +500,7 @@ def cli_main():
                 if file_list == []:
                     print("glob on", f, "did not return any files",
                           file=sys.stderr)
-                    raise "Error"
+                    raise
                 for file_iter in file_list:
                     cccId = runner.infer_cccId(file_iter, args.strategy)
                     print("{0}\t{1}".format(file_iter, cccId))
@@ -574,8 +573,6 @@ def cli_main():
     # Response Handling
     # ------------------------
     for r in responses:
-        # if args.debug:
-        #     print(r.headers)
         if r.status_code // 100 == 2:
             if not (args.service == "dts" and args.action == "post"):
                 print(r.text)

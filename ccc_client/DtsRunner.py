@@ -56,10 +56,10 @@ class DtsRunner(object):
         )
         return response
 
-    def put(self, cccId, filepath, sites, user=None):
+    def put(self, cccId, filepath, sites, user=None):        
         filepath = os.path.abspath(filepath)
-        sites = DtsRunner._process_sites(sites)
-        user = DtsRunner._process_user(user)
+        sites = self._process_sites(sites)
+        user = self._process_user(user)
 
         # get current record
         resp = self.get(cccId)
@@ -80,6 +80,8 @@ class DtsRunner(object):
             print("[ERROR] the name and/or size of this file doesn't",
                   "match the current record",
                   file=sys.stderr)
+            print(data['name'], os.path.basename(filepath))
+            print(data['size'], os.path.getsize(filepath))
             raise
 
         # update record
@@ -95,7 +97,7 @@ class DtsRunner(object):
                 )
                 location = data['location'][i]
 
-            location['site'] = DtsRunner._map_site_to_ip(site)
+            location['site'] = self._map_site_to_ip(site)
             location['path'] = os.path.dirname(filepath)
             location['timestampUpdated'] = os.stat(filepath)[-2]
             location['user'] = {"name": user}
@@ -113,8 +115,8 @@ class DtsRunner(object):
 
     def post(self, filepath, sites, user=None, cccId=None):
         filepath = os.path.abspath(filepath)
-        sites = DtsRunner._process_sites(sites)
-        user = DtsRunner._process_user(user)
+        sites = self._process_sites(sites)
+        user = self._process_user(user)
 
         data = {}
         if cccId is not None:
@@ -126,7 +128,7 @@ class DtsRunner(object):
             else:
                 data['cccId'] = cccId
         else:
-            data['cccId'] = DtsRunner._generate_cccId(filepath)
+            data['cccId'] = self._generate_cccId(filepath)
 
         data['name'] = os.path.basename(filepath)
         data['size'] = os.path.getsize(filepath)
@@ -134,7 +136,7 @@ class DtsRunner(object):
         locations = []
         for site in sites:
             location = {}
-            location['site'] = DtsRunner._map_site_to_ip(site)
+            location['site'] = self._map_site_to_ip(site)
             location['path'] = os.path.dirname(filepath)
             location['timestampUpdated'] = os.stat(filepath)[-2]
             location['user'] = {"name": user}
@@ -162,8 +164,8 @@ class DtsRunner(object):
                 raise
         return response
 
-    def infer_cccId(filepath, uuid_strategy="SHA-1"):
-        return DtsRunner._generate_cccId(filepath, uuid_strategy)
+    def infer_cccId(self, filepath, uuid_strategy="SHA-1"):
+        return self._generate_cccId(filepath, uuid_strategy)
 
     def _check_cccId(self, cccId):
         cccId_check_response = self.get(cccId)
@@ -172,7 +174,7 @@ class DtsRunner(object):
         else:
             return False
 
-    def _generate_cccId(filepath, uuid_strategy="SHA-1"):
+    def _generate_cccId(self, filepath, uuid_strategy="SHA-1"):
         filepath = os.path.abspath(filepath)
         if uuid_strategy.upper() == "RANDOM":
             cccId = str(uuid.uuid4())
@@ -188,7 +190,7 @@ class DtsRunner(object):
             )
         return cccId
 
-    def _map_site_to_ip(site):
+    def _map_site_to_ip(self,site):
         site_map = {"central": "http://10.73.127.1",
                     "ohsu": "http://10.73.127.6",
                     "dfci": "http://10.73.127.18",
@@ -202,7 +204,7 @@ class DtsRunner(object):
                   file=sys.stderr)
             raise
 
-    def _process_sites(sites):
+    def _process_sites(self, sites):
         if isinstance(sites, list):
             pass
         elif isinstance(sites, str):
@@ -213,7 +215,7 @@ class DtsRunner(object):
             raise
         return sites
 
-    def _process_user(user):
+    def _process_user(self, user):
         if user is None:
             user = os.environ['USER']
         return user
