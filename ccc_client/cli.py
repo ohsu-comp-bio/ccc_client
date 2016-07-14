@@ -553,7 +553,7 @@ def cli_main():
     # ------------------------
     elif args.service == "elasticsearch":
         if args.action == "query":
-            r = runner.query(args.domain, args.query_terms, args.output_file)
+            r = runner.query(args.domain, args.query_terms)
             print(r)
             # responses.append(r)
         elif args.action == "publish-batch":
