@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import glob
+import iso8601
 import os
 import re
 import requests
@@ -55,6 +56,32 @@ class ExecEngineRunner(object):
         response = requests.post(endpoint,
                                  files=form_data,
                                  headers=self.headers)
+        return response
+
+    def query(self, query_terms):
+        terms = []
+        for query in query_terms:
+            key, val = re.split("[:=]", query)
+            # validation of query terms
+            if key in ["start", "end"]:
+                try:
+                    val = iso8601.parse_date(val).isoformat()
+                except:
+                    raise ValueError("start and end should be in ISO8601",
+                                     "datetime format with mandatory offset",
+                                     "and start cannot be after end")
+            elif key == "status":
+                if val not in ["Submitted", "Running", "Aborted", "Failed", "Succeeded"]:
+                    raise ValueError("[ERROR] Valid statuses are Submitted,",
+                                     "Running, Aborting, Aborted, Failed, and",
+                                     "Succeeded.")
+            terms.append("{0}={1}".format(key, val))
+
+        query_string = "&".join(terms)
+        endpoint = "http://{0}:{1}/{2}/query?".format(
+            self.host, self.secondary_port, self.endpoint, query_string
+        )
+        response = requests.get(endpoint, headers=self.headers)
         return response
 
     def get_status(self, workflowId):

@@ -59,7 +59,7 @@ class ElasticSearchRunner(object):
         self.__skipDtsRegistration = skipDtsRegistration
 
     # @classmethod
-    def query(self, domainName, queries, output=None):
+    def query(self, domainName, queries):
         terms = []
         for query in queries:
             vals = query.split(":")
@@ -95,11 +95,7 @@ class ElasticSearchRunner(object):
             for hit in hits:
                 ret.append(hit['_source'])
 
-        if output is not None:
-            with open(output, 'w') as outfile:
-                outfile.write(json.dumps(ret))
-        else:
-            print(ret)
+        print(json.dumps(ret))
 
     # @classmethod
     def publish_resource(self, filePath, siteId, user, projectCode, workflowId,

@@ -119,8 +119,7 @@ def setup_parser():
     # api/v1/dts/file
     dts_post = dts_sub.add_parser("post", parents=[common_parser])
     dts_post.add_argument(
-        "--filepath", "-f",
-        required=True,
+        "filepath",
         type=str,
         nargs="+",
         help="name of file(s) or pattern to glob on"
@@ -140,7 +139,7 @@ def setup_parser():
         help="site the data resides at"
     )
     dts_post.add_argument(
-        "--cccId",
+        "--cccId", "-i",
         required=False,
         default=None,
         type=str,
@@ -150,19 +149,13 @@ def setup_parser():
     # api/v1/dts/file
     dts_put = dts_sub.add_parser("put", parents=[common_parser])
     dts_put.add_argument(
-        "--cccId",
-        required=True,
-        type=str,
-        help="cccId entry to update"
-    )
-    dts_put.add_argument(
-        "--filepath", "-f",
-        required=True,
+        "filepath",
         type=str,
         help="filepath"
     )
     dts_put.add_argument(
         "--user", "-u",
+        required=False,
         type=str,
         help="site user"
     )
@@ -174,12 +167,17 @@ def setup_parser():
         choices=["central", "dfci", "ohsu", "oicr"],
         help="site the data resides at"
     )
+    dts_put.add_argument(
+        "--cccId", "-i",
+        required=True,
+        type=str,
+        help="cccId entry to update"
+    )
 
     # api/v1/dts/file/<uuid>
     dts_get = dts_sub.add_parser("get", parents=[common_parser])
     dts_get.add_argument(
-        "--cccId",
-        required=True,
+        "cccId",
         type=str,
         nargs="+",
         help="cccId entry to GET"
@@ -188,8 +186,7 @@ def setup_parser():
     # api/v1/dts/file/<uuid>
     dts_delete = dts_sub.add_parser("delete", parents=[common_parser])
     dts_delete.add_argument(
-        "--cccId",
-        required=True,
+        "cccId",
         type=str,
         nargs="+",
         help="cccId entry to DELETE"
@@ -197,8 +194,7 @@ def setup_parser():
 
     dts_infer = dts_sub.add_parser("infer-cccId", parents=[common_parser])
     dts_infer.add_argument(
-        "--filepath", "-f",
-        required=True,
+        "filepath",
         type=str,
         nargs="+",
         help="name of file(s) or pattern to glob on"
@@ -273,9 +269,8 @@ def setup_parser():
     # api/v1/tool/<uuid>
     ar_delete = ar_sub.add_parser("delete", parents=[common_parser])
     ar_delete.add_argument(
-        "--imageId", "-i",
+        "imageId",
         type=str,
-        required=True,
         help="docker image id"
     )
 
@@ -309,30 +304,49 @@ def setup_parser():
         help="workflow options"
     )
 
+    # api/workflows/v1/query?
+    ee_query = ee_sub.add_parser("query", parents=[common_parser])
+    ee_query.add_argument(
+        "query_terms",
+        type=str,
+        nargs="+",
+        help="The search terms on which to query. Can be specified multiple \
+        times. Should be supplied in the form 'FieldName:Term'"
+    )
+
     # api/workflows/v1/<uuid>/status
     ee_status = ee_sub.add_parser("status", parents=[common_parser])
     ee_status.add_argument(
-        "--workflowId", "-i",
+        "workflowId",
         type=str,
-        required=True,
+        nargs="+",
+        help="workflow uuid"
+    )
+
+    # api/workflows/v1/<uuid>/status
+    ee_status = ee_sub.add_parser("status", parents=[common_parser])
+    ee_status.add_argument(
+        "workflowId",
+        type=str,
+        nargs="+",
         help="workflow uuid"
     )
 
     # api/workflows/v1/<uuid>/outputs
     ee_outputs = ee_sub.add_parser("outputs", parents=[common_parser])
     ee_outputs.add_argument(
-        "--workflowId", "-i",
+        "workflowId",
         type=str,
-        required=True,
+        nargs="+",
         help="workflow uuid"
     )
 
     # api/workflows/v1/<uuid>/metadata
     ee_meta = ee_sub.add_parser("metadata", parents=[common_parser])
     ee_meta.add_argument(
-        "--workflowId", "-i",
+        "workflowId",
         type=str,
-        required=True,
+        nargs="+",
         help="workflow uuid"
     )
 
@@ -538,15 +552,17 @@ def cli_main():
                                        args.workflowInputs,
                                        args.workflowOptions)
             responses.append(r)
-        elif args.action == "status":
-            r = runner.get_status(args.workflowId)
-            responses.append(r)
-        elif args.action == "metadata":
-            r = runner.get_metadata(args.workflowId)
-            responses.append(r)
-        elif args.action == "outputs":
-            r = runner.get_outputs(args.workflowId)
-            responses.append(r)
+        else:
+            for workflowId in args.workflowId:
+                if args.action == "status":
+                    r = runner.get_status(workflowId)
+                    responses.append(r)
+                elif args.action == "metadata":
+                    r = runner.get_metadata(workflowId)
+                    responses.append(r)
+                elif args.action == "outputs":
+                    r = runner.get_outputs(workflowId)
+                    responses.append(r)
 
     # ------------------------
     # Elastic Search

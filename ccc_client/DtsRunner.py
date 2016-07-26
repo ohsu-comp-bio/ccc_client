@@ -56,7 +56,7 @@ class DtsRunner(object):
         )
         return response
 
-    def put(self, cccId, filepath, sites, user=None):        
+    def put(self, cccId, filepath, sites, user=None):
         filepath = os.path.abspath(filepath)
         sites = self._process_sites(sites)
         user = self._process_user(user)
