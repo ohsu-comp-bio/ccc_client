@@ -75,7 +75,7 @@ class ExecEngineRunner(object):
                     raise ValueError("[ERROR] Valid statuses are Submitted,",
                                      "Running, Aborting, Aborted, Failed, and",
                                      "Succeeded.")
-            terms.append("{0}={1}".format(key, val))
+            terms.append("{0}={1}".format(key.tolower(), val))
 
         query_string = "&".join(terms)
         endpoint = "http://{0}:{1}/{2}/query?".format(

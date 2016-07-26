@@ -119,7 +119,8 @@ def setup_parser():
     # api/v1/dts/file
     dts_post = dts_sub.add_parser("post", parents=[common_parser])
     dts_post.add_argument(
-        "filepath",
+        "--filepath", "-f",
+        required=True,
         type=str,
         nargs="+",
         help="name of file(s) or pattern to glob on"
@@ -149,7 +150,8 @@ def setup_parser():
     # api/v1/dts/file
     dts_put = dts_sub.add_parser("put", parents=[common_parser])
     dts_put.add_argument(
-        "filepath",
+        "--filepath", "-f",
+        required=True, 
         type=str,
         help="filepath"
     )
@@ -192,6 +194,17 @@ def setup_parser():
         help="cccId entry to DELETE"
     )
 
+    # api/v1/dts/file/query?
+    dts_query = dts_sub.add_parser("query", parents=[common_parser])
+    dts_query.add_argument(
+        "query_terms",
+        type=str,
+        nargs="+",
+        help="The search terms on which to query. Can be specified multiple \
+        times. Should be supplied in the form 'FieldName:Term'"
+    )
+
+    # no endpoint; doesnt hit the service
     dts_infer = dts_sub.add_parser("infer-cccId", parents=[common_parser])
     dts_infer.add_argument(
         "filepath",
@@ -311,7 +324,8 @@ def setup_parser():
         type=str,
         nargs="+",
         help="The search terms on which to query. Can be specified multiple \
-        times. Should be supplied in the form 'FieldName:Term'"
+        times. Should be supplied in the form 'FieldName:Term'. Possible field \
+        names: name, id, status, start, end, page, pagesize"
     )
 
     # api/workflows/v1/<uuid>/status

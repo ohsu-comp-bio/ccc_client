@@ -164,6 +164,21 @@ class DtsRunner(object):
                 raise
         return response
 
+    def query(self, query_terms):
+        raise NotImplementedError
+        terms = []
+        for query in query_terms:
+            key, val = re.split("[:=]", query)
+            # validation of query terms
+            # TODO
+            terms.append("{0}={1}".format(key.tolower(), val))
+        query_string = "&".join(terms)
+        endpoint = "http://{0}:{1}/{2}/query?".format(
+            self.host, self.port, self.endpoint, query_string
+        )
+        response = requests.get(endpoint, headers=self.headers)
+        return response
+
     def infer_cccId(self, filepath, uuid_strategy="SHA-1"):
         return self._generate_cccId(filepath, uuid_strategy)
 
