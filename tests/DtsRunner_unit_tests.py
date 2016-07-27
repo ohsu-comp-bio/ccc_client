@@ -8,7 +8,7 @@ from unittest.mock import patch
 from ccc_client import DtsRunner
 
 
-class TestCccClient(unittest.TestCase):
+class TestDtsRunner(unittest.TestCase):
     dts_client = DtsRunner()
 
     mock_file = tempfile.NamedTemporaryFile(delete=False)
