@@ -335,7 +335,7 @@ class ElasticSearchRunner(object):
                     print(rowMap, file=sys.stderr)
                     print("index:", self.getIndexName(rowMap), file=sys.stderr)
                     print("key:", self.generateKey(rowMap), file=sys.stderr)
-                    raise
+                    raise RuntimeError
 
         def generateKey(self, rowMap):
             return self.generateKeyForDomain(rowMap, self.domainName)
@@ -383,7 +383,7 @@ class ElasticSearchRunner(object):
                 print(rowMap, file=sys.stderr)
                 print("index: " + self.getIndexName(rowMap), file=sys.stderr)
                 print("key: " + self.generateKey(rowMap), file=sys.stderr)
-                raise
+                raise RuntimeError
 
         def validateOrRegisterWithDts(self, rowMap):
             if 'ccc_id' in rowMap.keys() and 'filepath' not in rowMap.keys() and 'url' not in rowMap.keys():

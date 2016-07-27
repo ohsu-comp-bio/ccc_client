@@ -56,14 +56,14 @@ class DtsRunner(object):
         )
         return response
 
-    def put(self, cccId, filepath, sites, user=None):        
+    def put(self, cccId, filepath, sites, user=None):
         filepath = os.path.abspath(filepath)
         sites = self._process_sites(sites)
         user = self._process_user(user)
 
         # get current record
         resp = self.get(cccId)
-        data = resp.json()
+        data = json.loads(resp.text)
 
         # some checks for safety
         try:
@@ -80,9 +80,7 @@ class DtsRunner(object):
             print("[ERROR] the name and/or size of this file doesn't",
                   "match the current record",
                   file=sys.stderr)
-            print(data['name'], os.path.basename(filepath))
-            print(data['size'], os.path.getsize(filepath))
-            raise
+            raise ValueError
 
         # update record
         locations = []
@@ -124,7 +122,7 @@ class DtsRunner(object):
                 print("[ERROR] The cccId", cccId,
                       "was already present in the DTS",
                       file=sys.stderr)
-                raise
+                raise ValueError
             else:
                 data['cccId'] = cccId
         else:
@@ -154,14 +152,14 @@ class DtsRunner(object):
         )
 
         if response.status_code // 100 != 2:
-            print("Registration with the DTS failed for:",
+            print("[ERROR] Registration with the DTS failed for:",
                   filepath,
                   file=sys.stderr)
             if self._check_cccId(data['cccId']):
-                print("[ERROR] The cccId", cccId,
+                print("[ERROR] The cccId", data['cccId'],
                       "was already present in the DTS",
                       file=sys.stderr)
-                raise
+                raise ValueError
         return response
 
     def infer_cccId(self, filepath, uuid_strategy="SHA-1"):
@@ -190,7 +188,7 @@ class DtsRunner(object):
             )
         return cccId
 
-    def _map_site_to_ip(self,site):
+    def _map_site_to_ip(self, site):
         site_map = {"central": "http://10.73.127.1",
                     "ohsu": "http://10.73.127.6",
                     "dfci": "http://10.73.127.18",
@@ -202,7 +200,7 @@ class DtsRunner(object):
             print("[ERROR] valid values for 'site' are:",
                   "central, ohsu, oicr, and dfci",
                   file=sys.stderr)
-            raise
+            raise KeyError
 
     def _process_sites(self, sites):
         if isinstance(sites, list):
@@ -212,7 +210,7 @@ class DtsRunner(object):
         else:
             print("[ERROR] 'sites' must be a string or list",
                   file=sys.stderr)
-            raise
+            raise TypeError
         return sites
 
     def _process_user(self, user):
