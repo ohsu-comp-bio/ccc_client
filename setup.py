@@ -24,7 +24,11 @@ setup(
         'Topic :: Scientific/Engineering :: Bio-Informatics',
     ],
     keywords='tool',
-    install_requires=["requests>=2.9.1", "elasticsearch>=2.3.0"],
+    install_requires=[
+        "requests>=2.9.1",
+        "elasticsearch>=2.3.0",
+        "iso8601>=0.1.11"
+    ],
     entry_points={
         'console_scripts': [
             'ccc_client=ccc_client.cli:cli_main'
