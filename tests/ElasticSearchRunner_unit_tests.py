@@ -3,20 +3,20 @@ import ccc_client
 
 
 class TestElasticSearchRunner(unittest.TestCase):
+    es_client = ccc_client.ElasticSearchRunner()
     siteId = 'testSite'
     project = 'testProject'
     user = 'testUser'
 
     def test_index_names(self):
-        ccc = ccc_client.ElasticSearchRunner()
-        rp = ccc.RowParser(
+        rp = self.es_client.RowParser(
             fileHeader=None,
             siteId=self.siteId,
             user=self.user,
             projectCode=self.project,
             domainName='resource',
             es=None,
-            domainDescriptors=ccc.DomainDescriptors,
+            domainDescriptors=self.es_client.DomainDescriptors,
             isMock=True,
             skipDtsRegistration=True
         )
@@ -64,13 +64,12 @@ class TestElasticSearchRunner(unittest.TestCase):
         )
 
     def test_import(self):
-        ccc = ccc_client.ElasticSearchRunner()
-        ccc.es = self.MockEs()
+        self.es_client.es = self.MockEs()
 
         # test lack of errors
         fp = "mock/file.txt"
 
-        rowMap = ccc.publish_resource(
+        rowMap = self.es_client.publish_resource(
             filePath=fp,
             siteId=self.siteId,
             user=self.user,
@@ -87,7 +86,7 @@ class TestElasticSearchRunner(unittest.TestCase):
         self.assertEqual(rowMap["mimetype"], "application/text")
 
         # test mock inheritance
-        rowMap = ccc.publish_resource(
+        rowMap = self.es_client.publish_resource(
             filePath=fp,
             siteId=self.siteId,
             user=self.user,
@@ -104,7 +103,7 @@ class TestElasticSearchRunner(unittest.TestCase):
         self.assertEqual(rowMap["inherit2"], "b")
 
         # test inheritance from other domain
-        rowMap = ccc.publish_resource(
+        rowMap = self.es_client.publish_resource(
             filePath=fp,
             siteId=self.siteId,
             user=self.user,

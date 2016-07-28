@@ -208,3 +208,7 @@ class TestDtsRunner(unittest.TestCase):
                 cccId=self.ccc_id
             )
             self.assertEqual(resp.text, "OK")
+
+
+if __name__ == '__main__':
+    unittest.main()

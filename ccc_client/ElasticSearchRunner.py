@@ -264,7 +264,7 @@ class ElasticSearchRunner(object):
 
                 # datatype conversion:
                 if cannonicalName in fds.keys() and 'dataType' in fds[cannonicalName].keys() and val:
-                    type =  fds[cannonicalName]['dataType']
+                    type = fds[cannonicalName]['dataType']
                     try:
                         if type == 'int':
                             val = int(val)
