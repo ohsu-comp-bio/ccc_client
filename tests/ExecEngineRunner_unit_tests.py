@@ -29,6 +29,8 @@ workflow test {
 }
 """
 
+    invalid_wdl_filepath = "/ZAfvcacADF/fakeWdl.wdl"
+
     mock_json = tempfile.NamedTemporaryFile(delete=False)
     mock_json_filepath = mock_json.name
     mock_json_content = json.dumps(
@@ -82,7 +84,7 @@ workflow test {
             mock_post.return_value.status_code = 500
             with self.assertRaises(FileNotFoundError):
                 resp = self.ee_client.submit_workflow(
-                    wdlSource="/tmp/fakeWdl.wdl",
+                    wdlSource=self.invalid_wdl_filepath,
                     workflowInputs=self.mock_json_filepath,
                     workflowOptions=None,
                 )
