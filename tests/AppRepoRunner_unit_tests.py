@@ -48,8 +48,9 @@ class TestAppRepoRunner(unittest.TestCase):
 
     mock_img = tempfile.NamedTemporaryFile(delete=False)
     mock_img_filepath = mock_img.name
-    invalid_img_filepath = "/ZAfvcacADF/foobar.tar.gz"
     mock_img.close()
+
+    invalid_img_filepath = "/ZAfvcacADF/foobar.tar.gz"
 
     mock_metadata = tempfile.NamedTemporaryFile(delete=False)
     mock_metadata_filepath = mock_metadata.name
