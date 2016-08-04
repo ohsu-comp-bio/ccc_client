@@ -17,13 +17,15 @@ setup(
     author_email="strucka@ohsu.edu",
     url="https://github.com/ohsu-computational-biology/ccc_client",
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
         'Natural Language :: English',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
+        "Topic :: Utilities"
     ],
-    keywords='tool',
+    keywords='tool utility',
     install_requires=["requests>=2.9.1", "elasticsearch>=2.3.0"],
     entry_points={
         'console_scripts': [
