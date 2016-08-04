@@ -168,6 +168,7 @@ class ElasticSearchRunner(object):
         read_mode = 'rb' if sys.version_info[0] < 3 else 'r'
         i = 0
         with open(tsv, mode=read_mode) as infile:
+            response = []
             reader = csv.reader(infile, delimiter='\t')
             for row in reader:
                 if i == 0:
@@ -180,8 +181,9 @@ class ElasticSearchRunner(object):
                                                isMock,
                                                skipDtsRegistration)
                 else:
-                    rowParser.pushArrToElastic(row)
+                    response.append(rowParser.pushArrToElastic(row))
                 i += 1
+        return response
 
     def __process_fields(self, fields):
         pfields = {}
@@ -350,7 +352,7 @@ class ElasticSearchRunner(object):
 
         def pushArrToElastic(self, row):
             rowMap = self.generateRowMapFromArr(row)
-            self.pushMapToElastic(rowMap)
+            return self.pushMapToElastic(rowMap)
 
         def pushMapToElastic(self, rowMap):
             rowMap = self.processRowMap(rowMap)

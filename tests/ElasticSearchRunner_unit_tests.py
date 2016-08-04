@@ -24,9 +24,6 @@ class TestElasticSearchRunner(unittest.TestCase):
         skipDtsRegistration=True
     )
 
-    es_record_to_publish = tempfile.NamedTemporaryFile(delete=False)
-    es_record_filepath = es_record_to_publish.name
-
     mock_domain_descriptors = json.dumps(
         {
             "resource": {
@@ -49,6 +46,12 @@ class TestElasticSearchRunner(unittest.TestCase):
     mock_dd_file = tempfile.NamedTemporaryFile(delete=False)
     mock_dd_file.write(mock_domain_descriptors.encode())
     mock_dd_file.close()
+
+    es_record_to_publish = tempfile.NamedTemporaryFile(delete=False)
+    es_record_filepath = es_record_to_publish.name
+    es_record_to_publish.write("ccc_id\tfilepath\textension\n".encode())
+    es_record_to_publish.write(("fakeUUID\t"+mock_dd_file.name+"\ttxt\n").encode())
+    es_record_to_publish.close()
 
     def test_set_read_domainDescriptors(self):
         es = ElasticSearchRunner()
@@ -213,7 +216,26 @@ class TestElasticSearchRunner(unittest.TestCase):
                 isMock=False,
                 skipDtsRegistration=True
             )
-            self.assertEqual(res, mock_es_index.return_value)
+            self.assertEqual(res, [mock_es_index.return_value])
+
+        # test mock
+        res = self.es_client.publish_batch(
+                tsv=self.es_record_filepath,
+                siteId=self.siteId,
+                user=self.user,
+                projectCode=self.project,
+                domainName="resource",
+                isMock=True,
+                skipDtsRegistration=True
+            )
+        self.assertEqual(
+            res,
+            [{"extension": "txt",
+              "projectCode": self.project,
+              "siteId": self.siteId,
+              "ccc_id": "fakeUUID",
+              "filepath": self.mock_dd_file.name}]
+        )
 
     def test_processRowMap(self):
         rowMap = {
