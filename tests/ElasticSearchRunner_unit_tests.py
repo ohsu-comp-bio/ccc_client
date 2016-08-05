@@ -2,7 +2,7 @@ import json
 import tempfile
 import unittest
 
-from unittest.mock import patch
+from mock import patch
 from ccc_client import ElasticSearchRunner
 
 

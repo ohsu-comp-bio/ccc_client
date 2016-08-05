@@ -4,7 +4,7 @@ import json
 import os
 import uuid
 
-from unittest.mock import patch
+from mock import patch
 from ccc_client import DtsRunner
 
 

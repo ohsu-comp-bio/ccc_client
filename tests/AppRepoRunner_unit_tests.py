@@ -2,7 +2,7 @@ import unittest
 import tempfile
 import json
 
-from unittest.mock import patch
+from mock import patch
 from ccc_client import AppRepoRunner
 
 
