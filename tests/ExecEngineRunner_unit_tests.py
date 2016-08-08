@@ -49,7 +49,7 @@ workflow test {
                 }
             }
         )
-        # mimick successful post with single input json
+        # mimic successful post with single input json
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
             mock_post.return_value.text = mock_response
@@ -60,7 +60,7 @@ workflow test {
             )
             self.assertEqual(resp.text, mock_response)
 
-        # mimick successful post with multiple input jsons
+        # mimic successful post with multiple input jsons
         mock_response = json.dumps(
             {
                 "multipleInputs": {
@@ -106,7 +106,7 @@ workflow test {
                 "status": "Running"
             }
         )
-        # mimick successful get request to status endpoint
+        # mimic successful get request to status endpoint
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
             mock_get.return_value.text = mock_response
@@ -155,7 +155,7 @@ workflow test {
                 "start": "2016-02-04T13:47:55.000-05:00"
             }
         )
-        # mimick successful get request to status endpoint
+        # mimic successful get request to status endpoint
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
             mock_get.return_value.text = mock_response
@@ -173,7 +173,7 @@ workflow test {
                 }
             }
         )
-        # mimick successful get request to status endpoint
+        # mimic successful get request to status endpoint
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
             mock_get.return_value.text = mock_response

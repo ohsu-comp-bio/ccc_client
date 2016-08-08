@@ -85,7 +85,7 @@ class TestElasticSearchRunner(unittest.TestCase):
         self.assertEqual(res, {"foo": "bar"})
 
     def test_es_query(self):
-        # mimick successful query of es
+        # mimic successful query of es
         with patch('elasticsearch.Elasticsearch.search') as mock_es_search:
             mock_es_search.return_value = {
                 "hits": {

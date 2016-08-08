@@ -48,9 +48,10 @@ class AppRepoRunner(object):
                      "imageName": (None, imageName),
                      "imageTag": (None, imageTag)}
 
+        headers = self.__setup_call_headers("post")
         response = requests.post(endpoint,
                                  files=form_data,
-                                 headers=self.headers)
+                                 headers=headers)
         return response
 
     def put(self, imageId, metadata):
@@ -83,7 +84,7 @@ class AppRepoRunner(object):
             else:
                 assert loaded_metadata['id'] == imageId
 
-        headers = self.headers.update({'Content-Type': 'application/json'})
+        headers = self.__setup_call_headers("put")
         response = requests.put(
             endpoint,
             data=json.dumps(loaded_metadata),
@@ -103,7 +104,7 @@ class AppRepoRunner(object):
                                                             self.endpoint,
                                                             imageName)
 
-        headers = self.headers.update({'Content-Type': 'application/json'})
+        headers = self.__setup_call_headers("get")
         response = requests.get(
             endpoint,
             headers=headers
@@ -115,9 +116,17 @@ class AppRepoRunner(object):
                                                    self.port,
                                                    self.endpoint,
                                                    imageId)
-        headers = self.headers.update({'Content-Type': 'application/json'})
+        headers = self.__setup_call_headers("delete")
         response = requests.delete(
             endpoint,
             headers=headers
         )
         return response
+
+    def __setup_call_headers(self, method):
+        call_header = self.headers.copy()
+        if method == "post":
+            call_header.update({'Content-Type': 'multipart/form-data'})
+        else:
+            call_header.update({'Content-Type': 'application/json'})
+        return call_header

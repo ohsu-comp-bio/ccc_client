@@ -21,7 +21,7 @@ class TestDtsRunner(unittest.TestCase):
     user = "dts_tester"
 
     def test_dts_post(self):
-        # mimick successful post
+        # mimic successful post
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
             mock_post.return_value.text = self.ccc_id
@@ -34,7 +34,7 @@ class TestDtsRunner(unittest.TestCase):
 
             self.assertEqual(resp.text, self.ccc_id)
 
-        # mimick file already being registered
+        # mimic file already being registered
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 500
             with patch('requests.get') as mock_get:
@@ -47,7 +47,7 @@ class TestDtsRunner(unittest.TestCase):
                         cccId=None
                     )
 
-        # mimick successful post w/ user provided ccc id
+        # mimic successful post w/ user provided ccc id
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
             mock_post.return_value.text = self.ccc_id
@@ -61,7 +61,7 @@ class TestDtsRunner(unittest.TestCase):
                 )
                 self.assertEqual(resp.text, self.ccc_id)
 
-        # mimick failed post w/ user provided ccc id
+        # mimic failed post w/ user provided ccc id
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 500
             mock_post.return_value.text = self.ccc_id
@@ -76,7 +76,7 @@ class TestDtsRunner(unittest.TestCase):
                     )
 
     def test_dts_update(self):
-        # mimick successful update
+        # mimic successful update
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
             mock_put.return_value.text = "OK"
@@ -105,7 +105,7 @@ class TestDtsRunner(unittest.TestCase):
                 )
                 self.assertEqual(resp.text, "OK")
 
-        # mimick update attempt where filepath doesn't match expected cccId
+        # mimic update attempt where filepath doesn't match expected cccId
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
             mock_get.return_value.text = json.dumps(

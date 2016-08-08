@@ -59,7 +59,7 @@ class TestAppRepoRunner(unittest.TestCase):
 
     def test_ar_post(self):
         mock_response = ""
-        # mimick successful post with single input json
+        # mimic successful post with single input json
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
             mock_post.return_value.text = mock_response
@@ -82,7 +82,7 @@ class TestAppRepoRunner(unittest.TestCase):
 
     def test_ar_put(self):
         mock_response = "OK"
-        # mimick successful put metadata request w/ metadata file path
+        # mimic successful put metadata request w/ metadata file path
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
             mock_put.return_value.text = mock_response
@@ -92,7 +92,7 @@ class TestAppRepoRunner(unittest.TestCase):
             )
             self.assertEqual(resp.text, mock_response)
 
-        # mimick successful put metadata request w/ metadata json str
+        # mimic successful put metadata request w/ metadata json str
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
             mock_put.return_value.text = mock_response
@@ -102,7 +102,7 @@ class TestAppRepoRunner(unittest.TestCase):
             )
             self.assertEqual(resp.text, mock_response)
 
-        # mimick successful put metadata request w/ metadata dict
+        # mimic successful put metadata request w/ metadata dict
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
             mock_put.return_value.text = mock_response
@@ -112,7 +112,7 @@ class TestAppRepoRunner(unittest.TestCase):
             )
             self.assertEqual(resp.text, mock_response)
 
-        # mimick unsuccessful put metadata request w/ invalid json
+        # mimic unsuccessful put metadata request w/ invalid json
         with patch('requests.put') as mock_put:
             with self.assertRaises(ValueError):
                 resp = self.ar_client.put(
@@ -120,7 +120,7 @@ class TestAppRepoRunner(unittest.TestCase):
                     metadata=self.invalid_metadata_str
                 )
 
-        # mimick unsuccessful put metadata request w/ valid json, invalid json
+        # mimic unsuccessful put metadata request w/ valid json, invalid json
         # schema
         with patch('requests.put') as mock_put:
             with self.assertRaises(KeyError):
@@ -129,7 +129,7 @@ class TestAppRepoRunner(unittest.TestCase):
                     metadata=self.invalid_metadata2_str
                 )
 
-        # mimick unsuccessful put metadata request where imageId doesn't match
+        # mimic unsuccessful put metadata request where imageId doesn't match
         # metadata imageId field
         with patch('requests.put') as mock_put:
             with self.assertRaises(AssertionError):
@@ -140,7 +140,7 @@ class TestAppRepoRunner(unittest.TestCase):
 
     def test_ar_get(self):
         mock_response = self.valid_metadata_str
-        # mimick successful get request:
+        # mimic successful get request:
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
             mock_get.return_value.text = mock_response
@@ -159,7 +159,7 @@ class TestAppRepoRunner(unittest.TestCase):
 
     def test_ar_delete(self):
         mock_response = "OK"
-        # mimick successful get request:
+        # mimic successful get request:
         with patch('requests.delete') as mock_delete:
             mock_delete.return_value.status_code = 201
             mock_delete.return_value.text = mock_response

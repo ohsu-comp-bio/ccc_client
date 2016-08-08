@@ -94,7 +94,7 @@ class ElasticSearchRunner(object):
 
         hits = hits['hits']['hits']
         ret = []
-        if hits != []:
+        if len(hits) > 0:
             for hit in hits:
                 ret.append(hit['_source'])
         return(ret)
@@ -322,8 +322,7 @@ class ElasticSearchRunner(object):
                 )
 
                 hits = hits['hits']['hits']
-                if hits != []:
-                    # apply data
+                if len(hits) > 0:
                     hit = hits[0]
                     rowMap.update(hit["_source"])
 
