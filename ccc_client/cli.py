@@ -585,7 +585,6 @@ def cli_main():
         if args.action == "query":
             r = runner.query(args.domain,
                              args.query_terms)
-            # responses.append(r)
         elif args.action == "publish-batch":
             r = runner.publish_batch(args.tsv,
                                      args.site,
@@ -593,7 +592,6 @@ def cli_main():
                                      args.project,
                                      args.domain,
                                      False)
-            # responses.append(r)
         elif args.action == "publish-resource":
             r = runner.publish_resource(args.filepath,
                                         args.site,
@@ -605,7 +603,7 @@ def cli_main():
                                         args.inheritFrom,
                                         args.property_override,
                                         False)
-            # responses.append(r)
+        print(r)
 
     # ------------------------
     # Response Handling

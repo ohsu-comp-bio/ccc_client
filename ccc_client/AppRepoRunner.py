@@ -48,9 +48,10 @@ class AppRepoRunner(object):
                      "imageName": (None, imageName),
                      "imageTag": (None, imageTag)}
 
+        headers = self.__setup_call_headers("post")
         response = requests.post(endpoint,
                                  files=form_data,
-                                 headers=self.headers)
+                                 headers=headers)
         return response
 
     def put(self, imageId, metadata):
@@ -59,11 +60,17 @@ class AppRepoRunner(object):
                                                    self.endpoint,
                                                    imageId)
 
-        if os.path.isfile(metadata):
-            with open(metadata) as metadata_filehandle:
-                loaded_metadata = json.loads(metadata_filehandle.read())
+        if isinstance(metadata, str):
+            if os.path.isfile(metadata):
+                with open(metadata) as metadata_filehandle:
+                    metadata = metadata_filehandle.read()
+            else:
+                pass
+            loaded_metadata = json.loads(metadata.replace("'", '"'))
+        elif isinstance(metadata, dict):
+            loaded_metadata = metadata
         else:
-            loaded_metadata = json.loads(metadata)
+            raise TypeError("metadata must be a python dict or str")
 
         if imageId is None:
             if loaded_metadata['id'] == '':
@@ -74,8 +81,10 @@ class AppRepoRunner(object):
         else:
             if loaded_metadata['id'] == '':
                 loaded_metadata['id'] = imageId
+            else:
+                assert loaded_metadata['id'] == imageId
 
-        headers = self.headers.update({'Content-Type': 'application/json'})
+        headers = self.__setup_call_headers("put")
         response = requests.put(
             endpoint,
             data=json.dumps(loaded_metadata),
@@ -95,22 +104,29 @@ class AppRepoRunner(object):
                                                             self.endpoint,
                                                             imageName)
 
-        headers = self.headers.update({'Content-Type': 'application/json'})
+        headers = self.__setup_call_headers("get")
         response = requests.get(
             endpoint,
             headers=headers
         )
         return response
 
-
     def delete(self, imageId):
         endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
                                                    self.port,
                                                    self.endpoint,
                                                    imageId)
-        headers = self.headers.update({'Content-Type': 'application/json'})
+        headers = self.__setup_call_headers("delete")
         response = requests.delete(
             endpoint,
             headers=headers
         )
         return response
+
+    def __setup_call_headers(self, method):
+        call_header = self.headers.copy()
+        if method == "post":
+            call_header.update({'Content-Type': 'multipart/form-data'})
+        else:
+            call_header.update({'Content-Type': 'application/json'})
+        return call_header
