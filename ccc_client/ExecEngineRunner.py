@@ -44,6 +44,12 @@ class ExecEngineRunner(object):
 
         form_data = [('wdlSource', (wdlSource, open(wdlSource, 'rb')))]
         # allow for pattern matching on workflow inputs file(s)
+        if isinstance(workflowInputs, str):
+            workflowInputs = [workflowInputs]
+        elif isinstance(workflowInputs, list):
+            assert all(isinstance(n, str) for n in workflowInputs)
+        else:
+            raise TypeError("WorkflowInputs must be str or list type")
         for f in workflowInputs:
             file_list = glob.glob(os.path.abspath(f))
             if file_list == []:

@@ -3,16 +3,17 @@ from __future__ import print_function
 import csv
 import json
 import os
+import re
 import sys
 import uuid
-import ccc_client.DtsRunner
+
+from ccc_client import DtsRunner
 from ccc_client.utils import parseAuthToken
 from elasticsearch import Elasticsearch
 
 
 class ElasticSearchRunner(object):
     __domainFile = None
-    __skipDtsRegistration = False
 
     def __init__(self, host=None, port=None, authToken=None):
         if host is not None:
@@ -47,7 +48,6 @@ class ElasticSearchRunner(object):
 
         with open(ddFile) as json_data:
             self.DomainDescriptors = json.load(json_data)
-
             json_data.close()
 
     # @classmethod
@@ -55,17 +55,20 @@ class ElasticSearchRunner(object):
         self.__domainFile = domainFile
         self.readDomainDescriptors()
 
-    def setSkipDtsRegistration(self, skipDtsRegistration):
-        self.__skipDtsRegistration = skipDtsRegistration
-
     # @classmethod
     def query(self, domainName, queries):
+        if isinstance(queries, str):
+            queries = [queries]
+        elif isinstance(queries, list):
+            pass
+        else:
+            raise TypeError("queries must be a str or list type")
+
         terms = []
-        for query in queries:
-            vals = query.split(":")
+        for key, val in self.__process_fields(queries).items():
             terms.append({
                 "match_phrase": {
-                    vals[0]: vals[1]
+                    key: val
                 }
             })
 
@@ -91,17 +94,20 @@ class ElasticSearchRunner(object):
 
         hits = hits['hits']['hits']
         ret = []
-        if hits:
+        if len(hits) > 0:
             for hit in hits:
                 ret.append(hit['_source'])
-
-        print(json.dumps(ret))
+        return(ret)
 
     # @classmethod
     def publish_resource(self, filePath, siteId, user, projectCode, workflowId,
-                         mimeType, domainName, inheritFrom, properties, isMock):
-        rowMap = {}
+                         mimeType, domainName, inheritFrom, properties, isMock,
+                         skipDtsRegistration):
 
+        if not self.DomainDescriptors[domainName]:
+            raise RuntimeError("Unknown domain: " + domainName)
+
+        rowMap = {}
         if (inheritFrom):
             domain = self.DomainDescriptors[domainName]
             hits = self.es.search(
@@ -130,13 +136,13 @@ class ElasticSearchRunner(object):
                 if ("_source" in hit.keys()):
                     rowMap.update(hit["_source"])
             else:
-                raise RuntimeError(
+                raise KeyError(
                     "Unable to find existing resource with id: " + inheritFrom
                 )
 
-        for prop in properties:
-            tokens = prop.split(":")
-            rowMap[tokens[0]] = tokens[1]
+        # update with user supplied properties
+        properties = self.__process_fields(properties)
+        rowMap.update(properties)
 
         # NOTE: these should always supersede the properties argument
         rowMap['filepath'] = filePath
@@ -147,27 +153,22 @@ class ElasticSearchRunner(object):
 
         rowParser = self.RowParser(rowMap.keys(), siteId, user, projectCode,
                                    'resource', self.es, self.DomainDescriptors,
-                                   isMock, self.__skipDtsRegistration)
-        rowParser.pushMapToElastic(rowMap)
+                                   isMock, skipDtsRegistration)
 
-        return rowMap
-
-    # @classmethod
-    def print_domain(self, domainName):
-        if not self.DomainDescriptors[domainName]:
-            raise RuntimeError("Unknown domain: " + domainName)
-
-        domain = self.DomainDescriptors[domainName]
-        print(domain)
+        response = rowParser.pushMapToElastic(rowMap)
+        return response
 
     # @classmethod
-    def publish_batch(self, tsv, siteId, user, projectCode, domainName, isMock):
+    def publish_batch(self, tsv, siteId, user, projectCode, domainName, isMock,
+                      skipDtsRegistration):
+
         if not self.DomainDescriptors[domainName]:
             raise RuntimeError("Unknown domain: " + domainName)
 
         read_mode = 'rb' if sys.version_info[0] < 3 else 'r'
         i = 0
         with open(tsv, mode=read_mode) as infile:
+            response = []
             reader = csv.reader(infile, delimiter='\t')
             for row in reader:
                 if i == 0:
@@ -178,29 +179,39 @@ class ElasticSearchRunner(object):
                                                domainName, self.es,
                                                self.DomainDescriptors,
                                                isMock,
-                                               self.__skipDtsRegistration)
+                                               skipDtsRegistration)
                 else:
-                    rowParser.pushArrToElastic(row)
-
+                    response.append(rowParser.pushArrToElastic(row))
                 i += 1
+        return response
+
+    def __process_fields(self, fields):
+        pfields = {}
+        if isinstance(fields, str):
+            pfields.update(self.__validate_field(fields))
+        elif isinstance(fields, (list, tuple)):
+            for f in fields:
+                pfields.update(self.__process_fields(f))
+        elif isinstance(fields, dict):
+            pfields.update(fields)
+        else:
+            raise TypeError("queries must be a str or list type")
+        return pfields
+
+    def __validate_field(self, field):
+        assert re.search(":", field) is not None
+        assert len(re.findall(":", field)) == 1
+        key, val = re.compile("\s*:\s*").split(field)
+        return {key: val}
 
     # Responsible for inspecting the header and normalizing/augmenting field
     # names
     class RowParser(object):
-        # array of raw data
-        fileHeader = None
-        siteId = None
-        user = None
-        aliasMap = {}
-        domainName = None
-        es = None
-        domainDescriptors = None
-        isMock = False
-        skipDtsRegistration = False
-
         def __init__(self, fileHeader=None, siteId=None, user=None,
                      projectCode=None, domainName=None, es=None,
-                     domainDescriptors=None, isMock=False, skipDtsRegistration=False):
+                     domainDescriptors=None, isMock=False,
+                     skipDtsRegistration=False):
+
             self.fileHeader = fileHeader
             self.siteId = siteId
             self.user = user
@@ -210,7 +221,10 @@ class ElasticSearchRunner(object):
             self.domainDescriptors = domainDescriptors
             self.aliasMap = self.getAliases(fileHeader)
             self.isMock = isMock
-            self.skipDtsRegistration = skipDtsRegistration
+            if isMock:
+                self.skipDtsRegistration = True
+            else:
+                self.skipDtsRegistration = skipDtsRegistration
 
         def getAliases(self, fileHeader):
             aliasMap = {}
@@ -226,119 +240,93 @@ class ElasticSearchRunner(object):
 
         def generateRowMapFromArr(self, rowArr):
             if not rowArr:
-                raise RuntimeError("empty row")
-
-            ret = {}
-            i = 0
-            for token in self.fileHeader:
-                if i >= len(rowArr):
-                    # raise RuntimeError("not enough elements in row: " + str(i) + "/" + str(len(rowArr)))
-                    continue
-
-                val = rowArr[i]
-                i += 1
-
-                ret[token] = val
-
-            return ret
+                raise ValueError("row cannot be empty")
+            elif len(rowArr) != len(self.fileHeader):
+                raise ValueError("fileHeader and row must have the same number of items")
+            else:
+                ret = dict(zip(self.fileHeader, rowArr))
+                return ret
 
         def processRowMap(self, rowMap):
-            rowMap['siteId'] = self.siteId
+            # get all fields for domain
+            fds = self.domainDescriptors[self.domainName]["fieldDescriptors"]
 
-            keys = list(rowMap.keys())
-            for token in keys:
-                # TODO: consider case sensitivity?
-
+            # iterate over rowMap
+            rowMap_keys = list(rowMap.keys())
+            for token in rowMap_keys:
                 val = rowMap[token]
-
                 # append known aliases
                 if token.lower() in self.aliasMap:
                     cannonicalName = self.aliasMap[token.lower()]
                 else:
                     cannonicalName = token
 
-                # allow for text on missing value
-                fds = self.domainDescriptors[self.domainName]["fieldDescriptors"]
-                if not val and cannonicalName in fds.keys() and 'missingValue' in fds[cannonicalName].keys():
-                    val = fds[cannonicalName]['missingValue']
-
-                # datatype conversion:
-                if cannonicalName in fds.keys() and 'dataType' in fds[cannonicalName].keys() and val:
-                    type =  fds[cannonicalName]['dataType']
-                    try:
-                        if type == 'int':
-                            val = int(val)
-                        elif type == 'float':
-                            val = float(val)
-                    except Exception:
-                        raise RuntimeError(
-                            "Unable to convert field: " + token + " to type: " +
-                            type + " for value [" + val + "]")
-
+                if cannonicalName in fds.keys():
+                    # allow for text on missing value
+                    if val is None:
+                        if 'missingValue' in fds[cannonicalName].keys():
+                            val = fds[cannonicalName]['missingValue']
+                    else:
+                        # datatype conversion:
+                        if 'dataType' in fds[cannonicalName].keys():
+                            dtype = fds[cannonicalName]['dataType']
+                            if dtype == 'int':
+                                val = int(val)
+                            elif dtype == 'float':
+                                val = float(val)
+                            elif dtype == 'string':
+                                pass
+                            else:
+                                raise TypeError(
+                                    "Unable to convert field: " + token +
+                                    " to type: " + dtype +
+                                    " for value [" + val + "]"
+                                )
                 # finally append value
                 rowMap[token] = val
+
+                # keep token and alias
                 if token != cannonicalName:
                     rowMap[cannonicalName] = val
 
             # process filepath/ccc_id
-            if not self.skipDtsRegistration:
-                self.validateOrRegisterWithDts(rowMap)
+            rowMap = self.validateOrRegisterWithDts(rowMap)
 
             # append fields from other domains (denormalize)
-            idx = self.domainDescriptors[self.domainName]['idx']
-            domainsToAppend = []
-            for dn in self.domainDescriptors:
-                if dn != self.domainName and self.domainDescriptors[dn]['idx'] < idx:
-                    domainsToAppend.append(dn)
-
-            domainsToAppend.reverse()
+            domainsToAppend = list(self.domainDescriptors.keys())
+            domainsToAppend.remove(self.domainName)
             for dn in domainsToAppend:
-                self.appendFieldsForDomain(rowMap, dn)
+                rowMap = self.appendFieldsForDomain(rowMap, dn)
 
             # NOTE: these should always supersede the previous properties
             rowMap['siteId'] = self.siteId
             rowMap['projectCode'] = self.projectCode
-
             return rowMap
 
         def appendFieldsForDomain(self, rowMap, dn):
             if self.domainDescriptors[dn]['keyField'] in rowMap:
                 key = self.generateKeyForDomain(rowMap, dn)
+                domain = self.domainDescriptors[dn]
 
-                try:
-                    domain = self.domainDescriptors[dn]
-
-                    hits = self.es.search(
-                        index=self.getIndexNameForDomain(dn),
-                        doc_type=domain['docType'],
-                        ignore_unavailable=True,
-                        body={
-                            "size": 10000, "query": {
-                                "query_string": {
-                                    "query": "_id" + ":\"" + key + "\""
-                                }
+                hits = self.es.search(
+                    index=self.getIndexNameForDomain(dn),
+                    doc_type=domain['docType'],
+                    ignore_unavailable=True,
+                    body={
+                        "size": 10000, "query": {
+                            "query_string": {
+                                "query": "_id" + ":\"" + key + "\""
                             }
                         }
-                    )
+                    }
+                )
 
-                    hits = hits['hits']['hits']
-                    if not hits:
-                        return
-
-                    # apply data
+                hits = hits['hits']['hits']
+                if len(hits) > 0:
                     hit = hits[0]
-                    if ("_source" in hit.keys()):
-                        rowMap.update(hit["_source"])
+                    rowMap.update(hit["_source"])
 
-                except:
-                    print('exception:', file=sys.stderr)
-                    print(rowMap, file=sys.stderr)
-                    print("index:", self.getIndexName(rowMap), file=sys.stderr)
-                    print("key:", self.generateKey(rowMap), file=sys.stderr)
-                    raise
-
-        def generateKey(self, rowMap):
-            return self.generateKeyForDomain(rowMap, self.domainName)
+            return rowMap
 
         def generateKeyForDomain(self, rowMap, domainName):
             domain = self.domainDescriptors[domainName]
@@ -347,79 +335,81 @@ class ElasticSearchRunner(object):
             if keyField not in rowMap:
                 print('exception:', file=sys.stderr)
                 print(json.dumps(rowMap), file=sys.stderr)
-                raise RuntimeError("Row lacks key field: " + keyField)
+                raise KeyError("Row lacks key field: " + keyField)
 
-            if 'useKeyFieldAsIndexKey' in domain.keys() and domain['useKeyFieldAsIndexKey']:
+            if 'useKeyFieldAsIndexKey' in domain.keys():
                 return (rowMap[keyField]).lower()
             else:
-                return (self.projectCode + "-" + domainName + "-" + rowMap[keyField]).lower()
-
-        def getIndexName(self, rowMap):
-            return self.getIndexNameForDomain(self.domainName)
+                domainKey = "-".join(
+                    [self.projectCode, domainName, rowMap[keyField]]
+                ).lower()
+                return domainKey
 
         def getIndexNameForDomain(self, domainName):
             domain = self.domainDescriptors[domainName]
-            return (self.projectCode + "-" + domain['indexPrefix']).lower()
+            return "-".join([self.projectCode, domain['indexPrefix']]).lower()
 
         def pushArrToElastic(self, row):
             rowMap = self.generateRowMapFromArr(row)
-            self.pushMapToElastic(rowMap)
+            return self.pushMapToElastic(rowMap)
 
         def pushMapToElastic(self, rowMap):
             rowMap = self.processRowMap(rowMap)
 
-            try:
-                if self.isMock:
-                    print(json.dumps(rowMap))
-                else:
-                    self.es.index(
-                        index=self.getIndexName(rowMap),
-                        body=rowMap,
-                        doc_type=self.domainDescriptors[self.domainName]['docType'],
-                        id=self.generateKey(rowMap)
-                    )
-            except:
-                print('exception', file=sys.stderr)
-                print(rowMap, file=sys.stderr)
-                print("index: " + self.getIndexName(rowMap), file=sys.stderr)
-                print("key: " + self.generateKey(rowMap), file=sys.stderr)
-                raise
+            if self.isMock:
+                return rowMap
+            else:
+                response = self.es.index(
+                    index=self.getIndexNameForDomain(self.domainName),
+                    body=rowMap,
+                    doc_type=self.domainDescriptors[self.domainName]['docType'],
+                    id=self.generateKeyForDomain(rowMap, self.domainName)
+                )
+                return response
 
         def validateOrRegisterWithDts(self, rowMap):
-            if 'ccc_id' in rowMap.keys() and 'filepath' not in rowMap.keys() and 'url' not in rowMap.keys():
-                self.validateCccId(rowMap['ccc_id'], None)
-            elif 'ccc_id' in rowMap.keys() and 'filepath' in rowMap.keys():
-                self.validateCccId(rowMap['ccc_id'], rowMap['filepath'])
-            elif 'ccc_id' not in rowMap.keys() and 'filepath' in rowMap.keys():
-                self.registerWithDts(rowMap)
-            elif 'ccc_id' not in rowMap.keys() and 'url' in rowMap.keys():
-                self.registerWithDts(rowMap)
+            if 'ccc_id' in rowMap.keys():
+                if 'filepath' in rowMap.keys():
+                    self.validateCccId(rowMap['ccc_id'], rowMap['filepath'])
+                elif 'url' in rowMap.keys():
+                    self.validateCccId(rowMap['ccc_id'], rowMap['url'])
+                else:
+                    self.validateCccId(rowMap['ccc_id'], None)
+            else:
+                rowMap = self.registerWithDts(rowMap)
+            return rowMap
 
         def registerWithDts(self, rowMap):
-            path = rowMap['filepath'] if 'filepath' in rowMap.keys() else rowMap['url']
+            if 'filepath' in rowMap.keys():
+                path = rowMap['filepath']
+            elif 'url' in rowMap.keys():
+                path = rowMap['url']
+            else:
+                raise KeyError(
+                    "DTS registration requires a resource path or url"
+                )
 
-            if self.isMock:
+            if self.skipDtsRegistration:
                 print("Assigning a mock CCC_ID", file=sys.stderr)
                 rowMap['ccc_id'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, path))
-                return
-
-            dts = ccc_client.DtsRunner()
-            rowMap['ccc_id'] = dts.post(path,
-                                        self.siteId,
-                                        self.user)
+            else:
+                dts = DtsRunner()
+                rowMap['ccc_id'] = dts.post(path,
+                                            self.siteId,
+                                            self.user).text
+            return rowMap
 
         def validateCccId(self, ccc_id, filepath):
-            if self.isMock:
+            if self.skipDtsRegistration:
                 print("Skipping DTS check because this is a mock import",
                       file=sys.stderr)
-                return
-
-            dts = ccc_client.DtsRunner()
-            response = dts.get(ccc_id)
-            if response.status_code // 100 != 2:
-                raise RuntimeError("CCC_ID not found: " + ccc_id)
-            if filepath is not None:
-                data = response.json()
-                assert data['name'] == os.path.basename(filepath)
-                assert data['path'] == os.path.dirname(filepath)
+            else:
+                dts = DtsRunner()
+                response = dts.get(ccc_id)
+                if response.status_code // 100 != 2:
+                    raise RuntimeError("CCC_ID not found: " + ccc_id)
+                if filepath is not None:
+                    data = response.json()
+                    assert data['name'] == os.path.basename(filepath)
+                    assert data['path'] == os.path.dirname(filepath)
             return True
