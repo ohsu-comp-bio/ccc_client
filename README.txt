@@ -1,9 +1,9 @@
-This tool provides a command line interface to services within the CCC, along with python libraries suitable for direct use from other python scripts.  Documentation of the command line options is below.  For registration of resources with DMS/Search (i.e. elasticsearch), you might consider the ccc_import tool, which is based on the same python modules, but provides a slightly streamlined command line interface.
+This tool provides a command line interface to services within the CCC, along with python libraries suitable for direct use from other python scripts.  Documentation of the command line options is below.
 
 
 usage: ccc_client [-h] [--debug] [--host HOST] [--port PORT]
-                         [--authToken AUTHTOKEN] [--help-long] [--version]
-                         {dts,app-repo,exec-engine,elasticsearch} ...
+                  [--authToken AUTHTOKEN] [--help-long] [--version]
+                  {dts,app-repo,exec-engine,elasticsearch} ...
 
 CCC client
 
@@ -32,16 +32,17 @@ action:
 | post |
 --------
 usage: ccc_client dts post [-h] [--debug] [--host HOST] [--port PORT]
-                                  [--authToken AUTHTOKEN] --filepath FILEPATH
-                                  [FILEPATH ...] --user USER --site
-                                  {central,dfci,ohsu,oicr} [--cccId CCCID]
+                           [--authToken AUTHTOKEN] --filepath FILEPATH
+                           [FILEPATH ...] [--user USER] --site
+                           {central,dfci,ohsu,oicr}
+                           [{central,dfci,ohsu,oicr} ...] [--cccId CCCID]
 
 optional arguments:
                         authorization token
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
                         name of file(s) or pattern to glob on
   --user USER, -u USER  user identity
-  --site {central,dfci,ohsu,oicr}, -s {central,dfci,ohsu,oicr}
+  --site {central,dfci,ohsu,oicr} [{central,dfci,ohsu,oicr} ...], -s {central,dfci,ohsu,oicr} [{central,dfci,ohsu,oicr} ...]
                         site the data resides at
   --cccId CCCID         cccId; if not given one will be generated
                         automatically
@@ -50,9 +51,10 @@ optional arguments:
 | put |
 -------
 usage: ccc_client dts put [-h] [--debug] [--host HOST] [--port PORT]
-                                 [--authToken AUTHTOKEN] --cccId CCCID
-                                 [--filepath FILEPATH] [--user USER]
-                                 [--site {central,dfci,ohsu,oicr}]
+                          [--authToken AUTHTOKEN] --cccId CCCID --filepath
+                          FILEPATH [--user USER] --site
+                          {central,dfci,ohsu,oicr}
+                          [{central,dfci,ohsu,oicr} ...]
 
 optional arguments:
                         authorization token
@@ -60,45 +62,48 @@ optional arguments:
   --filepath FILEPATH, -f FILEPATH
                         filepath
   --user USER, -u USER  site user
-  --site {central,dfci,ohsu,oicr}, -s {central,dfci,ohsu,oicr}
+  --site {central,dfci,ohsu,oicr} [{central,dfci,ohsu,oicr} ...], -s {central,dfci,ohsu,oicr} [{central,dfci,ohsu,oicr} ...]
                         site the data resides at
 
 -------
 | get |
 -------
 usage: ccc_client dts get [-h] [--debug] [--host HOST] [--port PORT]
-                                 [--authToken AUTHTOKEN] --cccId CCCID
-                                 [CCCID ...]
+                          [--authToken AUTHTOKEN]
+                          cccId [cccId ...]
+
+positional arguments:
+  cccId                 cccId entry to GET
 
 optional arguments:
                         authorization token
-  --cccId CCCID [CCCID ...]
-                        cccId entry to GET
 
 ----------
 | delete |
 ----------
 usage: ccc_client dts delete [-h] [--debug] [--host HOST] [--port PORT]
-                                    [--authToken AUTHTOKEN] --cccId CCCID
-                                    [CCCID ...]
+                             [--authToken AUTHTOKEN]
+                             cccId [cccId ...]
+
+positional arguments:
+  cccId                 cccId entry to DELETE
 
 optional arguments:
                         authorization token
-  --cccId CCCID [CCCID ...]
-                        cccId entry to DELETE
 
 ---------------
 | infer-cccId |
 ---------------
-usage: ccc_client dts infer-cccId [-h] [--debug] [--host HOST]
-                                         [--port PORT] [--authToken AUTHTOKEN]
-                                         --filepath FILEPATH [FILEPATH ...]
-                                         [--strategy {MD5,SHA-1}]
+usage: ccc_client dts infer-cccId [-h] [--debug] [--host HOST] [--port PORT]
+                                  [--authToken AUTHTOKEN]
+                                  [--strategy {MD5,SHA-1}]
+                                  filepath [filepath ...]
+
+positional arguments:
+  filepath              name of file(s) or pattern to glob on
 
 optional arguments:
                         authorization token
-  --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
-                        name of file(s) or pattern to glob on
   --strategy {MD5,SHA-1}, -s {MD5,SHA-1}
                         hashing strategy to use to generate the cccId
                         (default: SHA-1)
@@ -114,12 +119,11 @@ action:
 --------
 | post |
 --------
-usage: ccc_client app-repo post [-h] [--debug] [--host HOST]
-                                       [--port PORT] [--authToken AUTHTOKEN]
-                                       [--imageBlob IMAGEBLOB]
-                                       [--imageName IMAGENAME]
-                                       [--imageTag IMAGETAG]
-                                       [--metadata METADATA]
+usage: ccc_client app-repo post [-h] [--debug] [--host HOST] [--port PORT]
+                                [--authToken AUTHTOKEN]
+                                [--imageBlob IMAGEBLOB]
+                                [--imageName IMAGENAME] [--imageTag IMAGETAG]
+                                [--metadata METADATA]
 
 optional arguments:
                         authorization token
@@ -135,9 +139,9 @@ optional arguments:
 -------
 | put |
 -------
-usage: ccc_client app-repo put [-h] [--debug] [--host HOST]
-                                      [--port PORT] [--authToken AUTHTOKEN]
-                                      --metadata METADATA [--imageId IMAGEID]
+usage: ccc_client app-repo put [-h] [--debug] [--host HOST] [--port PORT]
+                               [--authToken AUTHTOKEN] --metadata METADATA
+                               [--imageId IMAGEID]
 
 optional arguments:
                         authorization token
@@ -149,29 +153,28 @@ optional arguments:
 -------
 | get |
 -------
-usage: ccc_client app-repo get [-h] [--debug] [--host HOST]
-                                      [--port PORT] [--authToken AUTHTOKEN]
-                                      [--imageId IMAGEID]
-                                      [--imageName IMAGENAME]
+usage: ccc_client app-repo get [-h] [--debug] [--host HOST] [--port PORT]
+                               [--authToken AUTHTOKEN]
+                               imageId
+
+positional arguments:
+  imageId               docker image id or name
 
 optional arguments:
                         authorization token
-  --imageId IMAGEID, -i IMAGEID
-                        docker image id
-  --imageName IMAGENAME, -n IMAGENAME
-                        docker image name
 
 ----------
 | delete |
 ----------
-usage: ccc_client app-repo delete [-h] [--debug] [--host HOST]
-                                         [--port PORT] [--authToken AUTHTOKEN]
-                                         --imageId IMAGEID
+usage: ccc_client app-repo delete [-h] [--debug] [--host HOST] [--port PORT]
+                                  [--authToken AUTHTOKEN]
+                                  imageId
+
+positional arguments:
+  imageId               docker image id
 
 optional arguments:
                         authorization token
-  --imageId IMAGEID, -i IMAGEID
-                        docker image id
 
 ============================================================
 exec-engine
@@ -185,12 +188,10 @@ action:
 | submit |
 ----------
 usage: ccc_client exec-engine submit [-h] [--debug] [--host HOST]
-                                            [--port PORT]
-                                            [--authToken AUTHTOKEN]
-                                            --wdlSource WDLSOURCE
-                                            --workflowInputs WORKFLOWINPUTS
-                                            [WORKFLOWINPUTS ...]
-                                            [--workflowOptions WORKFLOWOPTIONS]
+                                     [--port PORT] [--authToken AUTHTOKEN]
+                                     --wdlSource WDLSOURCE --workflowInputs
+                                     WORKFLOWINPUTS [WORKFLOWINPUTS ...]
+                                     [--workflowOptions WORKFLOWOPTIONS]
 
 optional arguments:
                         authorization token
@@ -205,47 +206,46 @@ optional arguments:
 | status |
 ----------
 usage: ccc_client exec-engine status [-h] [--debug] [--host HOST]
-                                            [--port PORT]
-                                            [--authToken AUTHTOKEN]
-                                            --workflowId WORKFLOWID
+                                     [--port PORT] [--authToken AUTHTOKEN]
+                                     workflowId
+
+positional arguments:
+  workflowId            workflow uuid
 
 optional arguments:
                         authorization token
-  --workflowId WORKFLOWID, -i WORKFLOWID
-                        workflow uuid
 
 -----------
 | outputs |
 -----------
 usage: ccc_client exec-engine outputs [-h] [--debug] [--host HOST]
-                                             [--port PORT]
-                                             [--authToken AUTHTOKEN]
-                                             --workflowId WORKFLOWID
+                                      [--port PORT] [--authToken AUTHTOKEN]
+                                      workflowId
+
+positional arguments:
+  workflowId            workflow uuid
 
 optional arguments:
                         authorization token
-  --workflowId WORKFLOWID, -i WORKFLOWID
-                        workflow uuid
 
 ------------
 | metadata |
 ------------
 usage: ccc_client exec-engine metadata [-h] [--debug] [--host HOST]
-                                              [--port PORT]
-                                              [--authToken AUTHTOKEN]
-                                              --workflowId WORKFLOWID
+                                       [--port PORT] [--authToken AUTHTOKEN]
+                                       workflowId
+
+positional arguments:
+  workflowId            workflow uuid
 
 optional arguments:
                         authorization token
-  --workflowId WORKFLOWID, -i WORKFLOWID
-                        workflow uuid
 
 ============================================================
 elasticsearch
 ============================================================
 usage: ccc_client elasticsearch [-h]
-                                       {query,publish-batch,publish-resource}
-                                       ...
+                                {query,publish-batch,publish-resource} ...
 
 action:
   {query,publish-batch,publish-resource}
@@ -254,10 +254,10 @@ action:
 | query |
 ---------
 usage: ccc_client elasticsearch query [-h] [--debug] [--host HOST]
-                                             [--port PORT]
-                                             [--authToken AUTHTOKEN]
-                                             [--domain {patient,specimen,sample,resource}]
-                                             [--query-terms QUERY_TERMS [QUERY_TERMS ...]]
+                                      [--port PORT] [--authToken AUTHTOKEN]
+                                      [--domain {patient,specimen,sample,resource}]
+                                      --query-terms QUERY_TERMS
+                                      [QUERY_TERMS ...]
 
 optional arguments:
                         authorization token
@@ -271,15 +271,16 @@ optional arguments:
 -----------------
 | publish-batch |
 -----------------
-usage: ccc_client elasticsearch publish-batch [-h] [--debug]
-                                                     [--host HOST]
-                                                     [--port PORT]
-                                                     [--authToken AUTHTOKEN]
-                                                     [--tsv TSV]
-                                                     [--site {central,dfci,ohsu,oicr}]
-                                                     [--user USER]
-                                                     [--project PROJECT]
-                                                     [--domain {patient,specimen,sample,resource}]
+usage: ccc_client elasticsearch publish-batch [-h] [--debug] [--host HOST]
+                                              [--port PORT]
+                                              [--authToken AUTHTOKEN] --tsv
+                                              TSV
+                                              [--site {central,dfci,ohsu,oicr}]
+                                              [--user USER]
+                                              [--project PROJECT]
+                                              [--domain {patient,specimen,sample,resource}]
+                                              [--domainJson DOMAINJSON]
+                                              [--mock] [--skipDtsRegistration]
 
 optional arguments:
                         authorization token
@@ -291,35 +292,47 @@ optional arguments:
                         The project this data is associated with
   --domain {patient,specimen,sample,resource}, -d {patient,specimen,sample,resource}
                         target domain to register the data to
+  --domainJson DOMAINJSON, -D DOMAINJSON
+                        this is the path to an alternate file describing the
+                        domains/fields to use for import.
+  --mock                perform a mock operation, which runs your input
+                        through the normal code path, but outputs the JSON
+                        that would otherwise be posted to elasticsearch,
+                        without actually sending it
+  --skipDtsRegistration
+                        skip any attempt to register or validate CCC Ids and
+                        filepaths with the DTS
 
 --------------------
 | publish-resource |
 --------------------
-usage: ccc_client elasticsearch publish-resource [-h] [--debug]
-                                                        [--host HOST]
-                                                        [--port PORT]
-                                                        [--authToken AUTHTOKEN]
-                                                        [--filepath FILEPATH]
-                                                        [--filetype FILETYPE]
-                                                        [--inheritFrom INHERITFROM]
-                                                        [--property-override PROPERTY_OVERRIDE [PROPERTY_OVERRIDE ...]]
-                                                        [--site {central,dfci,ohsu,oicr}]
-                                                        [--user USER]
-                                                        [--project PROJECT]
-                                                        [--workflowId WORKFLOWID]
+usage: ccc_client elasticsearch publish-resource [-h] [--debug] [--host HOST]
+                                                 [--port PORT]
+                                                 [--authToken AUTHTOKEN]
+                                                 --filepath FILEPATH
+                                                 [--mimeType MIMETYPE]
+                                                 [--inheritFrom INHERITFROM]
+                                                 [--propertyOverride PROPERTYOVERRIDE [PROPERTYOVERRIDE ...]]
+                                                 [--site {central,dfci,ohsu,oicr}]
+                                                 [--user USER]
+                                                 [--project PROJECT]
+                                                 [--workflowId WORKFLOWID]
+                                                 [--domainJson DOMAINJSON]
+                                                 [--mock]
+                                                 [--skipDtsRegistration]
 
 optional arguments:
                         authorization token
   --filepath FILEPATH, -f FILEPATH
                         file to be registered in ES index
-  --filetype FILETYPE, -t FILETYPE
+  --mimeType MIMETYPE, -t MIMETYPE
                         the MIME type of the file
   --inheritFrom INHERITFROM, -i INHERITFROM
                         a cccId - if provided, the fields of this existing
                         record will be queried and applied to the incoming
-                        resource. Any values provided using --property-
-                        override will override these
-  --property-override PROPERTY_OVERRIDE [PROPERTY_OVERRIDE ...], -o PROPERTY_OVERRIDE [PROPERTY_OVERRIDE ...]
+                        resource. Any values provided using --propertyOverride
+                        will override these
+  --propertyOverride PROPERTYOVERRIDE [PROPERTYOVERRIDE ...], -o PROPERTYOVERRIDE [PROPERTYOVERRIDE ...]
                         One or more fields to apply to the incoming resource.
                         The values should be supplied in the form
                         'FieldName:Value'
@@ -330,4 +343,14 @@ optional arguments:
                         The project this file is associated with
   --workflowId WORKFLOWID, -w WORKFLOWID
                         The workflow this file was generated by
+  --domainJson DOMAINJSON, -D DOMAINJSON
+                        this is the path to an alternate file describing the
+                        domains/fields to use for import.
+  --mock                perform a mock operation, which runs your input
+                        through the normal code path, but outputs the JSON
+                        that would otherwise be posted to elasticsearch,
+                        without actually sending it
+  --skipDtsRegistration
+                        skip any attempt to register or validate CCC Ids and
+                        filepaths with the DTS
 
