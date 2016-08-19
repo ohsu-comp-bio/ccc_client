@@ -92,23 +92,26 @@ class AppRepoRunner(object):
         )
         return response
 
-    def get(self, imageId, imageName):
-        if imageId is not None:
-            endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
-                                                       self.port,
-                                                       self.endpoint,
-                                                       imageId)
-        elif imageName is not None:
-            endpoint = "http://{0}:{1}/{2}/{3}/data".format(self.host,
-                                                            self.port,
-                                                            self.endpoint,
-                                                            imageName)
-
+    def get(self, image_id_or_name):
+        endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
+                                                   self.port,
+                                                   self.endpoint,
+                                                   image_id_or_name)
         headers = self.__setup_call_headers("get")
         response = requests.get(
             endpoint,
             headers=headers
         )
+        if response.status_code // 100 != 2:
+            endpoint = "http://{0}:{1}/{2}/{3}/data".format(self.host,
+                                                            self.port,
+                                                            self.endpoint,
+                                                            image_id_or_name)
+            headers = self.__setup_call_headers("get")
+            response = requests.get(
+                endpoint,
+                headers=headers
+            )
         return response
 
     def delete(self, imageId):

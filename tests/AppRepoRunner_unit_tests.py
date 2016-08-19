@@ -141,21 +141,30 @@ class TestAppRepoRunner(unittest.TestCase):
     def test_ar_get(self):
         mock_response = self.valid_metadata_str
         # mimic successful get request:
+        # by image id
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
             mock_get.return_value.text = mock_response
             # by id
             resp = self.ar_client.get(
-                imageId=self.imageId,
-                imageName=None
+                image_id_or_name=self.imageId,
+            )
+            mock_get.assert_called_once_with(
+                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
+                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
             )
             self.assertEqual(resp.text, mock_response)
-            # by name
+        # by image name
+        with patch('requests.get') as mock_get:
+            mock_get.return_value.status_code = 500
+            mock_get.return_value.text = mock_response
             resp = self.ar_client.get(
-                imageId=None,
-                imageName=self.imageName
+                image_id_or_name=self.imageName,
             )
-            self.assertEqual(resp.text, mock_response)
+            mock_get.assert_called_with(
+                "http://docker-centos7:8082/api/v1/tool/{0}/data".format(self.imageName),
+                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
+            )
 
     def test_ar_delete(self):
         mock_response = "OK"
