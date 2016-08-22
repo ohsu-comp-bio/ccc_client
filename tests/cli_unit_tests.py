@@ -1,3 +1,4 @@
+import argparse
 import unittest
 
 from ccc_client import cli, DtsRunner, ExecEngineRunner, AppRepoRunner, ElasticSearchRunner
@@ -190,3 +191,102 @@ class TestElasticSearchArgs(unittest.TestCase):
         self.assertEqual(args.runner, ElasticSearchRunner)
         self.assertEqual(args.action, "publish-resource")
 
+
+class testOptionParsing(unittest.TestCase):
+
+    help_str = """usage: ccc_client mock test
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --debug               debug flag
+  --host HOST           host
+  --port PORT           port
+  --authToken AUTHTOKEN, -T AUTHTOKEN
+                        authorization token
+  --mock MOCK           mock argument"""
+
+    stripped_common_args = """usage: ccc_client mock test
+
+optional arguments:
+  --mock MOCK           mock argument"""
+
+    def testFindOptions(self):
+        resp = cli.find_options(self.help_str, show_usage=True, strip_n=6)
+        print(resp)
+        self.assertEqual(resp, self.stripped_common_args)
+
+
+class testHelpLong(unittest.TestCase):
+
+    common_parser = argparse.ArgumentParser(add_help=False)
+    common_parser.add_argument("--debug",
+                               default=False,
+                               action="store_true",
+                               help="debug flag")
+    common_parser.add_argument("--host",
+                               type=str,
+                               help="host")
+    common_parser.add_argument("--port",
+                               type=str,
+                               help="port")
+    common_parser.add_argument("--authToken", "-T",
+                               type=str,
+                               help="authorization token")
+    parser = argparse.ArgumentParser(description="Mock Parser",
+                                     parents=[common_parser])
+    parser.add_argument("--help-long",
+                        default=False,
+                        action="store_true",
+                        help="Show help message for all services and actions")
+    parser.add_argument("--version", action='version',
+                        version="Test")
+    subparsers = parser.add_subparsers(title="service", dest="service")
+    mock = subparsers.add_parser("mock")
+    mock_sub = mock.add_subparsers(title="action", dest="action")
+    mock_test = mock_sub.add_parser("test", parents=[common_parser])
+    mock_test.add_argument(
+        "--mock",
+        action="store_true",
+        help="fake flag"
+    )
+
+    help_long = """usage: nosetests [-h] [--debug] [--host HOST] [--port PORT]
+                 [--authToken AUTHTOKEN] [--help-long] [--version]
+                 {mock} ...
+
+Mock Parser
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --debug               debug flag
+  --host HOST           host
+  --port PORT           port
+  --authToken AUTHTOKEN, -T AUTHTOKEN
+                        authorization token
+  --help-long           Show help message for all services and actions
+  --version             show program's version number and exit
+
+service:
+  {mock}
+
+============================================================
+mock
+============================================================
+usage: nosetests mock [-h] {test} ...
+
+action:
+  {test}
+
+--------
+| test |
+--------
+usage: nosetests mock test [-h] [--debug] [--host HOST] [--port PORT]
+                           [--authToken AUTHTOKEN] [--mock]
+
+optional arguments:
+  --mock                fake flag
+"""
+
+    def testHelpLong(self):
+        resp = cli.display_help(self.parser)
+        self.assertEqual(resp, self.help_long)

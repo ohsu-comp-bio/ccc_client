@@ -38,7 +38,6 @@ usage: ccc_client dts post [-h] [--debug] [--host HOST] [--port PORT]
                            [{central,dfci,ohsu,oicr} ...] [--cccId CCCID]
 
 optional arguments:
-                        authorization token
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
                         name of file(s) or pattern to glob on
   --user USER, -u USER  user identity
@@ -57,7 +56,6 @@ usage: ccc_client dts put [-h] [--debug] [--host HOST] [--port PORT]
                           [{central,dfci,ohsu,oicr} ...]
 
 optional arguments:
-                        authorization token
   --cccId CCCID         cccId entry to update
   --filepath FILEPATH, -f FILEPATH
                         filepath
@@ -75,9 +73,6 @@ usage: ccc_client dts get [-h] [--debug] [--host HOST] [--port PORT]
 positional arguments:
   cccId                 cccId entry to GET
 
-optional arguments:
-                        authorization token
-
 ----------
 | delete |
 ----------
@@ -87,9 +82,6 @@ usage: ccc_client dts delete [-h] [--debug] [--host HOST] [--port PORT]
 
 positional arguments:
   cccId                 cccId entry to DELETE
-
-optional arguments:
-                        authorization token
 
 ---------------
 | infer-cccId |
@@ -103,7 +95,6 @@ positional arguments:
   filepath              name of file(s) or pattern to glob on
 
 optional arguments:
-                        authorization token
   --strategy {MD5,SHA-1}, -s {MD5,SHA-1}
                         hashing strategy to use to generate the cccId
                         (default: SHA-1)
@@ -126,7 +117,6 @@ usage: ccc_client app-repo post [-h] [--debug] [--host HOST] [--port PORT]
                                 [--metadata METADATA]
 
 optional arguments:
-                        authorization token
   --imageBlob IMAGEBLOB, -b IMAGEBLOB
                         name of file or path
   --imageName IMAGENAME, -n IMAGENAME
@@ -144,7 +134,6 @@ usage: ccc_client app-repo put [-h] [--debug] [--host HOST] [--port PORT]
                                [--imageId IMAGEID]
 
 optional arguments:
-                        authorization token
   --metadata METADATA, -m METADATA
                         tool metadata
   --imageId IMAGEID, -i IMAGEID
@@ -160,9 +149,6 @@ usage: ccc_client app-repo get [-h] [--debug] [--host HOST] [--port PORT]
 positional arguments:
   imageId               docker image id or name
 
-optional arguments:
-                        authorization token
-
 ----------
 | delete |
 ----------
@@ -172,9 +158,6 @@ usage: ccc_client app-repo delete [-h] [--debug] [--host HOST] [--port PORT]
 
 positional arguments:
   imageId               docker image id
-
-optional arguments:
-                        authorization token
 
 ============================================================
 exec-engine
@@ -194,7 +177,6 @@ usage: ccc_client exec-engine submit [-h] [--debug] [--host HOST]
                                      [--workflowOptions WORKFLOWOPTIONS]
 
 optional arguments:
-                        authorization token
   --wdlSource WDLSOURCE, -s WDLSOURCE
                         WDL source file defining a workflow
   --workflowInputs WORKFLOWINPUTS [WORKFLOWINPUTS ...], -i WORKFLOWINPUTS [WORKFLOWINPUTS ...]
@@ -212,9 +194,6 @@ usage: ccc_client exec-engine status [-h] [--debug] [--host HOST]
 positional arguments:
   workflowId            workflow uuid
 
-optional arguments:
-                        authorization token
-
 -----------
 | outputs |
 -----------
@@ -225,9 +204,6 @@ usage: ccc_client exec-engine outputs [-h] [--debug] [--host HOST]
 positional arguments:
   workflowId            workflow uuid
 
-optional arguments:
-                        authorization token
-
 ------------
 | metadata |
 ------------
@@ -237,9 +213,6 @@ usage: ccc_client exec-engine metadata [-h] [--debug] [--host HOST]
 
 positional arguments:
   workflowId            workflow uuid
-
-optional arguments:
-                        authorization token
 
 ============================================================
 elasticsearch
@@ -260,7 +233,6 @@ usage: ccc_client elasticsearch query [-h] [--debug] [--host HOST]
                                       [QUERY_TERMS ...]
 
 optional arguments:
-                        authorization token
   --domain {patient,specimen,sample,resource}, -d {patient,specimen,sample,resource}
                         target domain of query
   --query-terms QUERY_TERMS [QUERY_TERMS ...], -q QUERY_TERMS [QUERY_TERMS ...]
@@ -283,7 +255,6 @@ usage: ccc_client elasticsearch publish-batch [-h] [--debug] [--host HOST]
                                               [--mock] [--skipDtsRegistration]
 
 optional arguments:
-                        authorization token
   --tsv TSV, -t TSV     input tab delimited file
   --site {central,dfci,ohsu,oicr}, -s {central,dfci,ohsu,oicr}
                         site this data is associated with
@@ -322,7 +293,6 @@ usage: ccc_client elasticsearch publish-resource [-h] [--debug] [--host HOST]
                                                  [--skipDtsRegistration]
 
 optional arguments:
-                        authorization token
   --filepath FILEPATH, -f FILEPATH
                         file to be registered in ES index
   --mimeType MIMETYPE, -t MIMETYPE

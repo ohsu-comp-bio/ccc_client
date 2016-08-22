@@ -22,8 +22,9 @@ def display_help(parser):
     """
     This function is called to provide an extended help message
     """
+    help_msg = []
     # Print main help message
-    print(parser.format_help())
+    help_msg.append(parser.format_help())
 
     # Find all service subparsers
     subparsers_actions = [
@@ -42,19 +43,25 @@ def display_help(parser):
             ]
 
             # Print service help
-            print("=" * 60)
-            print("{0}".format(choice))
-            print("=" * 60)
-            print(find_options(subparser.format_help(), strip_n=1))
+            help_msg.append("=" * 60)
+            help_msg.append("{0}".format(choice))
+            help_msg.append("=" * 60)
+            help_msg.append(find_options(subparser.format_help(), strip_n=1))
 
             # Iterate through the actions for a service
             for method_subparser_action in method_subparser_actions:
                 for method_choice, method_subparser in method_subparser_action.choices.items():
                     # Print service action help
-                    print("-" * len("| {0} |".format(method_choice)))
-                    print("| {0} |".format(method_choice))
-                    print("-" * len("| {0} |".format(method_choice)))
-                    print(find_options(method_subparser.format_help(), strip_n=5))
+                    help_msg.append("-" * len("| {0} |".format(method_choice)))
+                    help_msg.append("| {0} |".format(method_choice))
+                    help_msg.append("-" * len("| {0} |".format(method_choice)))
+                    help_msg.append(
+                        find_options(
+                            method_subparser.format_help(),
+                            strip_n=6
+                        )
+                    )
+    return "\n".join(help_msg)
 
 
 def find_options(helptext, show_usage=True, strip_n=0):
@@ -487,7 +494,9 @@ def cli_main():
         parser.print_help()
         raise RuntimeError()
 
-    runner = args.runner(host=args.host, port=args.port, authToken=args.authToken)
+    runner = args.runner(host=args.host,
+                         port=args.port,
+                         authToken=args.authToken)
     responses = []
 
     if args.debug:
