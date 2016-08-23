@@ -5,7 +5,6 @@ import json
 import os
 import re
 import sys
-import uuid
 
 from ccc_client import DtsRunner
 from ccc_client.utils import parseAuthToken
@@ -108,7 +107,7 @@ class ElasticSearchRunner(object):
             raise RuntimeError("Unknown domain: " + domainName)
 
         rowMap = {}
-        if (inheritFrom):
+        if inheritFrom:
             domain = self.DomainDescriptors[domainName]
             hits = self.es.search(
                 index=("*-" + domainName).lower(),
@@ -289,14 +288,16 @@ class ElasticSearchRunner(object):
                 if token != cannonicalName:
                     rowMap[cannonicalName] = val
 
-            # process filepath/ccc_id
-            rowMap = self.validateOrRegisterWithDts(rowMap)
-
-            # append fields from other domains (denormalize)
-            domainsToAppend = list(self.domainDescriptors.keys())
-            domainsToAppend.remove(self.domainName)
-            for dn in domainsToAppend:
-                rowMap = self.appendFieldsForDomain(rowMap, dn)
+            # denormalize resources
+            if self.domainName == 'resource':
+                # process filepath/ccc_id
+                if not self.skipDtsRegistration:
+                    rowMap = self.validateOrRegisterWithDts(rowMap)
+                # append fields from other domains (denormalize)
+                domainsToAppend = list(self.domainDescriptors.keys())
+                domainsToAppend.remove(self.domainName)
+                for dn in domainsToAppend:
+                    rowMap = self.appendFieldsForDomain(rowMap, dn)
 
             # NOTE: these should always supersede the previous properties
             rowMap['siteId'] = self.siteId
@@ -368,48 +369,41 @@ class ElasticSearchRunner(object):
                 return response
 
         def validateOrRegisterWithDts(self, rowMap):
+            path = self.__check_resource_path(rowMap)
             if 'ccc_id' in rowMap.keys():
-                if 'filepath' in rowMap.keys():
-                    self.validateCccId(rowMap['ccc_id'], rowMap['filepath'])
-                elif 'url' in rowMap.keys():
-                    self.validateCccId(rowMap['ccc_id'], rowMap['url'])
-                else:
-                    self.validateCccId(rowMap['ccc_id'], None)
+                self.validateCccId(rowMap['ccc_id'], path)
             else:
-                rowMap = self.registerWithDts(rowMap)
+                rowMap['ccc_id'] = self.registerWithDts(path)
             return rowMap
 
-        def registerWithDts(self, rowMap):
+        def registerWithDts(self, filepath):
+            dts = DtsRunner()
+            response = dts.post(filepath,
+                                self.siteId,
+                                self.user)
+            if response.status_code // 100 != 2:
+                raise RuntimeError("DTS registration for " + path + " failed")
+            else:
+                return response.text
+
+        def validateCccId(self, ccc_id, filepath):
+            dts = DtsRunner()
+            response = dts.get(ccc_id)
+            if response.status_code // 100 != 2:
+                raise RuntimeError("CCC_ID not found: " + ccc_id)
+            else:
+                data = response.json()
+                assert data['name'] == os.path.basename(filepath)
+                assert data['path'] == os.path.dirname(filepath)
+                return True
+
+        def __check_resource_path(self, rowMap):
             if 'filepath' in rowMap.keys():
                 path = rowMap['filepath']
             elif 'url' in rowMap.keys():
                 path = rowMap['url']
             else:
                 raise KeyError(
-                    "DTS registration requires a resource path or url"
+                    "Resource registration or validation with the DTS requires a valid file path or url"
                 )
-
-            if self.skipDtsRegistration:
-                print("Assigning a mock CCC_ID", file=sys.stderr)
-                rowMap['ccc_id'] = str(uuid.uuid5(uuid.NAMESPACE_DNS, path))
-            else:
-                dts = DtsRunner()
-                rowMap['ccc_id'] = dts.post(path,
-                                            self.siteId,
-                                            self.user).text
-            return rowMap
-
-        def validateCccId(self, ccc_id, filepath):
-            if self.skipDtsRegistration:
-                print("Skipping DTS check because this is a mock import",
-                      file=sys.stderr)
-            else:
-                dts = DtsRunner()
-                response = dts.get(ccc_id)
-                if response.status_code // 100 != 2:
-                    raise RuntimeError("CCC_ID not found: " + ccc_id)
-                if filepath is not None:
-                    data = response.json()
-                    assert data['name'] == os.path.basename(filepath)
-                    assert data['path'] == os.path.dirname(filepath)
-            return True
+            return path
