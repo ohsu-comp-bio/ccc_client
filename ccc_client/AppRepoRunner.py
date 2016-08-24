@@ -44,6 +44,9 @@ class AppRepoRunner(object):
             imageName = re.sub("(\.tar)", "",
                                os.path.basename(imageBlob))
 
+        if imageTag is None:
+            imageTag = "latest"
+
         form_data = {'file': open(imageBlob, 'rb'),
                      "imageName": (None, imageName),
                      "imageTag": (None, imageTag)}
@@ -55,11 +58,6 @@ class AppRepoRunner(object):
         return response
 
     def put(self, imageId, metadata):
-        endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
-                                                   self.port,
-                                                   self.endpoint,
-                                                   imageId)
-
         if isinstance(metadata, str):
             if os.path.isfile(metadata):
                 with open(metadata) as metadata_filehandle:
@@ -85,6 +83,10 @@ class AppRepoRunner(object):
                 assert loaded_metadata['id'] == imageId
 
         headers = self.__setup_call_headers("put")
+        endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
+                                                   self.port,
+                                                   self.endpoint,
+                                                   imageId)
         response = requests.put(
             endpoint,
             data=json.dumps(loaded_metadata),
