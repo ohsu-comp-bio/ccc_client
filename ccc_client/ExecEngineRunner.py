@@ -65,6 +65,9 @@ class ExecEngineRunner(object):
         return response
 
     def query(self, query_terms):
+        """
+        GET version of cromwell query
+        """
         terms = []
         for query in query_terms:
             key, val = re.split("[:=]", query)
@@ -77,7 +80,9 @@ class ExecEngineRunner(object):
                                      "datetime format with mandatory offset",
                                      "and start cannot be after end")
             elif key == "status":
-                if val not in ["Submitted", "Running", "Aborted", "Failed", "Succeeded"]:
+                valid_status = ["Submitted", "Running", "Aborted", "Failed",
+                                "Succeeded"]
+                if val not in valid_status:
                     raise ValueError("[ERROR] Valid statuses are Submitted,",
                                      "Running, Aborting, Aborted, Failed, and",
                                      "Succeeded.")
@@ -91,22 +96,22 @@ class ExecEngineRunner(object):
         return response
 
     def get_status(self, workflowId):
-        endpoint = "http://{0}:{1}/{2}/{3}/status".format(
-            self.host, self.secondary_port, self.endpoint, workflowId
-        )
-        response = requests.get(endpoint, headers=self.headers)
-        return response
+        self._get(workflowId, "status")
 
     def get_metadata(self, workflowId):
-        endpoint = "http://{0}:{1}/{2}/{3}/metadata".format(
-            self.host, self.secondary_port, self.endpoint, workflowId
-        )
-        response = requests.get(endpoint, headers=self.headers)
-        return response
+        self._get(workflowId, "metadata")
+
+    def get_logs(self, workflowId):
+        self._get(workflowId, "logs")
 
     def get_outputs(self, workflowId):
-        endpoint = "http://{0}:{1}/{2}/{3}/outputs".format(
-            self.host, self.secondary_port, self.endpoint, workflowId
+        self._get(workflowId, "outputs")
+
+    def _get(self, workflowId, action):
+        valid_actions = ["status", "metadata", "logs", "outputs"]
+        assert action in valid_actions
+        endpoint = "http://{0}:{1}/{2}/{3}/{4}".format(
+            self.host, self.secondary_port, self.endpoint, workflowId, action
         )
         response = requests.get(endpoint, headers=self.headers)
         return response
