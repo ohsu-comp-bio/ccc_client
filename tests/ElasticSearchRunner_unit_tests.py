@@ -56,8 +56,12 @@ class TestElasticSearchRunner(unittest.TestCase):
     def test_set_read_domainDescriptors(self):
         es = ElasticSearchRunner()
         es.setDomainDescriptors(self.mock_dd_file.name)
+        # check file reference
         self.assertEqual(es._ElasticSearchRunner__domainFile,
                          self.mock_dd_file.name)
+        # check domain data was loaded
+        self.assertEqual(es.DomainDescriptors,
+                         json.loads(self.mock_domain_descriptors))
 
     def test_field_processing(self):
         # dict

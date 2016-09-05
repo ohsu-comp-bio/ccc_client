@@ -22,8 +22,9 @@ def display_help(parser):
     """
     This function is called to provide an extended help message
     """
+    help_msg = []
     # Print main help message
-    print(parser.format_help())
+    help_msg.append(parser.format_help())
 
     # Find all service subparsers
     subparsers_actions = [
@@ -42,19 +43,25 @@ def display_help(parser):
             ]
 
             # Print service help
-            print("=" * 60)
-            print("{0}".format(choice))
-            print("=" * 60)
-            print(find_options(subparser.format_help(), strip_n=1))
+            help_msg.append("=" * 60)
+            help_msg.append("{0}".format(choice))
+            help_msg.append("=" * 60)
+            help_msg.append(find_options(subparser.format_help(), strip_n=1))
 
             # Iterate through the actions for a service
             for method_subparser_action in method_subparser_actions:
                 for method_choice, method_subparser in method_subparser_action.choices.items():
                     # Print service action help
-                    print("-" * len("| {0} |".format(method_choice)))
-                    print("| {0} |".format(method_choice))
-                    print("-" * len("| {0} |".format(method_choice)))
-                    print(find_options(method_subparser.format_help(), strip_n=5))
+                    help_msg.append("-" * len("| {0} |".format(method_choice)))
+                    help_msg.append("| {0} |".format(method_choice))
+                    help_msg.append("-" * len("| {0} |".format(method_choice)))
+                    help_msg.append(
+                        find_options(
+                            method_subparser.format_help(),
+                            strip_n=6
+                        )
+                    )
+    return "\n".join(help_msg)
 
 
 def find_options(helptext, show_usage=True, strip_n=0):
@@ -269,14 +276,9 @@ def setup_parser():
     # api/v1/tool/<tool_name>/data
     ar_get = ar_sub.add_parser("get", parents=[common_parser])
     ar_get.add_argument(
-        "--imageId", "-i",
+        "imageId",
         type=str,
-        help="docker image id"
-    )
-    ar_get.add_argument(
-        "--imageName", "-n",
-        type=str,
-        help="docker image name"
+        help="docker image id or name"
     )
 
     # api/v1/tool/<uuid>
@@ -337,15 +339,6 @@ def setup_parser():
         help="workflow uuid"
     )
 
-    # api/workflows/v1/<uuid>/status
-    ee_status = ee_sub.add_parser("status", parents=[common_parser])
-    ee_status.add_argument(
-        "workflowId",
-        type=str,
-        nargs="+",
-        help="workflow uuid"
-    )
-
     # api/workflows/v1/<uuid>/outputs
     ee_outputs = ee_sub.add_parser("outputs", parents=[common_parser])
     ee_outputs.add_argument(
@@ -382,6 +375,7 @@ def setup_parser():
     es_query.add_argument(
         "--query-terms", "-q",
         type=str,
+        required=True,
         nargs="+",
         help="The search terms on which to query. Can be specified multiple \
         times. Should be supplied in the form 'FieldName:Term'"
@@ -392,6 +386,7 @@ def setup_parser():
     es_publish_batch.add_argument(
         "--tsv", "-t",
         type=str,
+        required=True,
         help="input tab delimited file"
     )
     es_publish_batch.add_argument(
@@ -416,16 +411,38 @@ def setup_parser():
         choices=["patient", "specimen", "sample", "resource"],
         help="target domain to register the data to"
     )
+    es_publish_batch.add_argument(
+        "--domainJson", "-D",
+        type=str,
+        help="this is the path to an alternate file describing the \
+        domains/fields to use for import."
+    )
+    es_publish_batch.add_argument(
+        "--mock",
+        dest="isMock",
+        action="store_true",
+        help="perform a mock operation, which runs your input through the \
+        normal code path, but outputs the JSON that would otherwise be posted \
+        to elasticsearch, without actually sending it"
+    )
+    es_publish_batch.add_argument(
+        "--skipDtsRegistration",
+        dest="skipDtsRegistration",
+        action="store_true",
+        help="skip any attempt to register or validate CCC Ids and filepaths \
+        with the DTS"
+    )
 
     es_publish_resource = es_sub.add_parser("publish-resource",
                                             parents=[common_parser])
     es_publish_resource.add_argument(
         "--filepath", "-f",
         type=str,
+        required=True,
         help="file to be registered in ES index"
     )
     es_publish_resource.add_argument(
-        "--filetype", "-t",
+        "--mimeType", "-t",
         type=str,
         help="the MIME type of the file"
     )
@@ -434,10 +451,10 @@ def setup_parser():
         type=str,
         help="a cccId - if provided, the fields of this existing record will \
         be queried and applied to the incoming resource. Any values provided \
-        using --property-override will override these"
+        using --propertyOverride will override these"
     )
     es_publish_resource.add_argument(
-        "--property-override", "-o",
+        "--propertyOverride", "-o",
         type=str,
         nargs="+",
         help="One or more fields to apply to the incoming resource. The values \
@@ -464,7 +481,27 @@ def setup_parser():
         type=str,
         help="The workflow this file was generated by"
     )
-
+    es_publish_resource.add_argument(
+        "--domainJson", "-D",
+        type=str,
+        help="this is the path to an alternate file describing the \
+        domains/fields to use for import."
+    )
+    es_publish_resource.add_argument(
+        "--mock",
+        dest="isMock",
+        action="store_true",
+        help="perform a mock operation, which runs your input through the \
+        normal code path, but outputs the JSON that would otherwise be posted \
+        to elasticsearch, without actually sending it"
+    )
+    es_publish_resource.add_argument(
+        "--skipDtsRegistration",
+        dest="skipDtsRegistration",
+        action="store_true",
+        help="skip any attempt to register or validate CCC Ids and filepaths \
+        with the DTS"
+    )
     return parser
 
 
@@ -483,7 +520,9 @@ def cli_main():
         parser.print_help()
         raise RuntimeError()
 
-    runner = args.runner(host=args.host, port=args.port, authToken=args.authToken)
+    runner = args.runner(host=args.host,
+                         port=args.port,
+                         authToken=args.authToken)
     responses = []
 
     if args.debug:
@@ -582,6 +621,8 @@ def cli_main():
     # Elastic Search
     # ------------------------
     elif args.service == "elasticsearch":
+        if args.domainJson:
+            runner.setDomainDescriptors(args.domainJson)
         if args.action == "query":
             r = runner.query(args.domain,
                              args.query_terms)
@@ -591,18 +632,20 @@ def cli_main():
                                      args.user,
                                      args.project,
                                      args.domain,
-                                     False)
+                                     args.isMock,
+                                     args.skipDtsRegistration)
         elif args.action == "publish-resource":
             r = runner.publish_resource(args.filepath,
                                         args.site,
                                         args.user,
                                         args.project,
                                         args.workflowId,
-                                        args.filetype,
+                                        args.mimeType,
                                         'resource',
                                         args.inheritFrom,
                                         args.property_override,
-                                        False)
+                                        args.isMock,
+                                        args.skipDtsRegistration)
         print(r)
 
     # ------------------------
