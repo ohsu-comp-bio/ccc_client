@@ -116,6 +116,71 @@ def setup_parser():
     subparsers = parser.add_subparsers(title="service", dest="service")
 
     # ------------------------
+    # DCS Options
+    # ------------------------
+    dcs = subparsers.add_parser("dcs")
+    dcs.set_defaults(runner=ccc_client.DcsRunner)
+
+    dcs_sub = dcs.add_subparsers(title="action", dest="action")
+
+    #
+    dcs_create_link = dcs_sub.subparsers.add_parser(
+        'create_link',
+        help='Assign set to existing CCC_DID(s)'
+    )
+    dcs_create_link.add_argument('--parentId', required=True, type=str,
+                                 help='CCC_DID of new or existing set')
+    dcs_create_link.add_argument('--childIds', nargs='+', type=str,
+                                 help='CCC_DID(s) of data to be assigned to set')
+
+    #
+    dcs_comon_parents = dcs_sub.subparsers.add_parser(
+        'common_parents',
+        help='Find common parent given list of CCC_DID(s)'
+    )
+    dcs_comon_parents.add_argument('ids', nargs='+', type=str,
+                                   help='CCC_DIDs to search')
+
+    #
+    dcs_all_parents = dcs_sub.subparsers.add_parser(
+        'all_parents',
+        help='Find all parents of a CCC_DID'
+    )
+    dcs_all_parents.add_argument('childId',
+                                 type=str,
+                                 help='CCC_DID to find parents of')
+
+    #
+    dcs_all_children = dcs_sub.subparsers.add_parser(
+        'all_children',
+        help='Find all children of a CCC_DID'
+    )
+    dcs_all_children.add_argument('parentId',
+                                  type=str,
+                                  help='CCC_DID to find children of')
+
+    #
+    dcs_delete_link = dcs_sub.subparsers.add_parser(
+        'delete_link',
+        help='Delete existing DCS parent/child relationship'
+    )
+    dcs_delete_link.add_argument('--parentId', required=True, type=str,
+                                 help='CCC_DID of parent set')
+    dcs_delete_link.add_argument('--childId', nargs='+', type=str,
+                                 help='CCC_DID(s) of data to be removed from set')
+    dcs_delete_link.add_argument('--filepath', type=str,
+                                 help='File containing multiple CCC_DID entries')
+
+    #
+    dcs_delete_set = dcs_sub.subparsers.add_parser(
+        'delete_set',
+        help='Remove a UUID corresponding to a set from the DCS'
+    )
+    dcs_delete_set.add_argument('setId',
+                                type=str,
+                                help='UUID of resource set to delete')
+
+    # ------------------------
     # DTS Options
     # ------------------------
     dts = subparsers.add_parser("dts")
@@ -532,6 +597,32 @@ def cli_main():
         logging.basicConfig(level=logging.WARNING)
 
     # ------------------------
+    # DCS
+    # ------------------------
+    if args.service == "dcs":
+        if args.action == "create_link":
+            for i in args.childIds:
+                r = runner.create_link(args.parentId, i)
+                responses.append(r)
+        elif args.action == "common_parents":
+            r = runner.common_parents(args.ids)
+            responses.append(r)
+        elif args.action == "all_parents":
+            r = runner.all_parents(args.childId)
+            responses.append(r)
+        elif args.action == "all_children":
+            r = runner.all_children(args.parentId)
+            responses.append(r)
+        elif args.action == "delete_link":
+            r = runner.delete_link(args.parentId, args.childId)
+            responses.append(r)
+        elif args.action == "delete_set":
+            r = runner.delete_set(args.setId)
+            responses.append(r)
+        else:
+            raise NotImplementedError
+
+    # ------------------------
     # DTS
     # ------------------------
     if args.service == "dts":
@@ -572,6 +663,8 @@ def cli_main():
                     cccId = runner.infer_cccId(file_iter, args.strategy)
                     print("{0}\t{1}".format(file_iter, cccId))
             return None
+        else:
+            raise NotImplementedError
 
     # ------------------------
     # App Repo
@@ -616,6 +709,8 @@ def cli_main():
                 elif args.action == "outputs":
                     r = runner.get_outputs(workflowId)
                     responses.append(r)
+                else:
+                    raise NotImplementedError
 
     # ------------------------
     # Elastic Search
@@ -646,7 +741,12 @@ def cli_main():
                                         args.property_override,
                                         args.isMock,
                                         args.skipDtsRegistration)
+        else:
+            raise NotImplementedError
         print(r)
+
+    else:
+        raise NotImplementedError
 
     # ------------------------
     # Response Handling
