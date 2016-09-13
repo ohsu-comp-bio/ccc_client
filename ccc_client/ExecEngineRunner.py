@@ -68,11 +68,22 @@ class ExecEngineRunner(object):
         """
         GET version of cromwell query
         """
+        valid_terms = [
+            "name", "id", "status", "start", "end", "page", "pagesize"
+        ]
+        valid_statuses = [
+            "Submitted", "Running", "Aborted", "Failed", "Succeeded"
+        ]
         terms = []
         for query in query_terms:
             key, val = re.split("[:=]", query)
+            key = key.lower()
             # validation of query terms
-            if key in ["start", "end"]:
+            if key not in valid_terms:
+                raise ValueError(
+                    "[ERROR] Valid query terms are: {0}".format(" ".join(valid_terms))
+                )
+            elif key in ["start", "end"]:
                 try:
                     val = iso8601.parse_date(val).isoformat()
                 except:
@@ -80,16 +91,14 @@ class ExecEngineRunner(object):
                                      "datetime format with mandatory offset",
                                      "and start cannot be after end")
             elif key == "status":
-                valid_status = ["Submitted", "Running", "Aborted", "Failed",
-                                "Succeeded"]
-                if val not in valid_status:
-                    raise ValueError("[ERROR] Valid statuses are Submitted,",
-                                     "Running, Aborting, Aborted, Failed, and",
-                                     "Succeeded.")
-            terms.append("{0}={1}".format(key.tolower(), val))
+                if val not in valid_statuses:
+                    raise ValueError(
+                        "[ERROR] Valid statuses are: {0}".format(" ".join(valid_statuses))
+                    )
+            terms.append("{0}={1}".format(key, val))
 
         query_string = "&".join(terms)
-        endpoint = "http://{0}:{1}/{2}/query?".format(
+        endpoint = "http://{0}:{1}/{2}/query?{3}".format(
             self.host, self.secondary_port, self.endpoint, query_string
         )
         response = requests.get(endpoint, headers=self.headers)

@@ -17,7 +17,7 @@ class AppRepoRunner(object):
         if host is not None:
             self.host = re.sub("^http[s]?:",  "", host)
         else:
-            self.host = "docker-centos7"
+            self.host = "central-gateway.ccc.org"
 
         if port is not None:
             self.port = str(port)

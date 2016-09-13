@@ -18,7 +18,7 @@ class ElasticSearchRunner(object):
         if host is not None:
             self.host = host
         else:
-            self.host = "0.0.0.0"
+            self.host = "localhost"
 
         if port is not None:
             self.port = port
