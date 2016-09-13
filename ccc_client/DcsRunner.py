@@ -2,13 +2,12 @@ from __future__ import print_function
 
 import json
 import uuid
-import re
 import requests
 
 from ccc_client.utils import parseAuthToken
 
 
-class DCS(object):
+class DcsRunner(object):
 
     def __init__(self,
                  host="central-gateway.ccc.org",
@@ -30,7 +29,7 @@ class DCS(object):
             self.authToken = ""
 
         self.headers = {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             "Authorization": " ".join(["Bearer", self.authToken])
         }
 
