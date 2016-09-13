@@ -150,7 +150,7 @@ class TestAppRepoRunner(unittest.TestCase):
                 image_id_or_name=self.imageId,
             )
             mock_get.assert_called_once_with(
-                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
+                "http://central-gateway.ccc.org:8082/api/v1/tool/{0}".format(self.imageId),
                 headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
             )
             self.assertEqual(resp.text, mock_response)
@@ -162,7 +162,7 @@ class TestAppRepoRunner(unittest.TestCase):
                 image_id_or_name=self.imageName,
             )
             mock_get.assert_called_with(
-                "http://docker-centos7:8082/api/v1/tool/{0}/data".format(self.imageName),
+                "http://central-gateway.ccc.org:8082/api/v1/tool/{0}/data".format(self.imageName),
                 headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
             )
 
