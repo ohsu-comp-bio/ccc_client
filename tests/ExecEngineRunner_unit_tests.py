@@ -83,7 +83,7 @@ workflow test {
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 500
             with self.assertRaises(FileNotFoundError):
-                resp = self.ee_client.submit_workflow(
+                self.ee_client.submit_workflow(
                     wdlSource=self.invalid_wdl_filepath,
                     workflowInputs=self.mock_json_filepath,
                     workflowOptions=None,
@@ -93,94 +93,76 @@ workflow test {
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 500
             with self.assertRaises(TypeError):
-                resp = self.ee_client.submit_workflow(
+                self.ee_client.submit_workflow(
                     wdlSource=self.mock_wdl_filepath,
                     workflowInputs={'workflowInputs': self.mock_json_filepath},
                     workflowOptions=None,
                 )
 
+    def test_ee_query(self):
+        # mimic successful get request to query endpoint
+        terms = ["Status:Submitted", "name=testWorkflow"]
+        with patch('requests.get') as mock_get:
+            mock_get.return_value.status_code = 201
+            self.ee_client.query(
+                terms
+            )
+            mock_get.assert_called_with(
+                "http://central-gateway.ccc.org:8000/api/workflows/v1/query?status=Submitted&name=testWorkflow",
+                headers={'Authorization': 'Bearer '}
+            )
+
+        # invalid search term
+        terms = ["task:foobar"]
+        with patch('requests.get') as mock_get:
+            with self.assertRaises(ValueError):
+                self.ee_client.query(
+                    terms
+                )
+
+        # invalid status
+        terms = ["Status:foobar", "name=testWorkflow"]
+        with patch('requests.get') as mock_get:
+            with self.assertRaises(ValueError):
+                self.ee_client.query(
+                    terms
+                )
+
     def test_ee_status(self):
-        mock_response = json.dumps(
-            {
-                "id": self.mock_workflow_id,
-                "status": "Running"
-            }
-        )
         # mimic successful get request to status endpoint
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
-            mock_get.return_value.text = mock_response
-            resp = self.ee_client.get_status(
-                    workflowId=self.mock_workflow_id
+            self.ee_client.get_status(
+                workflowId=self.mock_workflow_id
             )
-            self.assertEqual(resp.text, mock_response)
+            mock_get.assert_called_with(
+                "http://central-gateway.ccc.org:8000/api/workflows/v1/{0}/status".format(self.mock_workflow_id),
+                headers={'Authorization': 'Bearer '}
+            )
 
     def test_ee_metadata(self):
-        mock_response = json.dumps(
-            {
-                "workflowName": "hello",
-                "calls": {
-                    "test.hello": [
-                        {
-                            "executionStatus": "Done",
-                            "stdout": "/home/cromwell-executions/test/" + self.mock_workflow_id + "/call-hello/stdout",
-                            "shardIndex": -1,
-                            "outputs": {
-                                "response": "World"
-                            },
-                            "inputs": {
-                                "name": "World"
-                            },
-                            "runtimeAttributes": {},
-                            "returnCode": 0,
-                            "backend": "Local",
-                            "end": "2016-02-04T13:47:56.000-05:00",
-                            "stderr": "/home/cromwell-executions/test/" + self.mock_workflow_id + "/call-hello/stderr",
-                            "attempt": 1,
-                            "executionEvents": [],
-                            "start": "2016-02-04T13:47:55.000-05:00"
-                        }
-                    ]
-                },
-                "id": self.mock_workflow_id,
-                "outputs": {
-                    "test.hello.response": "World"
-                },
-                "inputs": {
-                    "test.hello.name": "World"
-                },
-                "submission": "2016-02-04T13:47:55.000-05:00",
-                "status": "Succeeded",
-                "end": "2016-02-04T13:47:57.000-05:00",
-                "start": "2016-02-04T13:47:55.000-05:00"
-            }
-        )
         # mimic successful get request to status endpoint
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
-            mock_get.return_value.text = mock_response
-            resp = self.ee_client.get_metadata(
-                    workflowId=self.mock_workflow_id
+            self.ee_client.get_metadata(
+                workflowId=self.mock_workflow_id
             )
-            self.assertEqual(resp.text, mock_response)
+            mock_get.assert_called_with(
+                "http://central-gateway.ccc.org:8000/api/workflows/v1/{0}/metadata".format(self.mock_workflow_id),
+                headers={'Authorization': 'Bearer '}
+            )
 
     def test_ee_outputs(self):
-        mock_response = json.dumps(
-            {
-                "id": self.mock_workflow_id,
-                "outputs": {
-                    "test.hello.response": "World"
-                }
-            }
-        )
         # mimic successful get request to status endpoint
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
-            mock_get.return_value.text = mock_response
-            resp = self.ee_client.get_outputs(
-                    workflowId=self.mock_workflow_id
+            self.ee_client.get_outputs(
+                workflowId=self.mock_workflow_id
             )
-            self.assertEqual(resp.text, mock_response)
+            mock_get.assert_called_with(
+                "http://central-gateway.ccc.org:8000/api/workflows/v1/{0}/outputs".format(self.mock_workflow_id),
+                headers={'Authorization': 'Bearer '}
+            )
 
 
 if __name__ == '__main__':
