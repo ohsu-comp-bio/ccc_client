@@ -24,15 +24,34 @@ class TestDtsRunner(unittest.TestCase):
         # mimic successful post
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
-            mock_post.return_value.text = self.ccc_id
-            resp = self.dts_client.post(
+            self.dts_client.post(
                 filepath=self.mock_filepath,
                 sites=self.site,
                 user=self.user,
                 cccId=None
             )
-
-            self.assertEqual(resp.text, self.ccc_id)
+            mock_post.assert_called_with(
+                "http://central-gateway.ccc.org:9510/api/v1/dts/file",
+                data=json.dumps(
+                    {
+                        "cccId": str(uuid.uuid5(uuid.NAMESPACE_DNS,
+                                                self.mock_filepath)),
+                        "name": os.path.basename(self.mock_filepath),
+                        "size": os.path.getsize(self.mock_filepath),
+                        "location": [{
+                            "site": "http://10.73.127.6",
+                            "path": os.path.dirname(self.mock_filepath),
+                            "timestampUpdated": os.stat(self.mock_filepath)[-2],
+                            "user": {
+                                "name": self.user
+                            }
+                        }]
+                    },
+                    sort_keys=True
+                ),
+                headers={"Content-Type": "application/json",
+                         "Authorization": "Bearer "}
+            )
 
         # mimic file already being registered
         with patch('requests.post') as mock_post:
@@ -40,7 +59,7 @@ class TestDtsRunner(unittest.TestCase):
             with patch('requests.get') as mock_get:
                 mock_get.return_value.status_code = 201
                 with self.assertRaises(ValueError):
-                    resp = self.dts_client.post(
+                    self.dts_client.post(
                         filepath=self.mock_filepath,
                         sites=self.site,
                         user=self.user,
@@ -50,25 +69,43 @@ class TestDtsRunner(unittest.TestCase):
         # mimic successful post w/ user provided ccc id
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
-            mock_post.return_value.text = self.ccc_id
             with patch('requests.get') as mock_get:
                 mock_get.return_value.status_code = 500
-                resp = self.dts_client.post(
+                self.dts_client.post(
                     filepath=self.mock_filepath,
                     sites=self.site,
                     user=self.user,
                     cccId=self.ccc_id
                 )
-                self.assertEqual(resp.text, self.ccc_id)
+                mock_post.assert_called_with(
+                    "http://central-gateway.ccc.org:9510/api/v1/dts/file",
+                    data=json.dumps(
+                        {
+                        "cccId": self.ccc_id,
+                            "name": os.path.basename(self.mock_filepath),
+                            "size": os.path.getsize(self.mock_filepath),
+                            "location": [{
+                                "site": "http://10.73.127.6",
+                                "path": os.path.dirname(self.mock_filepath),
+                                "timestampUpdated": os.stat(self.mock_filepath)[-2],
+                                "user": {
+                                    "name": self.user
+                                }
+                            }]
+                        },
+                        sort_keys=True
+                    ),
+                    headers={"Content-Type": "application/json",
+                             "Authorization": "Bearer "}
+                )
 
         # mimic failed post w/ user provided ccc id
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 500
-            mock_post.return_value.text = self.ccc_id
             with patch('requests.get') as mock_get:
                 mock_get.return_value.status_code = 201
                 with self.assertRaises(ValueError):
-                    resp = self.dts_client.post(
+                    self.dts_client.post(
                         filepath=self.mock_filepath,
                         sites=self.site,
                         user=self.user,
@@ -79,31 +116,58 @@ class TestDtsRunner(unittest.TestCase):
         # mimic successful update
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
-            mock_put.return_value.text = "OK"
             with patch('requests.get') as mock_get:
                 mock_get.return_value.status_code = 201
-                mock_get.return_value.text = json.dumps(
-                    {
-                        "cccId": self.ccc_id,
-                        "name": os.path.basename(self.mock_filepath),
-                        "size": os.path.getsize(self.mock_filepath),
-                        "location": [{
-                            "site": "http://10.73.127.14",
-                            "path": os.path.dirname(self.mock_filepath),
-                            "timestampUpdated": 1468263436,
-                            "user": {
-                                "name": "dts_tester"
-                            }
-                        }]
-                    }
-                )
-                resp = self.dts_client.put(
+                mock_get.return_value.text = json.dumps({
+                    "cccId": self.ccc_id,
+                    "name": os.path.basename(self.mock_filepath),
+                    "size": os.path.getsize(self.mock_filepath),
+                    "location": [{
+                        "site": "http://10.73.127.6",
+                        "path": os.path.dirname(self.mock_filepath),
+                        "timestampUpdated": os.stat(self.mock_filepath)[-2],
+                        "user": {
+                            "name": self.user
+                        }
+                    }]
+                })
+                self.dts_client.put(
                     filepath=self.mock_filepath,
                     sites=self.sites,
                     user=self.user,
                     cccId=self.ccc_id
                 )
-                self.assertEqual(resp.text, "OK")
+                mock_put.assert_called_with(
+                    "http://central-gateway.ccc.org:9510/api/v1/dts/file",
+                    data=json.dumps(
+                        {
+                            "cccId": self.ccc_id,
+                            "location": [
+                                {
+                                    "site": "http://10.73.127.6",
+                                    "path": os.path.dirname(self.mock_filepath),
+                                    "timestampUpdated": os.stat(self.mock_filepath)[-2],
+                                    "user": {
+                                        "name": self.user
+                                    }
+                                },
+                                {
+                                    "site": "http://10.73.127.1",
+                                    "path": os.path.dirname(self.mock_filepath),
+                                    "timestampUpdated": os.stat(self.mock_filepath)[-2],
+                                    "user": {
+                                        "name": self.user
+                                    }
+                                }
+                            ],
+                            "name": os.path.basename(self.mock_filepath),
+                            "size": os.path.getsize(self.mock_filepath)
+                        },
+                        sort_keys=True
+                    ),
+                    headers={"Content-Type": "application/json",
+                             "Authorization": "Bearer "}
+                )
 
         # mimic update attempt where filepath doesn't match expected cccId
         with patch('requests.get') as mock_get:
@@ -114,9 +178,9 @@ class TestDtsRunner(unittest.TestCase):
                     "name": os.path.basename(self.mock_filepath),
                     "size": os.path.getsize(self.mock_filepath),
                     "location": [{
-                        "site": "http://10.73.127.14",
+                        "site": "http://10.73.127.6",
                         "path": os.path.dirname(self.mock_filepath),
-                        "timestampUpdated": 1468263436,
+                        "timestampUpdated": os.stat(self.mock_filepath)[-2],
                         "user": {
                             "name": "dts_tester"
                         }
@@ -124,28 +188,77 @@ class TestDtsRunner(unittest.TestCase):
                 }
             )
             with self.assertRaises(ValueError):
-                resp = self.dts_client.put(
+                self.dts_client.put(
                     filepath="/tmp/foobar",
                     sites=self.sites,
                     user=self.user,
                     cccId=self.ccc_id
                 )
 
+    def test_dts_get(self):
+        with patch('requests.get') as mock_get:
+            mock_get.return_value.status_code = 201
+            self.dts_client.get(
+                cccId=self.ccc_id
+            )
+            mock_get.assert_called_with(
+                "http://central-gateway.ccc.org:9510/api/v1/dts/file/{0}".format(self.ccc_id),
+                headers={"Content-Type": "application/json",
+                         "Authorization": "Bearer "}
+            )
+
+    def test_dts_query(self):
+        terms = ["name:tmp.txt", "site=ohsu"]
+        with patch('requests.get') as mock_get:
+            mock_get.return_value.status_code = 201
+            self.dts_client.query(
+                terms
+            )
+            mock_get.assert_called_with(
+                "http://central-gateway.ccc.org:9510/api/v1/dts/file/?name=tmp.txt&site=ohsu",
+                headers={"Content-Type": "application/json",
+                         "Authorization": "Bearer "}
+            )
+
+        # invalid search term
+        terms = ["task:foobar"]
+        with patch('requests.get') as mock_get:
+            with self.assertRaises(ValueError):
+                self.dts_client.query(
+                    terms
+                )
+
+    def test_dts_delete(self):
+        with patch('requests.delete') as mock_delete:
+            mock_delete.return_value.status_code = 201
+            self.dts_client.delete(
+                cccId=self.ccc_id
+            )
+            mock_delete.assert_called_with(
+                "http://central-gateway.ccc.org:9510/api/v1/dts/file/{0}".format(self.ccc_id),
+                headers={"Content-Type": "application/json",
+                         "Authorization": "Bearer "}
+            )
+
     def test_cccId_generation(self):
         self.assertEqual(
-            self.dts_client.infer_cccId(filepath=self.mock_filepath, uuid_strategy="SHA-1"),
+            self.dts_client.infer_cccId(filepath=self.mock_filepath,
+                                        uuid_strategy="SHA-1"),
             str(uuid.uuid5(uuid.NAMESPACE_DNS, self.mock_filepath))
         )
         self.assertEqual(
-            self.dts_client.infer_cccId(filepath=self.mock_filepath, uuid_strategy="MD5"),
+            self.dts_client.infer_cccId(filepath=self.mock_filepath,
+                                        uuid_strategy="MD5"),
             str(uuid.uuid3(uuid.NAMESPACE_DNS, self.mock_filepath))
         )
         self.assertNotEqual(
-            self.dts_client.infer_cccId(filepath=self.mock_filepath, uuid_strategy="RANDOM"),
+            self.dts_client.infer_cccId(filepath=self.mock_filepath,
+                                        uuid_strategy="RANDOM"),
             str(uuid.uuid5(uuid.NAMESPACE_DNS, self.mock_filepath))
         )
         self.assertNotEqual(
-            self.dts_client.infer_cccId(filepath=self.mock_filepath, uuid_strategy="RANDOM"),
+            self.dts_client.infer_cccId(filepath=self.mock_filepath,
+                                        uuid_strategy="RANDOM"),
             str(uuid.uuid3(uuid.NAMESPACE_DNS, self.mock_filepath))
         )
 
@@ -166,48 +279,6 @@ class TestDtsRunner(unittest.TestCase):
             self.dts_client._map_site_to_ip("dfci"),
             "http://10.73.127.18"
         )
-
-    # the below tests don't really do anything...
-    def test_dts_get(self):
-        mock_dts_entry = json.dumps(
-            {
-                "cccId": self.ccc_id,
-                "name": os.path.basename(self.mock_filepath),
-                "size": os.path.getsize(self.mock_filepath),
-                "location": [{
-                    "site": "http://10.73.127.14",
-                    "path": os.path.dirname(self.mock_filepath),
-                    "timestampUpdated": 1468263436,
-                    "user": {
-                        "name": "dts_tester"
-                    }
-                }]
-            }
-        )
-
-        with patch('requests.get') as mock_get:
-            mock_get.return_value.status_code = 201
-            mock_get.return_value.text = mock_dts_entry
-            resp = self.dts_client.get(
-                cccId=self.ccc_id
-            )
-            self.assertEqual(resp.text, mock_dts_entry)
-
-        with patch('requests.get') as mock_get:
-            mock_get.return_value.status_code = 500
-            resp = self.dts_client.get(
-                cccId=self.ccc_id
-            )
-            self.assertEqual(resp.status_code, 500)
-
-    def test_dts_delete(self):
-        with patch('requests.delete') as mock_delete:
-            mock_delete.return_value.status_code = 201
-            mock_delete.return_value.text = "OK"
-            resp = self.dts_client.delete(
-                cccId=self.ccc_id
-            )
-            self.assertEqual(resp.text, "OK")
 
 
 if __name__ == '__main__':

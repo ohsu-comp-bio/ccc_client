@@ -1,7 +1,5 @@
 import unittest
-import tempfile
 import json
-import os
 import uuid
 
 from mock import patch

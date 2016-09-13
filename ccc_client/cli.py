@@ -124,7 +124,7 @@ def setup_parser():
     dcs_sub = dcs.add_subparsers(title="action", dest="action")
 
     #
-    dcs_create_link = dcs_sub.subparsers.add_parser(
+    dcs_create_link = dcs_sub.add_parser(
         'create_link',
         help='Assign set to existing CCC_DID(s)'
     )
@@ -134,7 +134,7 @@ def setup_parser():
                                  help='CCC_DID(s) of data to be assigned to set')
 
     #
-    dcs_comon_parents = dcs_sub.subparsers.add_parser(
+    dcs_comon_parents = dcs_sub.add_parser(
         'common_parents',
         help='Find common parent given list of CCC_DID(s)'
     )
@@ -142,7 +142,7 @@ def setup_parser():
                                    help='CCC_DIDs to search')
 
     #
-    dcs_all_parents = dcs_sub.subparsers.add_parser(
+    dcs_all_parents = dcs_sub.add_parser(
         'all_parents',
         help='Find all parents of a CCC_DID'
     )
@@ -151,7 +151,7 @@ def setup_parser():
                                  help='CCC_DID to find parents of')
 
     #
-    dcs_all_children = dcs_sub.subparsers.add_parser(
+    dcs_all_children = dcs_sub.add_parser(
         'all_children',
         help='Find all children of a CCC_DID'
     )
@@ -160,7 +160,7 @@ def setup_parser():
                                   help='CCC_DID to find children of')
 
     #
-    dcs_delete_link = dcs_sub.subparsers.add_parser(
+    dcs_delete_link = dcs_sub.add_parser(
         'delete_link',
         help='Delete existing DCS parent/child relationship'
     )
@@ -172,7 +172,7 @@ def setup_parser():
                                  help='File containing multiple CCC_DID entries')
 
     #
-    dcs_delete_set = dcs_sub.subparsers.add_parser(
+    dcs_delete_set = dcs_sub.add_parser(
         'delete_set',
         help='Remove a UUID corresponding to a set from the DCS'
     )
