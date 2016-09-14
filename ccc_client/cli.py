@@ -46,7 +46,11 @@ def display_help(parser):
             help_msg.append("=" * 60)
             help_msg.append("{0}".format(choice))
             help_msg.append("=" * 60)
-            help_msg.append(find_options(subparser.format_help(), strip_n=1))
+            help_msg.append(
+                find_options(subparser.format_help(),
+                             show_usage=True,
+                             strip_n=1)
+            )
 
             # Iterate through the actions for a service
             for method_subparser_action in method_subparser_actions:
@@ -58,6 +62,7 @@ def display_help(parser):
                     help_msg.append(
                         find_options(
                             method_subparser.format_help(),
+                            show_usage=True,
                             strip_n=6
                         )
                     )
@@ -69,12 +74,18 @@ def find_options(helptext, show_usage=True, strip_n=0):
     Return a substring with the optional arguments
     """
     helplist = helptext.split("\n")
-
+    try:
+        positional_arg_index = helplist.index("positional arguments:")
+    except ValueError:
+        positional_arg_index = None
     arg_index = helplist.index("optional arguments:")
 
-    # Remove usage info
     if not show_usage:
-        helplist = helplist[arg_index:]
+        if positional_arg_index:
+            helplist = helplist[positional_arg_index:]
+        else:
+            helplist = helplist[arg_index:]
+        arg_index = helplist.index("optional arguments:")
 
     # Remove help flag info
     del helplist[(arg_index + 1):(arg_index + 1 + strip_n)]
@@ -114,6 +125,86 @@ def setup_parser():
     parser.add_argument("--version", action='version',
                         version=str(ccc_client.__version__))
     subparsers = parser.add_subparsers(title="service", dest="service")
+
+    # ------------------------
+    # DCS Options
+    # ------------------------
+    dcs = subparsers.add_parser("dcs")
+    dcs.set_defaults(runner=ccc_client.DcsRunner)
+
+    dcs_sub = dcs.add_subparsers(title="action", dest="action")
+
+    #
+    dcs_create_link = dcs_sub.add_parser(
+        'create-link',
+        parents=[common_parser],
+        help='Assign one or more resources to a set'
+    )
+    dcs_create_link.add_argument('--setId', '-p',
+                                 required=True,
+                                 type=str,
+                                 help='CCC_ID of new or existing set')
+    dcs_create_link.add_argument('--cccId', '-c',
+                                 type=str,
+                                 nargs='+',
+                                 help='CCC_ID(s) of data to be assigned to set')
+
+    #
+    dcs_comon_sets = dcs_sub.add_parser(
+        'find-common-sets',
+        parents=[common_parser],
+        help='Find common resource sets given a list of CCC_IDs'
+    )
+    dcs_comon_sets.add_argument('cccId',
+                                type=str,
+                                nargs='+',
+                                help='CCC_IDs to search')
+
+    #
+    dcs_list_sets = dcs_sub.add_parser(
+        'list-sets',
+        parents=[common_parser],
+        help='List all sets containing a resource'
+    )
+    dcs_list_sets.add_argument('cccId',
+                               type=str,
+                               help='CCC_ID of resource')
+
+    #
+    dcs_list_resources = dcs_sub.add_parser(
+        'list-resources',
+        parents=[common_parser],
+        help='List all resources belonging to a set'
+    )
+    dcs_list_resources.add_argument('setId',
+                                    type=str,
+                                    help='UUID of resource set')
+
+    #
+    dcs_delete_link = dcs_sub.add_parser(
+        'delete-link',
+        parents=[common_parser],
+        help='Delete existing DCS relationship'
+    )
+    dcs_delete_link.add_argument('--setId', '-p',
+                                 required=True,
+                                 type=str,
+                                 help='UUID of resource set')
+    dcs_delete_link.add_argument('--cccId', '-c',
+                                 type=str,
+                                 nargs='+',
+                                 help='CCC_DID(s) of data to be removed from set')
+
+    #
+    dcs_delete_set = dcs_sub.add_parser(
+        'delete-set',
+        parents=[common_parser],
+        help='Remove a UUID corresponding to a set from the DCS'
+    )
+    dcs_delete_set.add_argument('setId',
+                                type=str,
+                                nargs="+",
+                                help='UUID(s) of resource set(s) to delete')
 
     # ------------------------
     # DTS Options
@@ -512,7 +603,8 @@ def cli_main():
         return parser.print_help()
 
     if "--help-long" in sys.argv[1:]:
-        return display_help(parser)
+        print(display_help(parser))
+        return
 
     args = parser.parse_args()
 
@@ -530,6 +622,34 @@ def cli_main():
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.WARNING)
+
+    # ------------------------
+    # DCS
+    # ------------------------
+    if args.service == "dcs":
+        if args.action == "create-link":
+            for i in args.cccId:
+                r = runner.create_link(args.setId, i)
+                responses.append(r)
+        elif args.action == "find-common-sets":
+            r = runner.find_common_sets(args.ids)
+            responses.append(r)
+        elif args.action == "list-sets":
+            r = runner.list_all_sets(args.cccId)
+            responses.append(r)
+        elif args.action == "list-resources":
+            r = runner.list_all_resources(args.setId)
+            responses.append(r)
+        elif args.action == "delete-link":
+            for i in args.cccId:
+                r = runner.delete_link(args.setId, i)
+                responses.append(r)
+        elif args.action == "delete-set":
+            for i in args.setId:
+                r = runner.delete_set(i)
+                responses.append(r)
+        else:
+            raise NotImplementedError
 
     # ------------------------
     # DTS
@@ -572,6 +692,8 @@ def cli_main():
                     cccId = runner.infer_cccId(file_iter, args.strategy)
                     print("{0}\t{1}".format(file_iter, cccId))
             return None
+        else:
+            raise NotImplementedError
 
     # ------------------------
     # App Repo
@@ -616,6 +738,8 @@ def cli_main():
                 elif args.action == "outputs":
                     r = runner.get_outputs(workflowId)
                     responses.append(r)
+                else:
+                    raise NotImplementedError
 
     # ------------------------
     # Elastic Search
@@ -646,7 +770,12 @@ def cli_main():
                                         args.property_override,
                                         args.isMock,
                                         args.skipDtsRegistration)
+        else:
+            raise NotImplementedError
         print(r)
+
+    else:
+        raise NotImplementedError
 
     # ------------------------
     # Response Handling

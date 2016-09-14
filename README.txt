@@ -2,8 +2,8 @@ This tool provides a command line interface to services within the CCC, along wi
 
 
 usage: ccc_client [-h] [--debug] [--host HOST] [--port PORT]
-                  [--authToken AUTHTOKEN] [--help-long] [--version]
-                  {dts,app-repo,exec-engine,elasticsearch} ...
+                         [--authToken AUTHTOKEN] [--help-long] [--version]
+                         {dcs,dts,app-repo,exec-engine,elasticsearch} ...
 
 CCC client
 
@@ -18,24 +18,111 @@ optional arguments:
   --version             show program's version number and exit
 
 service:
-  {dts,app-repo,exec-engine,elasticsearch}
+  {dcs,dts,app-repo,exec-engine,elasticsearch}
+
+============================================================
+dcs
+============================================================
+usage: ccc_client dcs [-h]
+                             {create-link,find-common-sets,list-sets,list-resources,delete-link,delete-set}
+                             ...
+
+action:
+  {create-link,find-common-sets,list-sets,list-resources,delete-link,delete-set}
+    create-link         Assign one or more resources to a set
+    find-common-sets    Find common resource sets given a list of CCC_IDs
+    list-sets           List all sets containing a resource
+    list-resources      List all resources belonging to a set
+    delete-link         Delete existing DCS relationship
+    delete-set          Remove a UUID corresponding to a set from the DCS
+
+---------------
+| create-link |
+---------------
+usage: ccc_client dcs create-link [-h] [--debug] [--host HOST]
+                                         [--port PORT] [--authToken AUTHTOKEN]
+                                         --setId SETID
+                                         [--cccId CCCID [CCCID ...]]
+
+optional arguments:
+  --setId SETID, -p SETID
+                        CCC_ID of new or existing set
+  --cccId CCCID [CCCID ...], -c CCCID [CCCID ...]
+                        CCC_ID(s) of data to be assigned to set
+
+--------------------
+| find-common-sets |
+--------------------
+usage: ccc_client dcs find-common-sets [-h] [--debug] [--host HOST]
+                                              [--port PORT]
+                                              [--authToken AUTHTOKEN]
+                                              cccId [cccId ...]
+
+positional arguments:
+  cccId                 CCC_IDs to search
+
+-------------
+| list-sets |
+-------------
+usage: ccc_client dcs list-sets [-h] [--debug] [--host HOST]
+                                       [--port PORT] [--authToken AUTHTOKEN]
+                                       cccId
+
+positional arguments:
+  cccId                 CCC_ID of resource
+
+------------------
+| list-resources |
+------------------
+usage: ccc_client dcs list-resources [-h] [--debug] [--host HOST]
+                                            [--port PORT]
+                                            [--authToken AUTHTOKEN]
+                                            setId
+
+positional arguments:
+  setId                 UUID of resource set
+
+---------------
+| delete-link |
+---------------
+usage: ccc_client dcs delete-link [-h] [--debug] [--host HOST]
+                                         [--port PORT] [--authToken AUTHTOKEN]
+                                         --setId SETID
+                                         [--cccId CCCID [CCCID ...]]
+
+optional arguments:
+  --setId SETID, -p SETID
+                        UUID of resource set
+  --cccId CCCID [CCCID ...], -c CCCID [CCCID ...]
+                        CCC_DID(s) of data to be removed from set
+
+--------------
+| delete-set |
+--------------
+usage: ccc_client dcs delete-set [-h] [--debug] [--host HOST]
+                                        [--port PORT] [--authToken AUTHTOKEN]
+                                        setId [setId ...]
+
+positional arguments:
+  setId                 UUID(s) of resource set(s) to delete
 
 ============================================================
 dts
 ============================================================
-usage: ccc_client dts [-h] {post,put,get,delete,infer-cccId} ...
+usage: ccc_client dts [-h] {post,put,get,delete,query,infer-cccId} ...
 
 action:
-  {post,put,get,delete,infer-cccId}
+  {post,put,get,delete,query,infer-cccId}
 
 --------
 | post |
 --------
 usage: ccc_client dts post [-h] [--debug] [--host HOST] [--port PORT]
-                           [--authToken AUTHTOKEN] --filepath FILEPATH
-                           [FILEPATH ...] [--user USER] --site
-                           {central,dfci,ohsu,oicr}
-                           [{central,dfci,ohsu,oicr} ...] [--cccId CCCID]
+                                  [--authToken AUTHTOKEN] --filepath FILEPATH
+                                  [FILEPATH ...] [--user USER] --site
+                                  {central,dfci,ohsu,oicr}
+                                  [{central,dfci,ohsu,oicr} ...]
+                                  [--cccId CCCID]
 
 optional arguments:
   --filepath FILEPATH [FILEPATH ...], -f FILEPATH [FILEPATH ...]
@@ -43,32 +130,33 @@ optional arguments:
   --user USER, -u USER  user identity
   --site {central,dfci,ohsu,oicr} [{central,dfci,ohsu,oicr} ...], -s {central,dfci,ohsu,oicr} [{central,dfci,ohsu,oicr} ...]
                         site the data resides at
-  --cccId CCCID         cccId; if not given one will be generated
+  --cccId CCCID, -i CCCID
+                        cccId; if not given one will be generated
                         automatically
 
 -------
 | put |
 -------
 usage: ccc_client dts put [-h] [--debug] [--host HOST] [--port PORT]
-                          [--authToken AUTHTOKEN] --cccId CCCID --filepath
-                          FILEPATH [--user USER] --site
-                          {central,dfci,ohsu,oicr}
-                          [{central,dfci,ohsu,oicr} ...]
+                                 [--authToken AUTHTOKEN] --filepath FILEPATH
+                                 [--user USER] --site {central,dfci,ohsu,oicr}
+                                 [{central,dfci,ohsu,oicr} ...] --cccId CCCID
 
 optional arguments:
-  --cccId CCCID         cccId entry to update
   --filepath FILEPATH, -f FILEPATH
                         filepath
   --user USER, -u USER  site user
   --site {central,dfci,ohsu,oicr} [{central,dfci,ohsu,oicr} ...], -s {central,dfci,ohsu,oicr} [{central,dfci,ohsu,oicr} ...]
                         site the data resides at
+  --cccId CCCID, -i CCCID
+                        cccId entry to update
 
 -------
 | get |
 -------
 usage: ccc_client dts get [-h] [--debug] [--host HOST] [--port PORT]
-                          [--authToken AUTHTOKEN]
-                          cccId [cccId ...]
+                                 [--authToken AUTHTOKEN]
+                                 cccId [cccId ...]
 
 positional arguments:
   cccId                 cccId entry to GET
@@ -77,19 +165,31 @@ positional arguments:
 | delete |
 ----------
 usage: ccc_client dts delete [-h] [--debug] [--host HOST] [--port PORT]
-                             [--authToken AUTHTOKEN]
-                             cccId [cccId ...]
+                                    [--authToken AUTHTOKEN]
+                                    cccId [cccId ...]
 
 positional arguments:
   cccId                 cccId entry to DELETE
 
+---------
+| query |
+---------
+usage: ccc_client dts query [-h] [--debug] [--host HOST] [--port PORT]
+                                   [--authToken AUTHTOKEN]
+                                   query_terms [query_terms ...]
+
+positional arguments:
+  query_terms           The search terms on which to query. Can be specified
+                        multiple times. Should be supplied in the form
+                        'FieldName:Term'
+
 ---------------
 | infer-cccId |
 ---------------
-usage: ccc_client dts infer-cccId [-h] [--debug] [--host HOST] [--port PORT]
-                                  [--authToken AUTHTOKEN]
-                                  [--strategy {MD5,SHA-1}]
-                                  filepath [filepath ...]
+usage: ccc_client dts infer-cccId [-h] [--debug] [--host HOST]
+                                         [--port PORT] [--authToken AUTHTOKEN]
+                                         [--strategy {MD5,SHA-1}]
+                                         filepath [filepath ...]
 
 positional arguments:
   filepath              name of file(s) or pattern to glob on
@@ -110,11 +210,12 @@ action:
 --------
 | post |
 --------
-usage: ccc_client app-repo post [-h] [--debug] [--host HOST] [--port PORT]
-                                [--authToken AUTHTOKEN]
-                                [--imageBlob IMAGEBLOB]
-                                [--imageName IMAGENAME] [--imageTag IMAGETAG]
-                                [--metadata METADATA]
+usage: ccc_client app-repo post [-h] [--debug] [--host HOST]
+                                       [--port PORT] [--authToken AUTHTOKEN]
+                                       [--imageBlob IMAGEBLOB]
+                                       [--imageName IMAGENAME]
+                                       [--imageTag IMAGETAG]
+                                       [--metadata METADATA]
 
 optional arguments:
   --imageBlob IMAGEBLOB, -b IMAGEBLOB
@@ -129,9 +230,9 @@ optional arguments:
 -------
 | put |
 -------
-usage: ccc_client app-repo put [-h] [--debug] [--host HOST] [--port PORT]
-                               [--authToken AUTHTOKEN] --metadata METADATA
-                               [--imageId IMAGEID]
+usage: ccc_client app-repo put [-h] [--debug] [--host HOST]
+                                      [--port PORT] [--authToken AUTHTOKEN]
+                                      --metadata METADATA [--imageId IMAGEID]
 
 optional arguments:
   --metadata METADATA, -m METADATA
@@ -142,9 +243,9 @@ optional arguments:
 -------
 | get |
 -------
-usage: ccc_client app-repo get [-h] [--debug] [--host HOST] [--port PORT]
-                               [--authToken AUTHTOKEN]
-                               imageId
+usage: ccc_client app-repo get [-h] [--debug] [--host HOST]
+                                      [--port PORT] [--authToken AUTHTOKEN]
+                                      imageId
 
 positional arguments:
   imageId               docker image id or name
@@ -152,9 +253,9 @@ positional arguments:
 ----------
 | delete |
 ----------
-usage: ccc_client app-repo delete [-h] [--debug] [--host HOST] [--port PORT]
-                                  [--authToken AUTHTOKEN]
-                                  imageId
+usage: ccc_client app-repo delete [-h] [--debug] [--host HOST]
+                                         [--port PORT] [--authToken AUTHTOKEN]
+                                         imageId
 
 positional arguments:
   imageId               docker image id
@@ -162,19 +263,23 @@ positional arguments:
 ============================================================
 exec-engine
 ============================================================
-usage: ccc_client exec-engine [-h] {submit,status,outputs,metadata} ...
+usage: ccc_client exec-engine [-h]
+                                     {submit,query,status,outputs,metadata}
+                                     ...
 
 action:
-  {submit,status,outputs,metadata}
+  {submit,query,status,outputs,metadata}
 
 ----------
 | submit |
 ----------
 usage: ccc_client exec-engine submit [-h] [--debug] [--host HOST]
-                                     [--port PORT] [--authToken AUTHTOKEN]
-                                     --wdlSource WDLSOURCE --workflowInputs
-                                     WORKFLOWINPUTS [WORKFLOWINPUTS ...]
-                                     [--workflowOptions WORKFLOWOPTIONS]
+                                            [--port PORT]
+                                            [--authToken AUTHTOKEN]
+                                            --wdlSource WDLSOURCE
+                                            --workflowInputs WORKFLOWINPUTS
+                                            [WORKFLOWINPUTS ...]
+                                            [--workflowOptions WORKFLOWOPTIONS]
 
 optional arguments:
   --wdlSource WDLSOURCE, -s WDLSOURCE
@@ -184,12 +289,27 @@ optional arguments:
   --workflowOptions WORKFLOWOPTIONS, -o WORKFLOWOPTIONS
                         workflow options
 
+---------
+| query |
+---------
+usage: ccc_client exec-engine query [-h] [--debug] [--host HOST]
+                                           [--port PORT]
+                                           [--authToken AUTHTOKEN]
+                                           query_terms [query_terms ...]
+
+positional arguments:
+  query_terms           The search terms on which to query. Can be specified
+                        multiple times. Should be supplied in the form
+                        'FieldName:Term'. Possible field names: name, id,
+                        status, start, end, page, pagesize
+
 ----------
 | status |
 ----------
 usage: ccc_client exec-engine status [-h] [--debug] [--host HOST]
-                                     [--port PORT] [--authToken AUTHTOKEN]
-                                     workflowId
+                                            [--port PORT]
+                                            [--authToken AUTHTOKEN]
+                                            workflowId [workflowId ...]
 
 positional arguments:
   workflowId            workflow uuid
@@ -198,8 +318,9 @@ positional arguments:
 | outputs |
 -----------
 usage: ccc_client exec-engine outputs [-h] [--debug] [--host HOST]
-                                      [--port PORT] [--authToken AUTHTOKEN]
-                                      workflowId
+                                             [--port PORT]
+                                             [--authToken AUTHTOKEN]
+                                             workflowId [workflowId ...]
 
 positional arguments:
   workflowId            workflow uuid
@@ -208,8 +329,9 @@ positional arguments:
 | metadata |
 ------------
 usage: ccc_client exec-engine metadata [-h] [--debug] [--host HOST]
-                                       [--port PORT] [--authToken AUTHTOKEN]
-                                       workflowId
+                                              [--port PORT]
+                                              [--authToken AUTHTOKEN]
+                                              workflowId [workflowId ...]
 
 positional arguments:
   workflowId            workflow uuid
@@ -218,7 +340,8 @@ positional arguments:
 elasticsearch
 ============================================================
 usage: ccc_client elasticsearch [-h]
-                                {query,publish-batch,publish-resource} ...
+                                       {query,publish-batch,publish-resource}
+                                       ...
 
 action:
   {query,publish-batch,publish-resource}
@@ -227,10 +350,11 @@ action:
 | query |
 ---------
 usage: ccc_client elasticsearch query [-h] [--debug] [--host HOST]
-                                      [--port PORT] [--authToken AUTHTOKEN]
-                                      [--domain {patient,specimen,sample,resource}]
-                                      --query-terms QUERY_TERMS
-                                      [QUERY_TERMS ...]
+                                             [--port PORT]
+                                             [--authToken AUTHTOKEN]
+                                             [--domain {patient,specimen,sample,resource}]
+                                             --query-terms QUERY_TERMS
+                                             [QUERY_TERMS ...]
 
 optional arguments:
   --domain {patient,specimen,sample,resource}, -d {patient,specimen,sample,resource}
@@ -243,16 +367,18 @@ optional arguments:
 -----------------
 | publish-batch |
 -----------------
-usage: ccc_client elasticsearch publish-batch [-h] [--debug] [--host HOST]
-                                              [--port PORT]
-                                              [--authToken AUTHTOKEN] --tsv
-                                              TSV
-                                              [--site {central,dfci,ohsu,oicr}]
-                                              [--user USER]
-                                              [--project PROJECT]
-                                              [--domain {patient,specimen,sample,resource}]
-                                              [--domainJson DOMAINJSON]
-                                              [--mock] [--skipDtsRegistration]
+usage: ccc_client elasticsearch publish-batch [-h] [--debug]
+                                                     [--host HOST]
+                                                     [--port PORT]
+                                                     [--authToken AUTHTOKEN]
+                                                     --tsv TSV
+                                                     [--site {central,dfci,ohsu,oicr}]
+                                                     [--user USER]
+                                                     [--project PROJECT]
+                                                     [--domain {patient,specimen,sample,resource}]
+                                                     [--domainJson DOMAINJSON]
+                                                     [--mock]
+                                                     [--skipDtsRegistration]
 
 optional arguments:
   --tsv TSV, -t TSV     input tab delimited file
@@ -277,20 +403,21 @@ optional arguments:
 --------------------
 | publish-resource |
 --------------------
-usage: ccc_client elasticsearch publish-resource [-h] [--debug] [--host HOST]
-                                                 [--port PORT]
-                                                 [--authToken AUTHTOKEN]
-                                                 --filepath FILEPATH
-                                                 [--mimeType MIMETYPE]
-                                                 [--inheritFrom INHERITFROM]
-                                                 [--propertyOverride PROPERTYOVERRIDE [PROPERTYOVERRIDE ...]]
-                                                 [--site {central,dfci,ohsu,oicr}]
-                                                 [--user USER]
-                                                 [--project PROJECT]
-                                                 [--workflowId WORKFLOWID]
-                                                 [--domainJson DOMAINJSON]
-                                                 [--mock]
-                                                 [--skipDtsRegistration]
+usage: ccc_client elasticsearch publish-resource [-h] [--debug]
+                                                        [--host HOST]
+                                                        [--port PORT]
+                                                        [--authToken AUTHTOKEN]
+                                                        --filepath FILEPATH
+                                                        [--mimeType MIMETYPE]
+                                                        [--inheritFrom INHERITFROM]
+                                                        [--propertyOverride PROPERTYOVERRIDE [PROPERTYOVERRIDE ...]]
+                                                        [--site {central,dfci,ohsu,oicr}]
+                                                        [--user USER]
+                                                        [--project PROJECT]
+                                                        [--workflowId WORKFLOWID]
+                                                        [--domainJson DOMAINJSON]
+                                                        [--mock]
+                                                        [--skipDtsRegistration]
 
 optional arguments:
   --filepath FILEPATH, -f FILEPATH

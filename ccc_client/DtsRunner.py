@@ -106,7 +106,7 @@ class DtsRunner(object):
                                                self.endpoint)
         response = requests.put(
             endpoint,
-            data=json.dumps(data),
+            data=json.dumps(data, sort_keys=True),
             headers=self.headers
         )
         return response
@@ -147,7 +147,7 @@ class DtsRunner(object):
                                                self.endpoint)
         response = requests.post(
             endpoint,
-            data=json.dumps(data),
+            data=json.dumps(data, sort_keys=True),
             headers=self.headers
         )
 
@@ -163,15 +163,19 @@ class DtsRunner(object):
         return response
 
     def query(self, query_terms):
-        raise NotImplementedError
+        valid_terms = ["name", "site", "path"]
         terms = []
         for query in query_terms:
             key, val = re.split("[:=]", query)
-            # validation of query terms
-            # TODO
-            terms.append("{0}={1}".format(key.tolower(), val))
+            key = key.lower()
+            if key not in valid_terms:
+                raise ValueError(
+                    "[ERROR] Valid query terms are: {0}".format(" ".join(valid_terms))
+                )
+            else:
+                terms.append("{0}={1}".format(key, val))
         query_string = "&".join(terms)
-        endpoint = "http://{0}:{1}/{2}/query?".format(
+        endpoint = "http://{0}:{1}/{2}/?{3}".format(
             self.host, self.port, self.endpoint, query_string
         )
         response = requests.get(endpoint, headers=self.headers)

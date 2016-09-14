@@ -78,7 +78,7 @@ class TestExecEngineArgs(unittest.TestCase):
         cliInput = """exec-engine status foo"""
         parser = cli.setup_parser()
         args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.workflowId, "foo")
+        self.assertEqual(args.workflowId, ["foo"])
         self.assertEqual(args.runner, ExecEngineRunner)
         self.assertEqual(args.action, "status")
 
@@ -86,7 +86,7 @@ class TestExecEngineArgs(unittest.TestCase):
         cliInput = """exec-engine outputs foo"""
         parser = cli.setup_parser()
         args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.workflowId, "foo")
+        self.assertEqual(args.workflowId, ["foo"])
         self.assertEqual(args.runner, ExecEngineRunner)
         self.assertEqual(args.action, "outputs")
 
@@ -94,7 +94,7 @@ class TestExecEngineArgs(unittest.TestCase):
         cliInput = """exec-engine metadata foo"""
         parser = cli.setup_parser()
         args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.workflowId, "foo")
+        self.assertEqual(args.workflowId, ["foo"])
         self.assertEqual(args.runner, ExecEngineRunner)
         self.assertEqual(args.action, "metadata")
 
