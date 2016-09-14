@@ -296,7 +296,6 @@ def setup_parser():
     dts_query = dts_sub.add_parser("query", parents=[common_parser])
     dts_query.add_argument(
         "filepath",
-        required=True,
         type=str,
         nargs="+",
         help="name of file(s) and/or pattern(s) to glob on"
