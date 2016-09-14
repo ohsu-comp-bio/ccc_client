@@ -162,18 +162,33 @@ class DtsRunner(object):
                 raise ValueError
         return response
 
-    def query(self, query_terms):
-        valid_terms = ["name", "site", "path"]
-        terms = []
-        for query in query_terms:
-            key, val = re.split("[:=]", query)
-            key = key.lower()
-            if key not in valid_terms:
-                raise ValueError(
-                    "[ERROR] Valid query terms are: {0}".format(" ".join(valid_terms))
-                )
-            else:
-                terms.append("{0}={1}".format(key, val))
+    # def query(self, query_terms):
+    #     valid_terms = ["name", "site", "path"]
+    #     terms = []
+    #     for query in query_terms:
+    #         key, val = re.split("[:=]", query)
+    #         key = key.lower()
+    #         if key not in valid_terms:
+    #             raise ValueError(
+    #                 "[ERROR] Valid query terms are: {0}".format(" ".join(valid_terms))
+    #             )
+    #         else:
+    #             terms.append("{0}={1}".format(key, val))
+    #     query_string = "&".join(terms)
+    #     endpoint = "http://{0}:{1}/{2}/?{3}".format(
+    #         self.host, self.port, self.endpoint, query_string
+    #     )
+    #     response = requests.get(endpoint, headers=self.headers)
+    #     return response
+
+    def query(self, filepath, site):
+        name = os.path.basename(filepath)
+        path = os.path.dirname(filepath)
+        terms = [
+            "name={0}".format(name),
+            "path={0}".format(path),
+            "site={0}".format(self._map_site_to_ip(site))
+        ]
         query_string = "&".join(terms)
         endpoint = "http://{0}:{1}/{2}/?{3}".format(
             self.host, self.port, self.endpoint, query_string

@@ -221,7 +221,7 @@ def setup_parser():
         required=True,
         type=str,
         nargs="+",
-        help="name of file(s) or pattern to glob on"
+        help="name of file(s) and/or pattern(s) to glob on"
     )
     dts_post.add_argument(
         "--user", "-u",
@@ -249,7 +249,7 @@ def setup_parser():
     dts_put = dts_sub.add_parser("put", parents=[common_parser])
     dts_put.add_argument(
         "--filepath", "-f",
-        required=True, 
+        required=True,
         type=str,
         help="filepath"
     )
@@ -295,12 +295,26 @@ def setup_parser():
     # api/v1/dts/file/query?
     dts_query = dts_sub.add_parser("query", parents=[common_parser])
     dts_query.add_argument(
-        "query_terms",
+        "filepath",
+        required=True,
         type=str,
         nargs="+",
-        help="The search terms on which to query. Can be specified multiple \
-        times. Should be supplied in the form 'FieldName:Term'"
+        help="name of file(s) and/or pattern(s) to glob on"
     )
+    dts_query.add_argument(
+        "--site", "-s",
+        required=True,
+        type=str,
+        choices=["central", "dfci", "ohsu", "oicr"],
+        help="site the data resides at"
+    )
+    # dts_query.add_argument(
+    #     "query_terms",
+    #     type=str,
+    #     nargs="+",
+    #     help="The search terms on which to query. Can be specified multiple \
+    #     times. Should be supplied in the form 'FieldName:Term'"
+    # )
 
     # no endpoint; doesnt hit the service
     dts_infer = dts_sub.add_parser("infer-cccId", parents=[common_parser])
@@ -596,6 +610,17 @@ def setup_parser():
     return parser
 
 
+def resolve_filepath_from_pattern(patterns):
+    for file_pattern in patterns:
+        file_list = glob.glob(os.path.abspath(file_pattern))
+        if file_list == []:
+            print("glob on", file_pattern, "did not return any files",
+                  file=sys.stderr)
+            raise ValueError
+        else:
+            return file_list
+
+
 def cli_main():
     parser = setup_parser()
 
@@ -656,18 +681,13 @@ def cli_main():
     # ------------------------
     if args.service == "dts":
         if args.action == "post":
-            for f in args.filepath:
-                file_list = glob.glob(os.path.abspath(f))
-                if file_list == []:
-                    print("glob on", f, "did not return any files",
-                          file=sys.stderr)
-                    raise
-                for file_iter in file_list:
-                    r = runner.post(file_iter, args.site,
-                                    args.user, args.cccId)
-                    if r.status_code // 100 == 2:
-                        print("{0}\t{1}".format(file_iter, r.text))
-                        responses.append(r)
+            file_list = resolve_filepath_from_pattern(args.filepath)
+            for file_iter in file_list:
+                r = runner.post(file_iter, args.site,
+                                args.user, args.cccId)
+                responses.append(r)
+                if r.status_code // 100 == 2:
+                    print("{0}\t{1}".format(file_iter, r.text))
         elif args.action == "put":
             r = runner.put(args.cccId, args.filepath, args.site, args.user)
             responses.append(r)
@@ -680,21 +700,16 @@ def cli_main():
                 r = runner.delete(cccId)
                 responses.append(r)
         elif args.action == "query":
-            r = runner.query(args.query_terms)
-            responses.append(r)
+            file_list = resolve_filepath_from_pattern(args.filepath)
+            for file_iter in file_list:
+                r = runner.query(file_iter, args.site)
+                responses.append(r)
         elif args.action == "infer-cccId":
-            for f in args.filepath:
-                file_list = glob.glob(os.path.abspath(f))
-            for f in args.filepath:
-                file_list = glob.glob(os.path.abspath(f))
-                if file_list == []:
-                    print("glob on", f, "did not return any files",
-                          file=sys.stderr)
-                    raise
-                for file_iter in file_list:
-                    cccId = runner.infer_cccId(file_iter, args.strategy)
-                    print("{0}\t{1}".format(file_iter, cccId))
-            return None
+            file_list = resolve_filepath_from_pattern(args.filepath)
+            for file_iter in file_list:
+                cccId = runner.infer_cccId(file_iter, args.strategy)
+                print("{0}\t{1}".format(file_iter, cccId))
+            return
         else:
             raise NotImplementedError
 
