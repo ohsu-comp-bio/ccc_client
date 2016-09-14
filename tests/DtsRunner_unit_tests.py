@@ -81,7 +81,7 @@ class TestDtsRunner(unittest.TestCase):
                     "http://central-gateway.ccc.org:9510/api/v1/dts/file",
                     data=json.dumps(
                         {
-                        "cccId": self.ccc_id,
+                            "cccId": self.ccc_id,
                             "name": os.path.basename(self.mock_filepath),
                             "size": os.path.getsize(self.mock_filepath),
                             "location": [{
@@ -202,31 +202,27 @@ class TestDtsRunner(unittest.TestCase):
                 cccId=self.ccc_id
             )
             mock_get.assert_called_with(
-                "http://central-gateway.ccc.org:9510/api/v1/dts/file/{0}".format(self.ccc_id),
+                "http://central-gateway.ccc.org:9510/api/v1/dts/file/" +
+                self.ccc_id,
                 headers={"Content-Type": "application/json",
                          "Authorization": "Bearer "}
             )
 
     def test_dts_query(self):
-        terms = ["name:tmp.txt", "site=ohsu"]
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
             self.dts_client.query(
-                terms
+                self.mock_filepath, self.site
             )
             mock_get.assert_called_with(
-                "http://central-gateway.ccc.org:9510/api/v1/dts/file/?name=tmp.txt&site=ohsu",
+                "http://central-gateway.ccc.org:9510/api/v1/dts/file/?" +
+                "name={0}&path={1}&site=http://10.73.127.6".format(
+                    os.path.basename(self.mock_filepath),
+                    os.path.dirname(self.mock_filepath)
+                ),
                 headers={"Content-Type": "application/json",
                          "Authorization": "Bearer "}
             )
-
-        # invalid search term
-        terms = ["task:foobar"]
-        with patch('requests.get') as mock_get:
-            with self.assertRaises(ValueError):
-                self.dts_client.query(
-                    terms
-                )
 
     def test_dts_delete(self):
         with patch('requests.delete') as mock_delete:
@@ -235,7 +231,8 @@ class TestDtsRunner(unittest.TestCase):
                 cccId=self.ccc_id
             )
             mock_delete.assert_called_with(
-                "http://central-gateway.ccc.org:9510/api/v1/dts/file/{0}".format(self.ccc_id),
+                "http://central-gateway.ccc.org:9510/api/v1/dts/file/" +
+                self.ccc_id,
                 headers={"Content-Type": "application/json",
                          "Authorization": "Bearer "}
             )
