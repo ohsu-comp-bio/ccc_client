@@ -679,6 +679,9 @@ def cli_main():
             for cccId in args.cccId:
                 r = runner.delete(cccId)
                 responses.append(r)
+        elif args.action == "query":
+            r = runner.query(args.query_terms)
+            responses.append(r)
         elif args.action == "infer-cccId":
             for f in args.filepath:
                 file_list = glob.glob(os.path.abspath(f))
@@ -726,6 +729,9 @@ def cli_main():
             r = runner.submit_workflow(args.wdlSource,
                                        args.workflowInputs,
                                        args.workflowOptions)
+            responses.append(r)
+        elif args.action == "query":
+            r = runner.query(args.query_terms)
             responses.append(r)
         else:
             for workflowId in args.workflowId:
