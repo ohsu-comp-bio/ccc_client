@@ -35,14 +35,14 @@ class DcsRunner(object):
 
         self.endpoint = self._set_url()
 
-    def create_link(self, parentId, childId):
-        payload = json.dumps(self._set_relationship(parentId, childId))
+    def create_link(self, setId, cccId):
+        payload = json.dumps(self._set_relationship(setId, cccId))
         response = requests.put(self.url,
                                 data=payload,
                                 headers=self.headers)
         return response
 
-    def common_parents(self, ids):
+    def find_common_sets(self, ids):
         if isinstance(ids, str):
             ids = [ids]
         else:
@@ -53,23 +53,23 @@ class DcsRunner(object):
         response = requests.post(url, data=payload, headers=self.headers)
         return response
 
-    def all_parents(self, childId):
-        url = self.url[:-4] + '/' + str(childId) + '/parents'
+    def list_sets(self, cccId):
+        url = self.url[:-4] + '/' + str(cccId) + '/parents'
         response = requests.get(url, headers=self.headers)
         return response
 
-    def all_children(self, parentId):
-        url = self.url[:-4] + '/' + str(parentId) + '/children'
+    def list_resources(self, setId):
+        url = self.url[:-4] + '/' + str(setId) + '/children'
         response = requests.get(url, headers=self.headers)
         return response
 
-    def delete_link(self, parentId, childId):
-        payload = json.dumps(self._set_relationship(parentId, childId))
+    def delete_link(self, setId, cccId):
+        payload = json.dumps(self._set_relationship(setId, cccId))
         response = requests.delete(self.url, data=payload, headers=self.headers)
         return response
 
-    def delete_set(self, parentId):
-        url = self.url[:-4] + '/' + str(parentId)
+    def delete_set(self, setId):
+        url = self.url[:-4] + '/' + str(setId)
         response = requests.delete(url, headers=self.headers)
         return response
 
@@ -79,10 +79,10 @@ class DcsRunner(object):
         )
 
     @staticmethod
-    def _set_relationship(parent_id, child_id):
+    def _set_relationship(setId, cccId):
         return {
-            'parentId': parent_id,
-            'childId': child_id
+            'parentId': setId,
+            'childId': cccId
         }
 
     @staticmethod

@@ -125,60 +125,69 @@ def setup_parser():
 
     #
     dcs_create_link = dcs_sub.add_parser(
-        'create_link',
-        help='Assign set to existing CCC_DID(s)'
+        'create-link',
+        help='Assign one or more resources to a set'
     )
-    dcs_create_link.add_argument('--parentId', required=True, type=str,
-                                 help='CCC_DID of new or existing set')
-    dcs_create_link.add_argument('--childIds', nargs='+', type=str,
-                                 help='CCC_DID(s) of data to be assigned to set')
-
-    #
-    dcs_comon_parents = dcs_sub.add_parser(
-        'common_parents',
-        help='Find common parent given list of CCC_DID(s)'
-    )
-    dcs_comon_parents.add_argument('ids', nargs='+', type=str,
-                                   help='CCC_DIDs to search')
-
-    #
-    dcs_all_parents = dcs_sub.add_parser(
-        'all_parents',
-        help='Find all parents of a CCC_DID'
-    )
-    dcs_all_parents.add_argument('childId',
+    dcs_create_link.add_argument('--setId', '-p',
+                                 required=True,
                                  type=str,
-                                 help='CCC_DID to find parents of')
+                                 help='CCC_ID of new or existing set')
+    dcs_create_link.add_argument('--cccId', '-c',
+                                 type=str,
+                                 nargs='+',
+                                 help='CCC_ID(s) of data to be assigned to set')
 
     #
-    dcs_all_children = dcs_sub.add_parser(
-        'all_children',
-        help='Find all children of a CCC_DID'
+    dcs_comon_sets = dcs_sub.add_parser(
+        'find-common-sets',
+        help='Find common resource sets given a list of CCC_IDs'
     )
-    dcs_all_children.add_argument('parentId',
-                                  type=str,
-                                  help='CCC_DID to find children of')
+    dcs_comon_sets.add_argument('cccId',
+                                type=str,
+                                nargs='+',
+                                help='CCC_IDs to search')
+
+    #
+    dcs_list_sets = dcs_sub.add_parser(
+        'list-sets',
+        help='List all sets containing a resource'
+    )
+    dcs_list_sets.add_argument('cccId',
+                               type=str,
+                               help='CCC_ID of resource')
+
+    #
+    dcs_list_resources = dcs_sub.add_parser(
+        'list-resources',
+        help='List all resources belonging to a set'
+    )
+    dcs_list_resources.add_argument('setId',
+                                    type=str,
+                                    help='UUID of resource set')
 
     #
     dcs_delete_link = dcs_sub.add_parser(
-        'delete_link',
-        help='Delete existing DCS parent/child relationship'
+        'delete-link',
+        help='Delete existing DCS relationship'
     )
-    dcs_delete_link.add_argument('--parentId', required=True, type=str,
-                                 help='CCC_DID of parent set')
-    dcs_delete_link.add_argument('--childId', nargs='+', type=str,
+    dcs_delete_link.add_argument('--setId', '-p',
+                                 required=True,
+                                 type=str,
+                                 help='UUID of resource set')
+    dcs_delete_link.add_argument('--cccId', '-c',
+                                 type=str,
+                                 nargs='+',
                                  help='CCC_DID(s) of data to be removed from set')
-    dcs_delete_link.add_argument('--filepath', type=str,
-                                 help='File containing multiple CCC_DID entries')
 
     #
     dcs_delete_set = dcs_sub.add_parser(
-        'delete_set',
+        'delete-set',
         help='Remove a UUID corresponding to a set from the DCS'
     )
     dcs_delete_set.add_argument('setId',
                                 type=str,
-                                help='UUID of resource set to delete')
+                                nargs="+",
+                                help='UUID(s) of resource set(s) to delete')
 
     # ------------------------
     # DTS Options
@@ -600,25 +609,27 @@ def cli_main():
     # DCS
     # ------------------------
     if args.service == "dcs":
-        if args.action == "create_link":
-            for i in args.childIds:
-                r = runner.create_link(args.parentId, i)
+        if args.action == "create-link":
+            for i in args.cccId:
+                r = runner.create_link(args.setId, i)
                 responses.append(r)
-        elif args.action == "common_parents":
-            r = runner.common_parents(args.ids)
+        elif args.action == "find-common-sets":
+            r = runner.find_common_sets(args.ids)
             responses.append(r)
-        elif args.action == "all_parents":
-            r = runner.all_parents(args.childId)
+        elif args.action == "list-sets":
+            r = runner.list_all_sets(args.cccId)
             responses.append(r)
-        elif args.action == "all_children":
-            r = runner.all_children(args.parentId)
+        elif args.action == "list-resources":
+            r = runner.list_all_resources(args.setId)
             responses.append(r)
-        elif args.action == "delete_link":
-            r = runner.delete_link(args.parentId, args.childId)
-            responses.append(r)
-        elif args.action == "delete_set":
-            r = runner.delete_set(args.setId)
-            responses.append(r)
+        elif args.action == "delete-link":
+            for i in args.cccId:
+                r = runner.delete_link(args.setId, i)
+                responses.append(r)
+        elif args.action == "delete-set":
+            for i in args.setId:
+                r = runner.delete_set(i)
+                responses.append(r)
         else:
             raise NotImplementedError
 
