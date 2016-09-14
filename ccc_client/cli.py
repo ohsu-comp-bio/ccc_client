@@ -610,6 +610,12 @@ def setup_parser():
 
 
 def resolve_filepath_from_pattern(patterns):
+    if isinstance(patterns, str):
+        patterns = [patterns]
+    else:
+        assert isinstance(patterns, list) is True
+
+    res = []
     for file_pattern in patterns:
         file_list = glob.glob(os.path.abspath(file_pattern))
         if file_list == []:
@@ -617,7 +623,8 @@ def resolve_filepath_from_pattern(patterns):
                   file=sys.stderr)
             raise ValueError
         else:
-            return file_list
+            res += file_list
+    return res
 
 
 def cli_main():
