@@ -380,7 +380,7 @@ def setup_parser():
     # api/v1/tool/<tool_name>/data
     ar_get = ar_sub.add_parser("get", parents=[common_parser])
     ar_get.add_argument(
-        "imageId",
+        "imageIdOrName",
         type=str,
         help="docker image id or name"
     )
@@ -736,7 +736,7 @@ def cli_main():
             r = runner.put(args.imageId, args.metadata)
             responses.append(r)
         elif args.action == "get":
-            r = runner.get(args.imageId, args.imageName)
+            r = runner.get(args.imageIdOrName)
             responses.append(r)
         elif args.action == "delete":
             r = runner.delete(args.imageId)
