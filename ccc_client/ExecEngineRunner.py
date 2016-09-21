@@ -105,16 +105,23 @@ class ExecEngineRunner(object):
         return response
 
     def get_status(self, workflowId):
-        self._get(workflowId, "status")
+        return self._get(workflowId, "status")
 
     def get_metadata(self, workflowId):
-        self._get(workflowId, "metadata")
+        return self._get(workflowId, "metadata")
 
     def get_logs(self, workflowId):
-        self._get(workflowId, "logs")
+        return self._get(workflowId, "logs")
 
     def get_outputs(self, workflowId):
-        self._get(workflowId, "outputs")
+        return self._get(workflowId, "outputs")
+
+    def abort(self, workflowId):
+        endpoint = "http://{0}:{1}/{2}/{3}/abort".format(
+            self.host, self.secondary_port, self.endpoint, workflowId
+        )
+        response = requests.post(endpoint, headers=self.headers)
+        return response
 
     def _get(self, workflowId, action):
         valid_actions = ["status", "metadata", "logs", "outputs"]
