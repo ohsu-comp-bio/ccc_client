@@ -127,7 +127,7 @@ class TestAppRepoArgs(unittest.TestCase):
         cliInput = """app-repo get foo"""
         parser = cli.setup_parser()
         args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.imageId, "foo")
+        self.assertEqual(args.imageIdOrName, "foo")
         self.assertEqual(args.runner, AppRepoRunner)
         self.assertEqual(args.action, "get")
 
