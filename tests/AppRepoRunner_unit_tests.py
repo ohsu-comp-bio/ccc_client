@@ -40,7 +40,7 @@ class TestAppRepoRunner(unittest.TestCase):
         "id": imageId,
         "name": "mock"
     }
-    valid_metadata_str = json.dumps(valid_metadata_dict)
+    valid_metadata_str = json.dumps(valid_metadata_dict, sort_keys=True)
 
     invalid_metadata_str = '{foo: bar}'
     invalid_metadata2_str = '{"foo": "bar"}'
@@ -58,17 +58,22 @@ class TestAppRepoRunner(unittest.TestCase):
     mock_metadata.close()
 
     def test_ar_post(self):
-        mock_response = ""
         # mimic successful post with single input json
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
-            mock_post.return_value.text = mock_response
             resp = self.ar_client.post(
                 imageBlob=self.mock_img_filepath,
                 imageName=self.imageName,
                 imageTag="latest"
             )
-            self.assertEqual(resp.text, mock_response)
+            assert mock_post.called
+            # mock_post.assert_called_once_with(
+            #     "http://docker-centos7:8082/api/v1/tool",
+            #     headers={'Authorization': 'Bearer ', 'Content-Type': 'multipart/form-data'},
+            #     files={'imageName': (None, 'mock'),
+            #            'imageTag': (None, 'latest'),
+            #            'file': open(self.mock_img_filepath, 'rb')}
+            # )
 
         # pass path of image tarball that does not exist
         with patch('requests.post') as mock_post:
@@ -81,36 +86,44 @@ class TestAppRepoRunner(unittest.TestCase):
                 )
 
     def test_ar_put(self):
-        mock_response = "OK"
         # mimic successful put metadata request w/ metadata file path
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
-            mock_put.return_value.text = mock_response
             resp = self.ar_client.put(
                 imageId=self.imageId,
                 metadata=self.mock_metadata_filepath
             )
-            self.assertEqual(resp.text, mock_response)
+            mock_put.assert_called_once_with(
+                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
+                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '},
+                data=self.valid_metadata_str
+            )
 
         # mimic successful put metadata request w/ metadata json str
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
-            mock_put.return_value.text = mock_response
             resp = self.ar_client.put(
                 imageId=self.imageId,
                 metadata=self.valid_metadata_str
             )
-            self.assertEqual(resp.text, mock_response)
+            mock_put.assert_called_once_with(
+                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
+                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '},
+                data=self.valid_metadata_str
+            )
 
         # mimic successful put metadata request w/ metadata dict
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
-            mock_put.return_value.text = mock_response
             resp = self.ar_client.put(
                 imageId=self.imageId,
                 metadata=self.valid_metadata_dict
             )
-            self.assertEqual(resp.text, mock_response)
+            mock_put.assert_called_once_with(
+                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
+                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '},
+                data=self.valid_metadata_str
+            )
 
         # mimic unsuccessful put metadata request w/ invalid json
         with patch('requests.put') as mock_put:
@@ -139,43 +152,47 @@ class TestAppRepoRunner(unittest.TestCase):
                 )
 
     def test_ar_get(self):
-        mock_response = self.valid_metadata_str
         # mimic successful get request:
         # by image id
         with patch('requests.get') as mock_get:
-            mock_get.return_value.status_code = 201
-            mock_get.return_value.text = mock_response
-            # by id
-            resp = self.ar_client.get(
+            mock_get.return_value.status_code = 200
+            self.ar_client.get(
                 image_id_or_name=self.imageId,
             )
             mock_get.assert_called_once_with(
-                "http://central-gateway.ccc.org:8082/api/v1/tool/{0}".format(self.imageId),
+                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
                 headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
             )
-            self.assertEqual(resp.text, mock_response)
+
         # by image name
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 500
-            mock_get.return_value.text = mock_response
-            resp = self.ar_client.get(
+            self.ar_client.get(
                 image_id_or_name=self.imageName,
             )
             mock_get.assert_called_with(
-                "http://central-gateway.ccc.org:8082/api/v1/tool/{0}/data".format(self.imageName),
+                "http://docker-centos7:8082/api/v1/tool/{0}/data".format(self.imageName),
                 headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
             )
 
     def test_ar_delete(self):
-        mock_response = "OK"
-        # mimic successful get request:
+        # mimic delete request:
         with patch('requests.delete') as mock_delete:
-            mock_delete.return_value.status_code = 201
-            mock_delete.return_value.text = mock_response
-            resp = self.ar_client.delete(
+            self.ar_client.delete(
                 imageId=self.imageId,
             )
-            self.assertEqual(resp.text, mock_response)
+            mock_delete.assert_called_with(
+                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
+                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
+            )
+
+    def test_ar_list_tools(self):
+        # mimic list_tools request:
+        with patch('requests.get') as mock_get:
+            self.ar_client.list_tools()
+            mock_get.assert_called_with(
+                "http://docker-centos7:5000/v2/_catalog",
+            )
 
 
 if __name__ == '__main__':

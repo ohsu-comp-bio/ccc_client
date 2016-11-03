@@ -393,6 +393,9 @@ def setup_parser():
         help="docker image id"
     )
 
+    # v2/_catalog
+    ar_list_tools = ar_sub.add_parser("list-tools", parents=[common_parser])
+
     # ------------------------
     # Exec Engine Options
     # ------------------------
@@ -740,6 +743,9 @@ def cli_main():
             responses.append(r)
         elif args.action == "delete":
             r = runner.delete(args.imageId)
+            responses.append(r)
+        elif args.action == "list-tools":
+            r = runner.list_tools()
             responses.append(r)
 
     # ------------------------

@@ -17,7 +17,7 @@ class AppRepoRunner(object):
         if host is not None:
             self.host = re.sub("^http[s]?:",  "", host)
         else:
-            self.host = "central-gateway.ccc.org"
+            self.host = "docker-centos7"
 
         if port is not None:
             self.port = str(port)
@@ -89,7 +89,7 @@ class AppRepoRunner(object):
                                                    imageId)
         response = requests.put(
             endpoint,
-            data=json.dumps(loaded_metadata),
+            data=json.dumps(loaded_metadata, sort_keys=True),
             headers=headers
         )
         return response
@@ -125,6 +125,13 @@ class AppRepoRunner(object):
         response = requests.delete(
             endpoint,
             headers=headers
+        )
+        return response
+
+    def list_tools(self):
+        endpoint = "http://{0}:5000/v2/_catalog".format(self.host)
+        response = requests.get(
+            endpoint
         )
         return response
 
