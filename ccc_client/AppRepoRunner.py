@@ -3,6 +3,7 @@ from __future__ import print_function
 import json
 import os
 import re
+import sys
 import requests
 import uuid
 from ccc_client.utils import parseAuthToken
@@ -35,7 +36,7 @@ class AppRepoRunner(object):
             "Authorization": " ".join(["Bearer", self.authToken])
         }
 
-    def post(self, imageBlob, imageName, imageTag):
+    def upload_image(self, imageBlob, imageName, imageTag):
         endpoint = "http://{0}:{1}/{2}".format(self.host,
                                                self.port,
                                                self.endpoint)
@@ -57,7 +58,19 @@ class AppRepoRunner(object):
                                  headers=headers)
         return response
 
-    def put(self, imageId, metadata):
+    def upload_metadata(self, imageId, metadata):
+        response = self.get_metadata(imageId)
+        if response.status_code // 100 == 2:
+            print("[ERROR] An entry with this id already exists in the database", file=sys.stderr)
+            print(response.text, file=sys.stderr)
+            raise ValueError
+        else:
+            self.__create_or_update_metadata(imageId, metadata)
+
+    def update_metadata(self, imageId, metadata):
+        self.__create_or_update_metadata(imageId, metadata)
+
+    def __create_or_update_metadata(self, imageId, metadata):
         if isinstance(metadata, str):
             if os.path.isfile(metadata):
                 with open(metadata) as metadata_filehandle:
@@ -94,7 +107,7 @@ class AppRepoRunner(object):
         )
         return response
 
-    def get(self, image_id_or_name):
+    def get_metadata(self, image_id_or_name):
         endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
                                                    self.port,
                                                    self.endpoint,
@@ -116,7 +129,7 @@ class AppRepoRunner(object):
             )
         return response
 
-    def delete(self, imageId):
+    def delete_metadata(self, imageId):
         endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
                                                    self.port,
                                                    self.endpoint,

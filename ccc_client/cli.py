@@ -340,37 +340,51 @@ def setup_parser():
     ar_sub = ar.add_subparsers(title="action", dest="action")
 
     # api/v1/tool/
-    ar_post = ar_sub.add_parser("post", parents=[common_parser])
-    ar_post.add_argument(
+    ar_upload_image = ar_sub.add_parser("upload-image", parents=[common_parser])
+    ar_upload_image.add_argument(
         "--imageBlob", "-b",
         type=str,
         help="name of file or path"
     )
-    ar_post.add_argument(
+    ar_upload_image.add_argument(
         "--imageName", "-n",
         type=str,
         help="name of docker image"
     )
-    ar_post.add_argument(
+    ar_upload_image.add_argument(
         "--imageTag", "-t",
         type=str,
         default="latest",
         help="docker image version tag"
     )
-    ar_post.add_argument(
+    ar_upload_image.add_argument(
         "--metadata", "-m", type=str,
         help="tool metadata; can be a filepath or json string"
     )
 
     # api/v1/tool/<uuid>
-    ar_put = ar_sub.add_parser("put", parents=[common_parser])
-    ar_put.add_argument(
+    ar_upload_metadata = ar_sub.add_parser("upload-metadata", parents=[common_parser])
+    ar_upload_metadata.add_argument(
         "--metadata", "-m",
         type=str,
         required=True,
         help="tool metadata"
     )
-    ar_put.add_argument(
+    ar_upload_metadata.add_argument(
+        "--imageId", "-i",
+        type=str,
+        help="docker image id"
+    )
+
+    # api/v1/tool/<uuid>
+    ar_update = ar_sub.add_parser("update-metadata", parents=[common_parser])
+    ar_update.add_argument(
+        "--metadata", "-m",
+        type=str,
+        required=True,
+        help="tool metadata"
+    )
+    ar_update.add_argument(
         "--imageId", "-i",
         type=str,
         help="docker image id"
@@ -378,7 +392,7 @@ def setup_parser():
 
     # api/v1/tool/<uuid>
     # api/v1/tool/<tool_name>/data
-    ar_get = ar_sub.add_parser("get", parents=[common_parser])
+    ar_get = ar_sub.add_parser("get-metadata", parents=[common_parser])
     ar_get.add_argument(
         "imageIdOrName",
         type=str,
@@ -386,7 +400,7 @@ def setup_parser():
     )
 
     # api/v1/tool/<uuid>
-    ar_delete = ar_sub.add_parser("delete", parents=[common_parser])
+    ar_delete = ar_sub.add_parser("delete-metadata", parents=[common_parser])
     ar_delete.add_argument(
         "imageId",
         type=str,
@@ -726,23 +740,23 @@ def cli_main():
     # App Repo
     # ------------------------
     elif args.service == "app-repo":
-        if args.action == "post":
-            r = runner.post(args.imageBlob, args.imageName, args.imageTag)
+        if args.action == "upload-image":
+            r = runner.upload_image(args.imageBlob, args.imageName, args.imageTag)
             responses.append(r)
-            imageId = re.compile(
-                r'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}').findall(
-                    r.content)[0]
             if args.metadata is not None:
-                r = runner.put(imageId, args.metadata)
+                r = runner.upload_metadata(None, args.metadata)
                 responses.append(r)
-        elif args.action == "put":
-            r = runner.put(args.imageId, args.metadata)
+        elif args.action == "upload-metadata":
+            r = runner.upload_metadata(args.imageId, args.metadata)
             responses.append(r)
-        elif args.action == "get":
-            r = runner.get(args.imageIdOrName)
+        elif args.action == "update-metadata":
+            r = runner.update_metadata(args.imageId, args.metadata)
             responses.append(r)
-        elif args.action == "delete":
-            r = runner.delete(args.imageId)
+        elif args.action == "get-metadata":
+            r = runner.get_metadata(args.imageIdOrName)
+            responses.append(r)
+        elif args.action == "delete-metadata":
+            r = runner.delete_metadata(args.imageId)
             responses.append(r)
         elif args.action == "list-tools":
             r = runner.list_tools()

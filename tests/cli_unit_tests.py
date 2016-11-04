@@ -102,7 +102,7 @@ class TestExecEngineArgs(unittest.TestCase):
 class TestAppRepoArgs(unittest.TestCase):
 
     def testParseArgumentsPost(self):
-        cliInput = """app-repo post --imageBlob /dev/null
+        cliInput = """app-repo upload-image --imageBlob /dev/null
         --imageName testImage --imageTag latest --metadata /dev/null
         """
         parser = cli.setup_parser()
@@ -112,32 +112,32 @@ class TestAppRepoArgs(unittest.TestCase):
         self.assertEqual(args.imageTag, "latest")
         self.assertEqual(args.metadata, "/dev/null")
         self.assertEqual(args.runner, AppRepoRunner)
-        self.assertEqual(args.action, "post")
+        self.assertEqual(args.action, "upload-image")
 
     def testParseArgumentsPut(self):
-        cliInput = """app-repo put --metadata /dev/null --imageId foo """
+        cliInput = """app-repo upload-metadata --metadata /dev/null --imageId foo """
         parser = cli.setup_parser()
         args = parser.parse_args(cliInput.split())
         self.assertEqual(args.imageId, "foo")
         self.assertEqual(args.metadata, "/dev/null")
         self.assertEqual(args.runner, AppRepoRunner)
-        self.assertEqual(args.action, "put")
+        self.assertEqual(args.action, "upload-metadata")
 
     def testParseArgumentsGet(self):
-        cliInput = """app-repo get foo"""
+        cliInput = """app-repo get-metadata foo"""
         parser = cli.setup_parser()
         args = parser.parse_args(cliInput.split())
         self.assertEqual(args.imageIdOrName, "foo")
         self.assertEqual(args.runner, AppRepoRunner)
-        self.assertEqual(args.action, "get")
+        self.assertEqual(args.action, "get-metadata")
 
     def testParseArgumentsDelete(self):
-        cliInput = """app-repo delete foo"""
+        cliInput = """app-repo delete-metadata foo"""
         parser = cli.setup_parser()
         args = parser.parse_args(cliInput.split())
         self.assertEqual(args.imageId, "foo")
         self.assertEqual(args.runner, AppRepoRunner)
-        self.assertEqual(args.action, "delete")
+        self.assertEqual(args.action, "delete-metadata")
 
 
 class TestElasticSearchArgs(unittest.TestCase):

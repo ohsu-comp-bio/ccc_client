@@ -57,11 +57,11 @@ class TestAppRepoRunner(unittest.TestCase):
     mock_metadata.write(valid_metadata_str.encode())
     mock_metadata.close()
 
-    def test_ar_post(self):
+    def test_ar_upload_image(self):
         # mimic successful post with single input json
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
-            resp = self.ar_client.post(
+            self.ar_client.upload_image(
                 imageBlob=self.mock_img_filepath,
                 imageName=self.imageName,
                 imageTag="latest"
@@ -79,17 +79,17 @@ class TestAppRepoRunner(unittest.TestCase):
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 500
             with self.assertRaises(FileNotFoundError):
-                resp = self.ar_client.post(
+                self.ar_client.upload_image(
                     imageBlob=self.invalid_img_filepath,
                     imageName=self.imageName,
                     imageTag=self.imageTag
                 )
 
-    def test_ar_put(self):
+    def test_ar_create_or_update_metadata(self):
         # mimic successful put metadata request w/ metadata file path
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
-            resp = self.ar_client.put(
+            self.ar_client._AppRepoRunner__create_or_update_metadata(
                 imageId=self.imageId,
                 metadata=self.mock_metadata_filepath
             )
@@ -102,7 +102,7 @@ class TestAppRepoRunner(unittest.TestCase):
         # mimic successful put metadata request w/ metadata json str
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
-            resp = self.ar_client.put(
+            self.ar_client._AppRepoRunner__create_or_update_metadata(
                 imageId=self.imageId,
                 metadata=self.valid_metadata_str
             )
@@ -115,7 +115,7 @@ class TestAppRepoRunner(unittest.TestCase):
         # mimic successful put metadata request w/ metadata dict
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
-            resp = self.ar_client.put(
+            self.ar_client._AppRepoRunner__create_or_update_metadata(
                 imageId=self.imageId,
                 metadata=self.valid_metadata_dict
             )
@@ -128,7 +128,7 @@ class TestAppRepoRunner(unittest.TestCase):
         # mimic unsuccessful put metadata request w/ invalid json
         with patch('requests.put') as mock_put:
             with self.assertRaises(ValueError):
-                resp = self.ar_client.put(
+                self.ar_client._AppRepoRunner__create_or_update_metadata(
                     imageId=self.imageId,
                     metadata=self.invalid_metadata_str
                 )
@@ -137,7 +137,7 @@ class TestAppRepoRunner(unittest.TestCase):
         # schema
         with patch('requests.put') as mock_put:
             with self.assertRaises(KeyError):
-                resp = self.ar_client.put(
+                self.ar_client._AppRepoRunner__create_or_update_metadata(
                     imageId=self.imageId,
                     metadata=self.invalid_metadata2_str
                 )
@@ -146,17 +146,27 @@ class TestAppRepoRunner(unittest.TestCase):
         # metadata imageId field
         with patch('requests.put') as mock_put:
             with self.assertRaises(AssertionError):
-                resp = self.ar_client.put(
+                self.ar_client._AppRepoRunner__create_or_update_metadata(
                     imageId=self.imageId,
                     metadata=self.invalid_metadata3_str
                 )
 
-    def test_ar_get(self):
+    def test_ar_upload_metadata(self):
+        # try to overwrite existing metadata
+        with patch('requests.get') as mock_get:
+            mock_get.return_value.status_code = 201
+            with self.assertRaises(ValueError):
+                self.ar_client.upload_metadata(
+                    imageId=self.imageId,
+                    metadata=self.mock_metadata_filepath
+                )
+
+    def test_ar_get_metadata(self):
         # mimic successful get request:
         # by image id
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 200
-            self.ar_client.get(
+            self.ar_client.get_metadata(
                 image_id_or_name=self.imageId,
             )
             mock_get.assert_called_once_with(
@@ -167,7 +177,7 @@ class TestAppRepoRunner(unittest.TestCase):
         # by image name
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 500
-            self.ar_client.get(
+            self.ar_client.get_metadata(
                 image_id_or_name=self.imageName,
             )
             mock_get.assert_called_with(
@@ -175,10 +185,10 @@ class TestAppRepoRunner(unittest.TestCase):
                 headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
             )
 
-    def test_ar_delete(self):
+    def test_ar_delete_metadata(self):
         # mimic delete request:
         with patch('requests.delete') as mock_delete:
-            self.ar_client.delete(
+            self.ar_client.delete_metadata(
                 imageId=self.imageId,
             )
             mock_delete.assert_called_with(
