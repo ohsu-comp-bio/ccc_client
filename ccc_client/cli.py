@@ -725,13 +725,17 @@ def cli_main():
     elif args.service == "app-repo":
         if args.action == "post":
             r = runner.post(args.imageBlob, args.imageName, args.imageTag)
-            responses.append(r)
-            imageId = re.compile(
-                r'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}').findall(
-                    r.content)[0]
-            if args.metadata is not None:
-                r = runner.put(imageId, args.metadata)
+            if r.status_code == 200:
                 responses.append(r)
+                imageId = re.compile(
+                    r'[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}').findall(
+                        r.content)[0]
+                if args.metadata is not None:
+                    r = runner.put(imageId, args.metadata)
+                    responses.append(r)
+            else:
+                print(r.content)
+  
         elif args.action == "put":
             r = runner.put(args.imageId, args.metadata)
             responses.append(r)

@@ -18,7 +18,7 @@ class AppRepoRunner(object):
         if host is not None:
             self.host = re.sub("^http[s]?:",  "", host)
         else:
-            self.host = "central-gateway.ccc.org"
+            self.host = "docker-centos7"
 
         if port is not None:
             self.port = str(port)
@@ -50,13 +50,14 @@ class AppRepoRunner(object):
 
         form_data = MultipartEncoder(
             fields={
-                'file': open(imageBlob, 'rb'),
+                'file': ('file', open(imageBlob, 'rb'), 'application/octet-stream'),
                 'imageName': (None, imageName),
                 'imageTag': (None, imageTag),
             }
         )
 
         headers = self.__setup_call_headers("post")
+        headers['Content-Type'] = form_data.content_type
         response = requests.post(endpoint,
                                  data=form_data,
                                  headers=headers)
