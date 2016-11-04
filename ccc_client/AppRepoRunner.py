@@ -4,6 +4,7 @@ import json
 import os
 import re
 import requests
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 import uuid
 from ccc_client.utils import parseAuthToken
 
@@ -47,13 +48,17 @@ class AppRepoRunner(object):
         if imageTag is None:
             imageTag = "latest"
 
-        form_data = {'file': open(imageBlob, 'rb'),
-                     "imageName": (None, imageName),
-                     "imageTag": (None, imageTag)}
+        form_data = MultipartEncoder(
+            fields={
+                'file': open(imageBlob, 'rb'),
+                'imageName': (None, imageName),
+                'imageTag': (None, imageTag),
+            }
+        )
 
         headers = self.__setup_call_headers("post")
         response = requests.post(endpoint,
-                                 files=form_data,
+                                 data=form_data,
                                  headers=headers)
         return response
 
