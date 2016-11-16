@@ -54,124 +54,11 @@ class ElasticSearchRunner(object):
             self.DomainDescriptors = json.load(json_data)
             json_data.close()
 
-#     # @classmethod
-#     def setDomainDescriptors(self, domainFile):
-#         self.__domainFile = domainFile
-#         self.readDomainDescriptors()
-#
-#     # @classmethod
-#     def query(self, domainName, queries):
-#         if isinstance(queries, str):
-#             queries = [queries]
-#         elif isinstance(queries, list):
-#             pass
-#         else:
-#             raise TypeError("queries must be a str or list type")
-#
-#         terms = []
-#         for key, val in self.__process_fields(queries).items():
-#             terms.append({
-#                 "match_phrase": {
-#                     key: val
-#                 }
-#             })
-#
-#         body = {
-#             "size": 10000,
-#             "query": {
-#                 "bool": {
-#                     "must": {
-#                         "and": terms
-#                     }
-#                 }
-#             },
-#         }
-#
-#         domain = self.DomainDescriptors[domainName]
-#         hits = self.es.search(
-#             index=("*-" + domainName).lower(),
-#             doc_type=domain['docType'],
-#             ignore_unavailable=True,
-#             allow_no_indices=True,
-#             body=body
-#         )
-#
-#         hits = hits['hits']['hits']
-#         ret = []
-#         if len(hits) > 0:
-#             for hit in hits:
-#                 ret.append(hit['_source'])
-#         return(ret)
-#
-#     # @classmethod
-#     def publish_resource(self, filePath, siteId, user, projectCode, workflowId,
-#                          mimeType, domainName, inheritFrom, properties, isMock,
-#                          skipDtsRegistration):
-#
-#         if not self.DomainDescriptors[domainName]:
-#             raise RuntimeError("Unknown domain: " + domainName)
-#
-#         rowMap = {}
-#         if inheritFrom:
-#             domain = self.DomainDescriptors[domainName]
-#             hits = self.es.search(
-#                 index=("*-" + domainName).lower(),
-#                 doc_type=domain['docType'],
-#                 ignore_unavailable=True,
-#                 allow_no_indices=True,
-#                 body={
-#                     "size": 10,
-#                     "query": {
-#                         "bool": {
-#                             "must": {
-#                                 "match_phrase": {
-#                                     "ccc_id": inheritFrom
-#                                 }
-#                             }
-#                         }
-#                     }
-#                 }
-#             )
-#
-#             hits = hits['hits']['hits']
-#             if hits:
-#                 # apply data
-#                 hit = hits[0]
-#                 if ("_source" in hit.keys()):
-#                     rowMap.update(hit["_source"])
-#             else:
-#                 raise KeyError(
-#                     "Unable to find existing resource with id: " + inheritFrom
-#                 )
-#
-#         # update with user supplied properties
-#         properties = self.__process_fields(properties)
-#         rowMap.update(properties)
-#
-#         # NOTE: these should always supersede the properties argument
-#         rowMap['filepath'] = filePath
-#         rowMap['siteId'] = siteId
-#         rowMap['projectCode'] = projectCode
-#         rowMap['workflowId'] = workflowId
-#         rowMap['mimetype'] = mimeType
-#
-#         rowParser = self.RowParser(rowMap.keys(), siteId, user, projectCode,
-#                                    'resource', self.es, self.DomainDescriptors,
-#                                    isMock, skipDtsRegistration)
-#
-#         response = rowParser.pushMapToElastic(rowMap)
-#         return response
 
     # @classmethod
     def publish_batch(self, tsv, siteId, user, programCode, projectCode, domainName, isMock,
                       skipDtsRegistration):
 
-        # if domainName == 'case':
-        #     self.domain = self.DomainDescriptors['Individual']
-        # elif domainName == 'sample':
-        #     self.domain = self.DomainDescriptors['BioSample']
-        # elif domainName == 'file':
-        #     self.domain = self.DomainDescriptors['Resource']
         if not self.DomainDescriptors[domainName]:
             raise RuntimeError("Unknown domain: " + domainName)
 
@@ -201,24 +88,6 @@ class ElasticSearchRunner(object):
                 i += 1
         return response
 
-#     def __process_fields(self, fields):
-#         pfields = {}
-#         if isinstance(fields, str):
-#             pfields.update(self.__validate_field(fields))
-#         elif isinstance(fields, (list, tuple)):
-#             for f in fields:
-#                 pfields.update(self.__process_fields(f))
-#         elif isinstance(fields, dict):
-#             pfields.update(fields)
-#         else:
-#             raise TypeError("queries must be a str or list type")
-#         return pfields
-#
-#     def __validate_field(self, field):
-#         assert re.search(":", field) is not None
-#         assert len(re.findall(":", field)) == 1
-#         key, val = re.compile("\s*:\s*").split(field)
-#         return {key: val}
 
     # Responsible for inspecting the header and normalizing/augmenting field
     # names
@@ -234,7 +103,6 @@ class ElasticSearchRunner(object):
             self.programCode = programCode
             self.projectCode = projectCode
             self.domainName = domainName
-            # self.domain = domain
             self.es = es
             self.req = req
             self.host = host
@@ -255,7 +123,6 @@ class ElasticSearchRunner(object):
                 if "aliases" in field.keys():
                     for alias in field["aliases"]:
                         aliasMap.append([alias.lower(), fieldName])
-                        # aliasMap[alias.lower()] = fieldName
             return aliasMap
 
         def generateRowMapFromArr(self, rowArr):
@@ -269,18 +136,13 @@ class ElasticSearchRunner(object):
 
         def processRowMap(self, rowMap):
             # get all fields for domain
-            # if not self.domain:
             fds = self.domainDescriptors[self.domainName]["fieldDescriptors"]
-            # else:
-            #     fds = self.domain["fieldDescriptors"]
 
             # iterate over rowMap
             rowMap_keys = list(rowMap.keys())
-            # rowMap_keys is the list of file headers
             for token in rowMap_keys:
                 val = rowMap[token]
                 cannonicalName = []
-                # val is the actual value of the header for row we are processing
                 # append known aliases
                 for i in self.aliasMap:
                     if token.lower() == i[0]:
@@ -380,10 +242,7 @@ class ElasticSearchRunner(object):
             return rowMap
 
         def generateKeyForDomain(self, rowMap, domainName, r=False):
-            # if not self.domain:
             domain = self.domainDescriptors[domainName]
-            # else:
-            #     domain = self.domain
             keyField = domain['keyField']
 
             if keyField not in rowMap:
@@ -429,21 +288,11 @@ class ElasticSearchRunner(object):
                 # We will need to decide what constitutes 'program' and 'project' in our database.
                 coll = self.getCollectionNameForDomain(self.domainName)
                 project = self.projectCode
-                # if not self.domain:
                 doc_type = self.domainDescriptors[self.domainName]['docType']
-                # else:
-                #     doc_type = self.domain["fieldDescriptors"]
                 doc_id = self.generateKeyForDomain(rowMap, self.domainName)
                 r = self.req.post(url="http://{}:{}/v0/submission/{}/{}".format(self.host, self.port, coll, project),
                                          json=rowMap)
-
-                # r = self.es.index(
-                #     index=self.getIndexNameForDomain(self.domainName),
-                #     body=rowMap,
-                #     doc_type=self.domainDescriptors[self.domainName]['docType'],
-                #     id=self.generateKeyForDomain(rowMap, self.domainName)
-                # )
-
+                
                 return r.json()
 
 #         def validateOrRegisterWithDts(self, rowMap):
