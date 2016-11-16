@@ -3,7 +3,6 @@ from __future__ import print_function
 import csv
 import json
 import os
-import re
 import sys
 
 from ccc_client import DtsRunner
@@ -35,10 +34,6 @@ class ElasticSearchRunner(object):
         # Will need to pass 'url="{}.{}".format(self.host, self.port)' to batch post.
         self.req = requests.Session()
         self.req.headers = {'Authorization': 'Bearer ' + self.authToken}
-        self.es = Elasticsearch(hosts="{0}:{1}".format(self.host, self.port))
-#         # see:
-#         # https://discuss.elastic.co/t/how-do-i-add-a-custom-http-header-using-the-python-client/38907
-        self.es.transport.connection_pool.connection.headers.update({'Authorization': 'Bearer ' + self.authToken})
         self.readDomainDescriptors()
 
     # Note: this creates the opportunity to allow externally provided field
@@ -75,8 +70,6 @@ class ElasticSearchRunner(object):
                                                programCode,
                                                projectCode,
                                                domainName,
-                                               # self.domain,
-                                               self.es,
                                                self.req,
                                                self.host,
                                                self.port,
@@ -93,7 +86,7 @@ class ElasticSearchRunner(object):
     # names
     class RowParser(object):
         def __init__(self, fileHeader=None, siteId=None, user=None, programCode=None,
-                     projectCode=None, domainName=None, es=None, req=None, host=None, port=None,
+                     projectCode=None, domainName=None, req=None, host=None, port=None,
                      domainDescriptors=None, isMock=False,
                      skipDtsRegistration=False):
 
@@ -103,7 +96,6 @@ class ElasticSearchRunner(object):
             self.programCode = programCode
             self.projectCode = projectCode
             self.domainName = domainName
-            self.es = es
             self.req = req
             self.host = host
             self.port = port
@@ -220,19 +212,6 @@ class ElasticSearchRunner(object):
                 # url = "http://{}:{}/v0/{}".format(self.host, self.port, endpoint)
                 # hits = self.req.get(url=url, json=body)
 
-                # hits = self.es.search(
-                #     index=self.getIndexNameForDomain(dn),
-                #     doc_type=domain['docType'],
-                #     ignore_unavailable=True,
-                #     body={
-                #         "size": 10000, "query": {
-                #             "query_string": {
-                #                 "query": "_id" + ":\"" + key + "\""
-                #             }
-                #         }
-                #     }
-                # )
-
                 # TO DO // Fix issue where search returns all possibilities. When fixed uncomment below
                 # hits = hits.json()['data']['hits']
                 # if len(hits) > 0:
@@ -292,45 +271,45 @@ class ElasticSearchRunner(object):
                 doc_id = self.generateKeyForDomain(rowMap, self.domainName)
                 r = self.req.post(url="http://{}:{}/v0/submission/{}/{}".format(self.host, self.port, coll, project),
                                          json=rowMap)
-                
+
                 return r.json()
 
-#         def validateOrRegisterWithDts(self, rowMap):
-#             path = self.__check_resource_path(rowMap)
-#             if 'ccc_id' in rowMap.keys():
-#                 self.validateCccId(rowMap['ccc_id'], path)
-#             else:
-#                 rowMap['ccc_id'] = self.registerWithDts(path)
-#             return rowMap
-#
-#         def registerWithDts(self, filepath):
-#             dts = DtsRunner()
-#             response = dts.post(filepath,
-#                                 self.siteId,
-#                                 self.user)
-#             if response.status_code // 100 != 2:
-#                 raise RuntimeError("DTS registration for " + path + " failed")
-#             else:
-#                 return response.text
-#
-#         def validateCccId(self, ccc_id, filepath):
-#             dts = DtsRunner()
-#             response = dts.get(ccc_id)
-#             if response.status_code // 100 != 2:
-#                 raise RuntimeError("CCC_ID not found: " + ccc_id)
-#             else:
-#                 data = response.json()
-#                 assert data['name'] == os.path.basename(filepath)
-#                 assert data['path'] == os.path.dirname(filepath)
-#                 return True
-#
-#         def __check_resource_path(self, rowMap):
-#             if 'filepath' in rowMap.keys():
-#                 path = rowMap['filepath']
-#             elif 'url' in rowMap.keys():
-#                 path = rowMap['url']
-#             else:
-#                 raise KeyError(
-#                     "Resource registration or validation with the DTS requires a valid file path or url"
-#                 )
-#             return path
+        # def validateOrRegisterWithDts(self, rowMap):
+        #     path = self.__check_resource_path(rowMap)
+        #     if 'ccc_id' in rowMap.keys():
+        #         self.validateCccId(rowMap['ccc_id'], path)
+        #     else:
+        #         rowMap['ccc_id'] = self.registerWithDts(path)
+        #     return rowMap
+        #
+        # def registerWithDts(self, filepath):
+        #     dts = DtsRunner()
+        #     response = dts.post(filepath,
+        #                         self.siteId,
+        #                         self.user)
+        #     if response.status_code // 100 != 2:
+        #         raise RuntimeError("DTS registration for " + path + " failed")
+        #     else:
+        #         return response.text
+        #
+        # def validateCccId(self, ccc_id, filepath):
+        #     dts = DtsRunner()
+        #     response = dts.get(ccc_id)
+        #     if response.status_code // 100 != 2:
+        #         raise RuntimeError("CCC_ID not found: " + ccc_id)
+        #     else:
+        #         data = response.json()
+        #         assert data['name'] == os.path.basename(filepath)
+        #         assert data['path'] == os.path.dirname(filepath)
+        #         return True
+        #
+        # def __check_resource_path(self, rowMap):
+        #     if 'filepath' in rowMap.keys():
+        #         path = rowMap['filepath']
+        #     elif 'url' in rowMap.keys():
+        #         path = rowMap['url']
+        #     else:
+        #         raise KeyError(
+        #             "Resource registration or validation with the DTS requires a valid file path or url"
+        #         )
+        #     return path
