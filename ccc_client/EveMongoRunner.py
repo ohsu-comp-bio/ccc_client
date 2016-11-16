@@ -14,23 +14,16 @@ class EveMongoRunner(object):
     __domainFile = None
 
     def __init__(self, host=None, port=None, authToken=None):
-        if host is not None:
-            self.host = host
-        else:
-            self.host = "http://192.168.99.100"
-
-        if port is not None:
-            self.port = port
-        else:
-            self.port = "8000"
-
+        if not host:
+            host = "http://192.168.99.100"
+        if not port:
+            port = "8000"
         if authToken is not None:
             self.authToken = parseAuthToken(authToken)
         else:
             self.authToken = ""
 
-        # Requests Session object appears incapable of holding host/url name;
-        # Will need to pass 'url="{}.{}".format(self.host, self.port)' to batch post.
+        self.url = "{}:{}".format(host, port)
         self.req = requests.Session()
         self.req.headers = {'Authorization': 'Bearer ' + self.authToken}
         self.readDomainDescriptors()
@@ -46,8 +39,6 @@ class EveMongoRunner(object):
 
         with open(ddFile) as json_data:
             self.DomainDescriptors = json.load(json_data)
-            json_data.close()
-
 
     # @classmethod
     def publish_batch(self, tsv, siteId, user, programCode, projectCode, domainName, isMock,
@@ -70,13 +61,12 @@ class EveMongoRunner(object):
                                                projectCode,
                                                domainName,
                                                self.req,
-                                               self.host,
-                                               self.port,
+                                               self.url,
                                                self.DomainDescriptors,
                                                isMock,
                                                skipDtsRegistration)
                 else:
-                    response.append(rowParser.pushArrToElastic(row))
+                    response.append(rowParser.pushArrToEveMongo(row))
                 i += 1
         return response
 
@@ -84,7 +74,7 @@ class EveMongoRunner(object):
     # names
     class RowParser(object):
         def __init__(self, fileHeader=None, siteId=None, user=None, programCode=None,
-                     projectCode=None, domainName=None, req=None, host=None, port=None,
+                     projectCode=None, domainName=None, req=None, url=None,
                      domainDescriptors=None, isMock=False,
                      skipDtsRegistration=False):
 
@@ -95,8 +85,7 @@ class EveMongoRunner(object):
             self.projectCode = projectCode
             self.domainName = domainName
             self.req = req
-            self.host = host
-            self.port = port
+            self.url = url
             self.domainDescriptors = domainDescriptors
             self.aliasMap = self.getAliases()
             self.isMock = isMock
@@ -170,75 +159,24 @@ class EveMongoRunner(object):
                     if token != i:
                         rowMap[i] = val
 
-            if self.domainName.lower() == 'case':
-                rowMap['projects'] = {"code": self.projectCode}
-
-            # denormalize resources
             if self.domainName.lower() == 'resource' or self.domainName.lower() == 'file':
                 # process filepath/ccc_id
                 if not self.skipDtsRegistration:
                     rowMap = self.validateOrRegisterWithDts(rowMap)
-                # append fields from other domains (denormalize)
-                domainsToAppend = list(self.domainDescriptors.keys())
-                domainsToAppend.remove(self.domainName)
-                for dn in domainsToAppend:
-                    rowMap = self.appendFieldsForDomain(rowMap, dn)
 
             # NOTE: these should always supersede the previous properties
+            if self.domainName.lower() == 'case':
+                rowMap['projects'] = {"code": self.projectCode}
             rowMap['siteId'] = self.siteId
             rowMap['projectCode'] = self.projectCode
             rowMap['type'] = self.domainName
             return rowMap
 
-        def appendFieldsForDomain(self, rowMap, dn):
-            if self.domainDescriptors[dn]['keyField'] in rowMap:
-                key = self.generateKeyForDomain(rowMap, dn, True)
-                domain = self.domainDescriptors[dn]
-                endpoint = domain['docType'] + 's'
-                # body = {
-                #     "size": 10000, "query": {
-                #         "query_string": {
-                #             "query": "_id" + ":\"" + key + "\""
-                #         }
-                #     }
-                # }
-                # body = {"id": key}
-                # url = "http://{}:{}/v0/{}".format(self.host, self.port, endpoint)
-                # hits = self.req.get(url=url, json=body)
-
-                # TO DO // Fix issue where search returns all possibilities. When fixed uncomment below
-                # hits = hits.json()['data']['hits']
-                # if len(hits) > 0:
-                #     hit = hits[0]
-                #     rowMap.update(hit["_source"])
-
-            return rowMap
-
-        def generateKeyForDomain(self, rowMap, domainName, r=False):
-            domain = self.domainDescriptors[domainName]
-            keyField = domain['keyField']
-
-            if keyField not in rowMap:
-                print('exception:', file=sys.stderr)
-                print(json.dumps(rowMap), file=sys.stderr)
-                raise KeyError("Row lacks key field: " + keyField)
-
-            if 'unmatchedInheritance' in domain.keys() and r:
-                if domainName == 'case':
-                    return rowMap["_".join(['individual', keyField]).lower()]
-            elif 'useKeyFieldAsIndexKey' in domain.keys():
-                return (rowMap[keyField]).lower()
-            else:
-                domainKey = "-".join(
-                    [self.projectCode, domainName, rowMap[keyField]]
-                ).lower()
-                return domainKey
-
-        def pushArrToElastic(self, row):
+        def pushArrToEveMongo(self, row):
             rowMap = self.generateRowMapFromArr(row)
-            return self.pushMapToElastic(rowMap)
+            return self.pushMapToEveMongo(rowMap)
 
-        def pushMapToElastic(self, rowMap):
+        def pushMapToEveMongo(self, rowMap):
             rowMap = self.processRowMap(rowMap)
 
             if self.isMock:
@@ -247,51 +185,47 @@ class EveMongoRunner(object):
                 # Note: According to the GDC API, the API endpoint url follows the format:
                 # "[base_host]/[API_version]/submission/[programName]/[projectCode]".
                 # We will need to decide what constitutes 'program' and 'project' in our database.
-                coll = self.programCode
-                project = self.projectCode
-                doc_type = self.domainDescriptors[self.domainName]['docType']
-                doc_id = self.generateKeyForDomain(rowMap, self.domainName)
-                r = self.req.post(url="http://{}:{}/v0/submission/{}/{}".format(self.host, self.port, coll, project),
-                                         json=rowMap)
+                r = self.req.post(url="{}/v0/submission/{}/{}".format(self.url, self.programCode, self.projectCode),
+                                  json=rowMap)
 
                 return r.json()
 
-        # def validateOrRegisterWithDts(self, rowMap):
-        #     path = self.__check_resource_path(rowMap)
-        #     if 'ccc_id' in rowMap.keys():
-        #         self.validateCccId(rowMap['ccc_id'], path)
-        #     else:
-        #         rowMap['ccc_id'] = self.registerWithDts(path)
-        #     return rowMap
-        #
-        # def registerWithDts(self, filepath):
-        #     dts = DtsRunner()
-        #     response = dts.post(filepath,
-        #                         self.siteId,
-        #                         self.user)
-        #     if response.status_code // 100 != 2:
-        #         raise RuntimeError("DTS registration for " + path + " failed")
-        #     else:
-        #         return response.text
-        #
-        # def validateCccId(self, ccc_id, filepath):
-        #     dts = DtsRunner()
-        #     response = dts.get(ccc_id)
-        #     if response.status_code // 100 != 2:
-        #         raise RuntimeError("CCC_ID not found: " + ccc_id)
-        #     else:
-        #         data = response.json()
-        #         assert data['name'] == os.path.basename(filepath)
-        #         assert data['path'] == os.path.dirname(filepath)
-        #         return True
-        #
-        # def __check_resource_path(self, rowMap):
-        #     if 'filepath' in rowMap.keys():
-        #         path = rowMap['filepath']
-        #     elif 'url' in rowMap.keys():
-        #         path = rowMap['url']
-        #     else:
-        #         raise KeyError(
-        #             "Resource registration or validation with the DTS requires a valid file path or url"
-        #         )
-        #     return path
+        def validateOrRegisterWithDts(self, rowMap):
+            path = self.__check_resource_path(rowMap)
+            if 'ccc_id' in rowMap.keys():
+                self.validateCccId(rowMap['ccc_id'], path)
+            else:
+                rowMap['ccc_id'] = self.registerWithDts(path)
+            return rowMap
+
+        def registerWithDts(self, filepath):
+            dts = DtsRunner()
+            response = dts.post(filepath,
+                                self.siteId,
+                                self.user)
+            if response.status_code // 100 != 2:
+                raise RuntimeError("DTS registration for " + filepath + " failed")
+            else:
+                return response.text
+
+        def validateCccId(self, ccc_id, filepath):
+            dts = DtsRunner()
+            response = dts.get(ccc_id)
+            if response.status_code // 100 != 2:
+                raise RuntimeError("CCC_ID not found: " + ccc_id)
+            else:
+                data = response.json()
+                assert data['name'] == os.path.basename(filepath)
+                assert data['path'] == os.path.dirname(filepath)
+                return True
+
+        def __check_resource_path(self, rowMap):
+            if 'filepath' in rowMap.keys():
+                path = rowMap['filepath']
+            elif 'url' in rowMap.keys():
+                path = rowMap['url']
+            else:
+                raise KeyError(
+                    "Resource registration or validation with the DTS requires a valid file path or url"
+                )
+            return path

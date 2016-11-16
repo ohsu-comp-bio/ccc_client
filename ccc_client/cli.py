@@ -679,7 +679,7 @@ def setup_parser():
         action="store_true",
         help="perform a mock operation, which runs your input through the \
         normal code path, but outputs the JSON that would otherwise be posted \
-        to elasticsearch, without actually sending it"
+        to eve, without actually sending it"
     )
     em_publish_batch.add_argument(
         "--skipDtsRegistration",
