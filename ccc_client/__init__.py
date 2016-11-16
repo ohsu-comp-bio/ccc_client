@@ -6,12 +6,14 @@ from ccc_client.DcsRunner import DcsRunner
 from ccc_client.AppRepoRunner import AppRepoRunner
 from ccc_client.ExecEngineRunner import ExecEngineRunner
 from ccc_client.ElasticSearchRunner import ElasticSearchRunner
+from ccc_client.EveMongoRunner import EveMongoRunner
 
 __all__ = ["DtsRunner",
            "DcsRunner",
            "AppRepoRunner",
            "ExecEngineRunner",
-           "ElasticSearchRunner"]
+           "ElasticSearchRunner",
+           "EveMongoRunner"]
 
 __version__ = "undefined"
 try:

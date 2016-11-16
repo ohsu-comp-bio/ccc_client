@@ -4,26 +4,25 @@ import csv
 import json
 import os
 import sys
+import requests
 
 from ccc_client import DtsRunner
 from ccc_client.utils import parseAuthToken
-from elasticsearch import Elasticsearch
 
-import requests
 
-class ElasticSearchRunner(object):
+class EveMongoRunner(object):
     __domainFile = None
 
     def __init__(self, host=None, port=None, authToken=None):
         if host is not None:
             self.host = host
         else:
-            self.host = "localhost"
+            self.host = "http://192.168.99.100"
 
         if port is not None:
             self.port = port
         else:
-            self.port = "9200"
+            self.port = "8000"
 
         if authToken is not None:
             self.authToken = parseAuthToken(authToken)
@@ -41,7 +40,7 @@ class ElasticSearchRunner(object):
     def readDomainDescriptors(self):
         if self.__domainFile is None:
             ddFile = os.path.dirname(os.path.realpath(__file__))
-            ddFile = ddFile + "/resources/domains.json"
+            ddFile = ddFile + "/resources/evemongo_domains.json"
         else:
             ddFile = self.__domainFile
 
@@ -81,7 +80,6 @@ class ElasticSearchRunner(object):
                 i += 1
         return response
 
-
     # Responsible for inspecting the header and normalizing/augmenting field
     # names
     class RowParser(object):
@@ -100,14 +98,14 @@ class ElasticSearchRunner(object):
             self.host = host
             self.port = port
             self.domainDescriptors = domainDescriptors
-            self.aliasMap = self.getAliases(fileHeader)
+            self.aliasMap = self.getAliases()
             self.isMock = isMock
             if isMock:
                 self.skipDtsRegistration = True
             else:
                 self.skipDtsRegistration = skipDtsRegistration
 
-        def getAliases(self, fileHeader):
+        def getAliases(self):
             aliasMap = []
             fds = self.domainDescriptors[self.domainName]["fieldDescriptors"]
             for fieldName in fds.keys():
@@ -182,10 +180,7 @@ class ElasticSearchRunner(object):
                     rowMap = self.validateOrRegisterWithDts(rowMap)
                 # append fields from other domains (denormalize)
                 domainsToAppend = list(self.domainDescriptors.keys())
-                # if not self.domain:
                 domainsToAppend.remove(self.domainName)
-                # else:
-                #     domainsToAppend.remove('Resource')
                 for dn in domainsToAppend:
                     rowMap = self.appendFieldsForDomain(rowMap, dn)
 
@@ -199,7 +194,6 @@ class ElasticSearchRunner(object):
             if self.domainDescriptors[dn]['keyField'] in rowMap:
                 key = self.generateKeyForDomain(rowMap, dn, True)
                 domain = self.domainDescriptors[dn]
-                # index = self.getIndexNameForDomain(dn)
                 endpoint = domain['docType'] + 's'
                 # body = {
                 #     "size": 10000, "query": {
@@ -229,7 +223,7 @@ class ElasticSearchRunner(object):
                 print(json.dumps(rowMap), file=sys.stderr)
                 raise KeyError("Row lacks key field: " + keyField)
 
-            if 'unmatchedInheritance' in domain.keys() and r == True:
+            if 'unmatchedInheritance' in domain.keys() and r:
                 if domainName == 'case':
                     return rowMap["_".join(['individual', keyField]).lower()]
             elif 'useKeyFieldAsIndexKey' in domain.keys():
@@ -239,18 +233,6 @@ class ElasticSearchRunner(object):
                     [self.projectCode, domainName, rowMap[keyField]]
                 ).lower()
                 return domainKey
-
-        def getIndexNameForDomain(self, domainName):
-            if not self.domain:
-                domain = self.domainDescriptors[domainName]
-            else:
-                domain = self.domain
-            return "-".join([self.projectCode, domain['indexPrefix']]).lower()
-
-        def getCollectionNameForDomain(self, domainName):
-            # if not self.domain:
-            domain = self.domainDescriptors[domainName]
-            return self.programCode
 
         def pushArrToElastic(self, row):
             rowMap = self.generateRowMapFromArr(row)
@@ -265,7 +247,7 @@ class ElasticSearchRunner(object):
                 # Note: According to the GDC API, the API endpoint url follows the format:
                 # "[base_host]/[API_version]/submission/[programName]/[projectCode]".
                 # We will need to decide what constitutes 'program' and 'project' in our database.
-                coll = self.getCollectionNameForDomain(self.domainName)
+                coll = self.programCode
                 project = self.projectCode
                 doc_type = self.domainDescriptors[self.domainName]['docType']
                 doc_id = self.generateKeyForDomain(rowMap, self.domainName)
