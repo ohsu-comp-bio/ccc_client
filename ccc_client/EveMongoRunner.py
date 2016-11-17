@@ -185,9 +185,22 @@ class EveMongoRunner(object):
                 # Note: According to the GDC API, the API endpoint url follows the format:
                 # "[base_host]/[API_version]/submission/[programName]/[projectCode]".
                 # We will need to decide what constitutes 'program' and 'project' in our database.
-                r = self.req.post(url="{}/v0/submission/{}/{}".format(self.url, self.programCode, self.projectCode),
-                                  json=rowMap)
-
+                url = "{}/v0/submission/{}/{}".format(self.url, self.programCode, self.projectCode)
+                try:
+                    r = self.req.post(url=url, json=rowMap)
+                    r.raise_for_status()
+                except requests.exceptions.HTTPError:
+                    print("WARNING: 404 response. Attempting to solve by submitting project for you.")
+                    try:
+                        project = {"code": self.projectCode, "programs": {"name": self.programCode}, "type": "project"}
+                        s = self.req.post(url="{}/v0/projects".format(self.url), json=project)
+                        s.raise_for_status()
+                        r = self.req.post(url=url, json=rowMap)
+                        r.raise_for_status()
+                    except requests.exceptions.HTTPError:
+                        print("Unknown Error: attempt to fix failed. "
+                              "Document not submitted to API. Has your program been submitted?")
+                        sys.exit()
                 return r.json()
 
         def validateOrRegisterWithDts(self, rowMap):
