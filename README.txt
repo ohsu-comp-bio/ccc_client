@@ -451,3 +451,57 @@ optional arguments:
                         skip any attempt to register or validate CCC Ids and
                         filepaths with the DTS
 
+
+============================================================
+eve-mongo
+============================================================
+usage: ccc_client eve-mongo [-h]
+                                       {publish-batch}
+                                       ...
+
+action:
+  {publish-batch}
+
+-----------------
+| publish-batch |
+-----------------
+usage: ccc_client eve-mongo publish-batch [-h] [--debug]
+                                                     [--host HOST]
+                                                     [--port PORT]
+                                                     [--authToken AUTHTOKEN]
+                                                     --tsv TSV
+                                                     [--site {central,dfci,ohsu,oicr}]
+                                                     [--user USER] [--program PROGRAM]
+                                                     [--project PROJECT]
+                                                     [--domain {case,sample,file}]
+                                                     [--domainJson DOMAINJSON]
+                                                     [--mock]
+                                                     [--skipDtsRegistration]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --debug               debug flag
+  --host HOST           host
+  --port PORT           port
+  --authToken AUTHTOKEN, -T AUTHTOKEN
+                        authorization token
+  --tsv TSV, -t TSV     input tab delimited file
+  --site {central,dfci,ohsu,oicr}, -s {central,dfci,ohsu,oicr}
+                        site this data is associated with
+  --user USER, -u USER  user identity
+  --program PROGRAM, -P PROGRAM
+                        The program this data is associated with
+  --project PROJECT, -p PROJECT
+                        The project this data is associated with
+  --domain {case,sample,file}, -d {case,sample,file}
+                        target domain to register the data to
+  --domainJson DOMAINJSON, -D DOMAINJSON
+                        this is the path to an alternate file describing the
+                        domains/fields to use for import.
+  --mock                perform a mock operation, which runs your input
+                        through the normal code path, but outputs the JSON
+                        that would otherwise be posted to eve, without
+                        actually sending it
+  --skipDtsRegistration
+                        skip any attempt to register or validate CCC Ids and
+                        filepaths with the DTS
