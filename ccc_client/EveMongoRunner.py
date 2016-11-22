@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import requests
+import re
 
 from ccc_client import DtsRunner
 from ccc_client.utils import parseAuthToken
@@ -41,6 +42,11 @@ class EveMongoRunner(object):
             self.DomainDescriptors = json.load(json_data)
 
     # @classmethod
+    def setDomainDescriptors(self, domainFile):
+        self.__domainFile = domainFile
+        self.readDomainDescriptors()
+
+    # @classmethod
     def publish_batch(self, tsv, siteId, user, programCode, projectCode, domainName, isMock,
                       skipDtsRegistration):
 
@@ -69,6 +75,25 @@ class EveMongoRunner(object):
                     response.append(rowParser.pushArrToEveMongo(row))
                 i += 1
         return response
+
+    def __process_fields(self, fields):
+        pfields = {}
+        if isinstance(fields, str):
+            pfields.update(self.__validate_field(fields))
+        elif isinstance(fields, (list, tuple)):
+            for f in fields:
+                pfields.update(self.__process_fields(f))
+        elif isinstance(fields, dict):
+            pfields.update(fields)
+        else:
+            raise TypeError("queries must be a str or list type")
+        return pfields
+
+    def __validate_field(self, field):
+        assert re.search(":", field) is not None
+        assert len(re.findall(":", field)) == 1
+        key, val = re.compile("\s*:\s*").split(field)
+        return {key: val}
 
     # Responsible for inspecting the header and normalizing/augmenting field
     # names
@@ -186,22 +211,8 @@ class EveMongoRunner(object):
                 # "[base_host]/[API_version]/submission/[programName]/[projectCode]".
                 # We will need to decide what constitutes 'program' and 'project' in our database.
                 url = "{}/v0/submission/{}/{}".format(self.url, self.programCode, self.projectCode)
-                try:
-                    r = self.req.post(url=url, json=rowMap)
-                    r.raise_for_status()
-                except requests.exceptions.HTTPError:
-                    print("WARNING: 404 response. Attempting to solve by submitting project for you.")
-                    try:
-                        project = {"code": self.projectCode, "programs": {"name": self.programCode}, "type": "project"}
-                        s = self.req.post(url="{}/v0/projects".format(self.url), json=project)
-                        s.raise_for_status()
-                        r = self.req.post(url=url, json=rowMap)
-                        r.raise_for_status()
-                    except requests.exceptions.HTTPError:
-                        print("Unknown Error: attempt to fix failed. "
-                              "Document not submitted to API. Has your program been submitted?")
-                        sys.exit()
-                return r.json()
+                r = self.req.post(url=url, json=rowMap)
+                return r
 
         def validateOrRegisterWithDts(self, rowMap):
             path = self.__check_resource_path(rowMap)

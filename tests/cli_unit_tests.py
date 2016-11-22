@@ -1,7 +1,7 @@
 import argparse
 import unittest
 
-from ccc_client import cli, DtsRunner, ExecEngineRunner, AppRepoRunner, ElasticSearchRunner
+from ccc_client import cli, DtsRunner, ExecEngineRunner, AppRepoRunner, ElasticSearchRunner, EveMongoRunner
 
 
 class TestCommonArgs(unittest.TestCase):
@@ -190,6 +190,27 @@ class TestElasticSearchArgs(unittest.TestCase):
         self.assertEqual(args.skipDtsRegistration, True)
         self.assertEqual(args.runner, ElasticSearchRunner)
         self.assertEqual(args.action, "publish-resource")
+
+
+class TestEveMongoArgs(unittest.TestCase):
+
+    def testParseArgumentsPublishBatch(self):
+        cliInput = """eve-mongo publish-batch --tsv /dev/null --site ohsu
+        --user test --program foo --project foo --domain case --domainJson /dev/null
+        """
+        parser = cli.setup_parser()
+        args = parser.parse_args(cliInput.split())
+        self.assertEqual(args.tsv, "/dev/null")
+        self.assertEqual(args.site, "ohsu")
+        self.assertEqual(args.user, "test")
+        self.assertEqual(args.program, "foo")
+        self.assertEqual(args.project, "foo")
+        self.assertEqual(args.domain, "case")
+        self.assertEqual(args.domainJson, "/dev/null")
+        self.assertEqual(args.isMock, False)
+        self.assertEqual(args.skipDtsRegistration, False)
+        self.assertEqual(args.runner, EveMongoRunner)
+        self.assertEqual(args.action, "publish-batch")
 
 
 class testOptionParsing(unittest.TestCase):
