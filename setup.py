@@ -28,7 +28,6 @@ setup(
     keywords='tool',
     install_requires=[
         "requests>=2.9.1",
-        "elasticsearch>=2.3.0",
         "iso8601>=0.1.11"
     ],
     entry_points={

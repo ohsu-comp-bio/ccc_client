@@ -1,7 +1,7 @@
 import argparse
 import unittest
 
-from ccc_client import cli, app_repo, exec_engine, dts, dcs, elastic_search
+from ccc_client import cli, app_repo, exec_engine, dts, dcs
 
 
 class TestCommonArgs(unittest.TestCase):

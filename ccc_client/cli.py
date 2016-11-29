@@ -10,7 +10,7 @@ import os
 import re
 import sys
 import ccc_client
-from ccc_client import app_repo, exec_engine, dts, dcs, elastic_search
+from ccc_client import app_repo, exec_engine, dts, dcs
 
 try:
     import http.client as http_client
@@ -50,11 +50,6 @@ services = {
         'list-resources': dcs.cli.list_resources,
         'delete-link': dcs.cli.delete_link,
         'delete-set': dcs.cli.delete_set,
-    },
-    'elastic-search': {
-        'query': elastic_search.cli.query,
-        'publish-batch': elastic_search.cli.publish_batch,
-        'publish-resource': elastic_search.cli.publish_resource,
     },
 }
 
