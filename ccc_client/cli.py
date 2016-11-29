@@ -4,9 +4,7 @@ Command line utility for interacting with CCC services.
 from __future__ import print_function
 
 import argparse
-import glob
 import logging
-import os
 import re
 import sys
 import ccc_client
@@ -180,16 +178,16 @@ def find_options(helptext, show_usage=True, strip_n=0):
     return "\n".join(helplist)
 
 
-def cli_main():
+def cli_main(argv=sys.argv):
 
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         return parser.print_help()
 
-    if "--help-long" in sys.argv[1:]:
+    if "--help-long" in argv[1:]:
         print(display_help(parser))
         return
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.debug:
         http_client.HTTPConnection.debuglevel = 1

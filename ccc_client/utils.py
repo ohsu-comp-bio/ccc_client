@@ -1,5 +1,9 @@
 from __future__ import print_function
+
+import glob
+import os
 import re
+import sys
 
 def print_API_response(r):
     if r.status_code // 100 == 2:

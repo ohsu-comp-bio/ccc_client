@@ -1,12 +1,16 @@
 # api/workflows/v1/
-#from ccc_client.cli import ArgumentParser
 from argparse import ArgumentParser
+from ccc_client.exec_engine.ExecEngineRunner import ExecEngineRunner
+from ccc_client.utils import print_API_response
 
 def run(args):
-    print 'submit', args
-    #r = runner.submit_workflow(args.wdlSource,
-                               #args.workflowInputs,
-                               #args.workflowOptions)
+    runner = ExecEngineRunner(args.host, args.port, args.authToken)
+    r = runner.submit_workflow(
+        args.wdlSource,
+        args.workflowInputs,
+        args.workflowOptions
+    )
+    print_API_response(r)
 
 parser = ArgumentParser()
 parser.set_defaults(runner=run)

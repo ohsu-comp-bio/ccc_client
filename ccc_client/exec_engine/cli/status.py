@@ -1,14 +1,13 @@
 # api/workflows/v1/<uuid>/status
 import argparse
+from ccc_client.exec_engine.ExecEngineRunner import ExecEngineRunner
+from ccc_client.utils import print_API_response
 
 def run(args):
-    print 'status', args
-    return
-
-    responses = []
+    runner = ExecEngineRunner(args.host, args.port, args.authToken)
     for workflowId in args.workflowId:
         r = runner.get_status(workflowId)
-        responses.append(r)
+        print_API_response(r)
 
 parser = argparse.ArgumentParser()
 parser.set_defaults(runner=run)
