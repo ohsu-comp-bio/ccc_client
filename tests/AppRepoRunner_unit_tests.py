@@ -78,7 +78,7 @@ class TestAppRepoRunner(unittest.TestCase):
         # pass path of image tarball that does not exist
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 500
-            with self.assertRaises(FileNotFoundError):
+            with self.assertRaises(IOError):
                 self.ar_client.upload_image(
                     imageBlob=self.invalid_img_filepath,
                     imageName=self.imageName,

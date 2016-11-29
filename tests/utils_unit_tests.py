@@ -32,5 +32,5 @@ class TestUtils(unittest.TestCase):
             result = utils.parseAuthToken(self.authHeader)
 
         # pass authToken in file that doesnt exist
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(IOError):
             result = utils.parseAuthToken(self.invalid_filepath)

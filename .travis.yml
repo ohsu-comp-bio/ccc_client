@@ -1,0 +1,37 @@
+language: python
+python:
+  - "2.7"
+  - "3.5"
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+
+install:
+  - pip install pip --upgrade
+  - pip install setuptools==25.1.0
+  - python setup.py install
+  - ccc_client --version
+
+before_script:
+  - pip install -r requirements_dev.txt
+
+# run_tests.py runs everything under the script: tag so only put commands
+# under it that we want to run (and want to be able to run) as local tests
+script: 
+  - flake8 ccc_client_dev.py
+           setup.py
+           tests 
+           ccc_client
+  - python -m nose tests 
+           --with-coverage 
+           --cover-package ccc_client
+           --cover-inclusive
+           --cover-min-percentage 80
+           --cover-branches 
+           --cover-erase
+
+# after_success:
+# run codecov
+#  - bash <(curl -s https://codecov.io/bash)

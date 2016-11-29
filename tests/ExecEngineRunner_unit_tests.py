@@ -82,7 +82,7 @@ workflow test {
         # pass path to wdl that does not exist
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 500
-            with self.assertRaises(FileNotFoundError):
+            with self.assertRaises(IOError):
                 self.ee_client.submit_workflow(
                     wdlSource=self.invalid_wdl_filepath,
                     workflowInputs=self.mock_json_filepath,
