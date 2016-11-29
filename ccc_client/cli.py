@@ -186,7 +186,6 @@ def find_options(helptext, show_usage=True, strip_n=0):
 
 
 def cli_main():
-    parser = setup_parser()
 
     if len(sys.argv) == 1:
         return parser.print_help()
