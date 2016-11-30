@@ -41,7 +41,9 @@ class TestDtsRunner(unittest.TestCase):
                         "location": [{
                             "site": "http://10.73.127.6",
                             "path": os.path.dirname(self.mock_filepath),
-                            "timestampUpdated": os.stat(self.mock_filepath)[-2],
+                            "timestampUpdated": (
+                                os.stat(self.mock_filepath)[-2]
+                            ),
                             "user": {
                                 "name": self.user
                             }
@@ -87,7 +89,9 @@ class TestDtsRunner(unittest.TestCase):
                             "location": [{
                                 "site": "http://10.73.127.6",
                                 "path": os.path.dirname(self.mock_filepath),
-                                "timestampUpdated": os.stat(self.mock_filepath)[-2],
+                                "timestampUpdated": (
+                                    os.stat(self.mock_filepath)[-2]
+                                ),
                                 "user": {
                                     "name": self.user
                                 }
@@ -145,16 +149,24 @@ class TestDtsRunner(unittest.TestCase):
                             "location": [
                                 {
                                     "site": "http://10.73.127.6",
-                                    "path": os.path.dirname(self.mock_filepath),
-                                    "timestampUpdated": os.stat(self.mock_filepath)[-2],
+                                    "path": (
+                                        os.path.dirname(self.mock_filepath)
+                                    ),
+                                    "timestampUpdated": (
+                                        os.stat(self.mock_filepath)[-2]
+                                    ),
                                     "user": {
                                         "name": self.user
                                     }
                                 },
                                 {
                                     "site": "http://10.73.127.1",
-                                    "path": os.path.dirname(self.mock_filepath),
-                                    "timestampUpdated": os.stat(self.mock_filepath)[-2],
+                                    "path": (
+                                        os.path.dirname(self.mock_filepath)
+                                    ),
+                                    "timestampUpdated": (
+                                        os.stat(self.mock_filepath)[-2]
+                                    ),
                                     "user": {
                                         "name": self.user
                                     }

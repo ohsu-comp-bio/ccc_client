@@ -3,7 +3,7 @@ from codecs import open
 from os import path
 
 here = path.abspath(path.dirname(__file__))
-with open(path.join(here, "README.txt"), encoding="utf-8") as readmeFile:
+with open(path.join(here, "README.md"), encoding="utf-8") as readmeFile:
     long_description = readmeFile.read()
 
 setup(
@@ -28,7 +28,6 @@ setup(
     keywords='tool',
     install_requires=[
         "requests>=2.9.1",
-        "elasticsearch>=2.3.0",
         "iso8601>=0.1.11"
     ],
     entry_points={

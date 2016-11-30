@@ -116,4 +116,7 @@ class DcsRunner(object):
 
     @staticmethod
     def _create_id(input_path=None, random=True):
-        return str(uuid.uuid4()) if random else str(uuid.uuid5(uuid.noid, input_path))
+        if random:
+            return str(uuid.uuid4())
+        else:
+            return str(uuid.uuid5(uuid.noid, input_path))

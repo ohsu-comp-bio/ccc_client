@@ -1,17 +1,15 @@
 """
 Interact with CCC services
 """
-from ccc_client.DtsRunner import DtsRunner
-from ccc_client.DcsRunner import DcsRunner
-from ccc_client.AppRepoRunner import AppRepoRunner
-from ccc_client.ExecEngineRunner import ExecEngineRunner
-from ccc_client.ElasticSearchRunner import ElasticSearchRunner
+from ccc_client.dts.DtsRunner import DtsRunner
+from ccc_client.dcs.DcsRunner import DcsRunner
+from ccc_client.app_repo.AppRepoRunner import AppRepoRunner
+from ccc_client.exec_engine.ExecEngineRunner import ExecEngineRunner
 
 __all__ = ["DtsRunner",
            "DcsRunner",
            "AppRepoRunner",
-           "ExecEngineRunner",
-           "ElasticSearchRunner"]
+           "ExecEngineRunner"]
 
 __version__ = "undefined"
 try:

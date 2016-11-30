@@ -74,7 +74,10 @@ workflow test {
             mock_post.return_value.text = mock_response
             resp = self.ee_client.submit_workflow(
                 wdlSource=self.mock_wdl_filepath,
-                workflowInputs=[self.mock_json_filepath, self.mock_json_filepath],
+                workflowInputs=[
+                    self.mock_json_filepath,
+                    self.mock_json_filepath
+                ],
                 workflowOptions=None,
             )
             self.assertEqual(resp.text, mock_response)
@@ -108,7 +111,8 @@ workflow test {
                 terms
             )
             mock_get.assert_called_with(
-                "http://central-gateway.ccc.org:8000/api/workflows/v1/query?status=Submitted&name=testWorkflow",
+                "http://central-gateway.ccc.org:8000/api/workflows/v1/query"
+                "?status=Submitted&name=testWorkflow",
                 headers={'Authorization': 'Bearer '}
             )
 
@@ -136,7 +140,8 @@ workflow test {
                 workflowId=self.mock_workflow_id
             )
             mock_get.assert_called_with(
-                "http://central-gateway.ccc.org:8000/api/workflows/v1/{0}/status".format(self.mock_workflow_id),
+                "http://central-gateway.ccc.org:8000/"
+                "api/workflows/v1/{0}/status".format(self.mock_workflow_id),
                 headers={'Authorization': 'Bearer '}
             )
 
@@ -148,7 +153,8 @@ workflow test {
                 workflowId=self.mock_workflow_id
             )
             mock_get.assert_called_with(
-                "http://central-gateway.ccc.org:8000/api/workflows/v1/{0}/metadata".format(self.mock_workflow_id),
+                "http://central-gateway.ccc.org:8000/"
+                "api/workflows/v1/{0}/metadata".format(self.mock_workflow_id),
                 headers={'Authorization': 'Bearer '}
             )
 
@@ -160,7 +166,8 @@ workflow test {
                 workflowId=self.mock_workflow_id
             )
             mock_get.assert_called_with(
-                "http://central-gateway.ccc.org:8000/api/workflows/v1/{0}/outputs".format(self.mock_workflow_id),
+                "http://central-gateway.ccc.org:8000/"
+                "api/workflows/v1/{0}/outputs".format(self.mock_workflow_id),
                 headers={'Authorization': 'Bearer '}
             )
 
