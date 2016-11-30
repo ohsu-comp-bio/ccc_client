@@ -1,6 +1,7 @@
 import argparse
+
 from ccc_client.dts.DtsRunner import DtsRunner
-from ccc_client.utils import print_API_response
+from ccc_client.utils import print_API_response, resolve_filepath_from_pattern
 
 
 def run(args):
@@ -9,7 +10,7 @@ def run(args):
     for file_iter in file_list:
         r = runner.query(file_iter, args.site)
         print_API_response(r)
-    
+
 
 parser = argparse.ArgumentParser()
 parser.set_defaults(runner=run)
@@ -30,5 +31,7 @@ parser.add_argument(
     "query_terms",
     type=str,
     nargs="+",
-    help="The search terms on which to query. Can be specified multiple times. Should be supplied in the form 'FieldName:Term'"
+    help="The search terms on which to query. "
+         "Can be specified multiple times. "
+         "Should be supplied in the form 'FieldName:Term'"
 )

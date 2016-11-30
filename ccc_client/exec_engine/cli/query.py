@@ -3,10 +3,12 @@ import argparse
 from ccc_client.exec_engine.ExecEngineRunner import ExecEngineRunner
 from ccc_client.utils import print_API_response
 
+
 def run(args):
     runner = ExecEngineRunner(args.host, args.port, args.authToken)
     r = runner.query(args.query_terms)
     print_API_response(r)
+
 
 parser = argparse.ArgumentParser()
 parser.set_defaults(runner=run)

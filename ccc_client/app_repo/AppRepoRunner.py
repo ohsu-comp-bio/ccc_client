@@ -61,7 +61,8 @@ class AppRepoRunner(object):
     def upload_metadata(self, imageId, metadata):
         response = self.get_metadata(imageId)
         if response.status_code // 100 == 2:
-            print("[ERROR] An entry with this id already exists in the database", file=sys.stderr)
+            m = "[ERROR] An entry with this id already exists in the database"
+            print(m, file=sys.stderr)
             print(response.text, file=sys.stderr)
             raise ValueError
         else:

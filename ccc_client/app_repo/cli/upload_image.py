@@ -1,7 +1,8 @@
-# api/v1/tool/
 import argparse
+
 from ccc_client.app_repo.AppRepoRunner import AppRepoRunner
 from ccc_client.utils import print_API_response
+
 
 def run(args):
     runner = AppRepoRunner(args.host, args.port, args.authToken)
@@ -11,6 +12,7 @@ def run(args):
     if args.metadata is not None:
         r = runner.upload_metadata(None, args.metadata)
         print_API_response(r)
+
 
 parser = argparse.ArgumentParser()
 parser.set_defaults(runner=run)

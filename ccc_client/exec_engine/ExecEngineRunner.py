@@ -57,7 +57,10 @@ class ExecEngineRunner(object):
                 print("glob on", f, "did not return any files",
                       file=sys.stderr)
             else:
-                form_data += [('workflowInputs', (f, open(f, 'rb'))) for f in file_list]
+                for f in file_list:
+                    fh = open(f, 'rb')
+                    item = 'workflowInputs', (f, fh)
+                    form_data.append(item)
 
         response = requests.post(endpoint,
                                  files=form_data,
@@ -80,9 +83,8 @@ class ExecEngineRunner(object):
             key = key.lower()
             # validation of query terms
             if key not in valid_terms:
-                raise ValueError(
-                    "[ERROR] Valid query terms are: {0}".format(" ".join(valid_terms))
-                )
+                msg = "[ERROR] Valid query terms are: {0}"
+                raise ValueError(msg.format(" ".join(valid_terms)))
             elif key in ["start", "end"]:
                 try:
                     val = iso8601.parse_date(val).isoformat()
@@ -92,9 +94,8 @@ class ExecEngineRunner(object):
                                      "and start cannot be after end")
             elif key == "status":
                 if val not in valid_statuses:
-                    raise ValueError(
-                        "[ERROR] Valid statuses are: {0}".format(" ".join(valid_statuses))
-                    )
+                    msg = "[ERROR] Valid statuses are: {0}"
+                    raise ValueError(msg.format(" ".join(valid_statuses)))
             terms.append("{0}={1}".format(key, val))
 
         query_string = "&".join(terms)

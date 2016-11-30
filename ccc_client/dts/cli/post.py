@@ -1,4 +1,5 @@
 import argparse
+
 from ccc_client.dts.DtsRunner import DtsRunner
 from ccc_client.utils import print_API_response, resolve_filepath_from_pattern
 
@@ -16,7 +17,6 @@ def run(args):
         else:
             print_API_response(r)
 
-    
 
 parser = argparse.ArgumentParser()
 parser.set_defaults(runner=run)

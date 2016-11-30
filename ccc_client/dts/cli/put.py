@@ -1,4 +1,5 @@
 import argparse
+
 from ccc_client.dts.DtsRunner import DtsRunner
 from ccc_client.utils import print_API_response
 
@@ -7,7 +8,7 @@ def run(args):
     runner = DtsRunner(args.host, args.port, args.authToken)
     r = runner.put(args.cccId, args.filepath, args.site, args.user)
     print_API_response(r)
-    
+
 
 parser = argparse.ArgumentParser()
 parser.set_defaults(runner=run)

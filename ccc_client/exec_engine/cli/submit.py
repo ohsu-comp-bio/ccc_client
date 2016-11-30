@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 from ccc_client.exec_engine.ExecEngineRunner import ExecEngineRunner
 from ccc_client.utils import print_API_response
 
+
 def run(args):
     runner = ExecEngineRunner(args.host, args.port, args.authToken)
     r = runner.submit_workflow(
@@ -11,6 +12,7 @@ def run(args):
         args.workflowOptions
     )
     print_API_response(r)
+
 
 parser = ArgumentParser()
 parser.set_defaults(runner=run)

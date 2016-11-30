@@ -5,10 +5,13 @@ from __future__ import print_function
 
 import argparse
 import logging
-import re
 import sys
+
 import ccc_client
-from ccc_client import app_repo, exec_engine, dts, dcs
+import app_repo.cli
+import exec_engine.cli
+import dts.cli
+import dcs.cli
 
 try:
     import http.client as http_client
@@ -83,20 +86,25 @@ parser.add_argument("--version", action='version',
                     version=str(ccc_client.__version__))
 
 
-# Set up the subparsers for services and actions based on the "services" dict above
+# Set up the subparsers for services and actions
+# based on the "services" dict above
 services_subparsers = parser.add_subparsers(title='service', dest='service')
 for service_name, actions in services.items():
     service_parser = services_subparsers.add_parser(
         service_name,
         conflict_handler='resolve'
     )
-    actions_subparsers = service_parser.add_subparsers(title='action', dest='action')
+    actions_subparsers = service_parser.add_subparsers(
+        title='action',
+        dest='action'
+    )
     for action_name, action_module in actions.items():
         actions_subparsers.add_parser(
             action_name,
             parents=[action_module.parser, common_parser],
             conflict_handler='resolve'
         )
+
 
 def display_help(parser):
     """
@@ -134,7 +142,8 @@ def display_help(parser):
 
             # Iterate through the actions for a service
             for method_subparser_action in method_subparser_actions:
-                for method_choice, method_subparser in method_subparser_action.choices.items():
+                items = method_subparser_action.choices.items()
+                for method_choice, method_subparser in items:
                     # Print service action help
                     help_msg.append("-" * len("| {0} |".format(method_choice)))
                     help_msg.append("| {0} |".format(method_choice))
@@ -187,7 +196,7 @@ def cli_main(argv=sys.argv):
         print(display_help(parser))
         return
 
-    args = parser.parse_args(argv)
+    args = parser.parse_args(argv[1:])
 
     if args.debug:
         http_client.HTTPConnection.debuglevel = 1

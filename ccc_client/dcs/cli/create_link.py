@@ -1,4 +1,5 @@
 import argparse
+
 from ccc_client.dcs.DcsRunner import DcsRunner
 from ccc_client.utils import print_API_response
 
@@ -8,7 +9,7 @@ def run(args):
     for i in args.cccId:
         r = runner.create_link(args.setId, i)
         print_API_response(r)
-    
+
 
 parser = argparse.ArgumentParser(
     description='Assign one or more resources to a set'

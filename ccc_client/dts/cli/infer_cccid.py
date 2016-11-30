@@ -1,5 +1,7 @@
 import argparse
+
 from ccc_client.dts.DtsRunner import DtsRunner
+from ccc_client.utils import resolve_filepath_from_pattern
 
 
 def run(args):
@@ -8,7 +10,7 @@ def run(args):
     for file_iter in file_list:
         cccId = runner.infer_cccId(file_iter, args.strategy)
         print("{0}\t{1}".format(file_iter, cccId))
-    
+
 
 parser = argparse.ArgumentParser()
 parser.set_defaults(runner=run)

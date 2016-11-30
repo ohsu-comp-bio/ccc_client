@@ -5,6 +5,7 @@ import os
 import re
 import sys
 
+
 def print_API_response(r):
     if r.status_code // 100 == 2:
         print(r.text)
@@ -12,6 +13,7 @@ def print_API_response(r):
         m = "[STATUS CODE - {0}] {1}"
         m = m.format(r.status_code, r.text)
         print(m, file=sys.stderr)
+
 
 def parseAuthToken(authToken):
     if isinstance(authToken, str):
@@ -25,6 +27,7 @@ def parseAuthToken(authToken):
             return authToken
     else:
         raise TypeError("authToken must be a str or valid filepath")
+
 
 def resolve_filepath_from_pattern(patterns):
     if isinstance(patterns, str):
