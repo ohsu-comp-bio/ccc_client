@@ -6,9 +6,11 @@ from mock import patch, call
 
 from ccc_client import cli
 
-def cli_main(args):
-    '''Helper to prefix 'ccc_client' and split the args so the tests don't have to.'''
+
+def run_cli(args):
+    '''Run the CLI for tests, with extra help.'''
     return cli.cli_main(['ccc_client'] + args.split())
+
 
 def calls_eq(mock_target_name, cliInput, expected_calls):
     '''
@@ -20,130 +22,108 @@ def calls_eq(mock_target_name, cliInput, expected_calls):
     ])
     '''
     with patch(mock_target_name) as mock:
-        cli_main(cliInput)
+        run_cli(cliInput)
         eq_(mock.call_args_list, expected_calls)
 
 
-class TestCommonArgs(unittest.TestCase):
-
-    def testParseCommonArguments(self):
-        cliInput = """dts get --port 8000 --host 127.0.0.1 --authToken foo bar"""
-        args = cli.parser.parse_args(cliInput.split())
-        self.assertEqual(args.port, "8000")
-        self.assertEqual(args.host, "127.0.0.1")
-        self.assertEqual(args.authToken, "foo")
-        self.assertEqual(args.debug, False)
+def test_common_args():
+    cliInput = "dts get --port 8000 --host 127.0.0.1 --authToken foo bar"
+    args = cli.parser.parse_args(cliInput.split())
+    eq_(args.port, "8000")
+    eq_(args.host, "127.0.0.1")
+    eq_(args.authToken, "foo")
+    eq_(args.debug, False)
 
 
-def test_dts_post():
-    cliInput ="""dts post --filepath /dev/null /dev/tty --user test
-    --site central"""
-    calls_eq('ccc_client.dts.DtsRunner.DtsRunner.post', cliInput, [
+@patch('ccc_client.dts.DtsRunner.DtsRunner.post')
+def test_dts_post(mock):
+    run_cli("dts post --filepath /dev/null /dev/tty "
+            "--user test --site central")
+    eq_(mock.call_args_list, [
         call("/dev/null", ["central"], "test", None),
         call("/dev/tty", ["central"], "test", None)
     ])
 
 
-def test_dts_put():
-    cliInput = """dts put --filepath /dev/null --user test --site central
-    --cccId foo
-    """
-    calls_eq('ccc_client.dts.DtsRunner.DtsRunner.put', cliInput, [
+@patch('ccc_client.dts.DtsRunner.DtsRunner.put')
+def test_dts_put(mock):
+    run_cli("dts put --filepath /dev/null --user test --site central "
+            "--cccId foo")
+    eq_(mock.call_args_list, [
         call("foo", "/dev/null", ["central"], "test")
     ])
 
 
-def test_dts_get():
-    cliInput = """dts get foo"""
-    calls_eq('ccc_client.dts.DtsRunner.DtsRunner.get', cliInput, [
-        call('foo')
+@patch('ccc_client.dts.DtsRunner.DtsRunner.get')
+def test_dts_get(mock):
+    run_cli("dts get foo")
+    eq_(mock.call_args_list, [call('foo')])
+
+
+@patch('ccc_client.dts.DtsRunner.DtsRunner.delete')
+def test_dts_delete(mock):
+    run_cli("dts delete foo")
+    eq_(mock.call_args_list, [call('foo')])
+
+
+@patch('ccc_client.exec_engine.ExecEngineRunner'
+       '.ExecEngineRunner.submit_workflow')
+def test_exec_submit(mock):
+    run_cli("exec-engine submit --wdlSource /dev/null "
+            "--workflowInputs /dev/null --workflowOptions /dev/tty")
+    eq_(mock.call_args_list, [
+        call('/dev/null', ['/dev/null'], '/dev/tty')
     ])
 
 
-def test_dts_delete():
-    cliInput = """dts delete foo"""
-    calls_eq('ccc_client.dts.DtsRunner.DtsRunner.delete', cliInput, [
-        call('foo')
+@patch('ccc_client.exec_engine.ExecEngineRunner'
+       '.ExecEngineRunner.get_status')
+def test_exec_status(mock):
+    run_cli("exec-engine status foo")
+    eq_(mock.call_args_list, [call("foo")])
+
+
+@patch('ccc_client.exec_engine.ExecEngineRunner'
+       '.ExecEngineRunner.get_outputs')
+def test_exec_outputs(mock):
+    run_cli("exec-engine outputs foo")
+    eq_(mock.call_args_list, [call("foo")])
+
+
+@patch('ccc_client.exec_engine.ExecEngineRunner'
+       '.ExecEngineRunner.get_metadata')
+def test_exec_metadata(mock):
+    run_cli("exec-engine metadata foo")
+    eq_(mock.call_args_list, [call("foo")])
+
+
+@patch('ccc_client.app_repo.AppRepoRunner.AppRepoRunner.upload_metadata')
+@patch('ccc_client.app_repo.AppRepoRunner.AppRepoRunner.upload_image')
+def test_app_upload_image(image_mock, meta_mock):
+    run_cli("app-repo upload-image --imageBlob /dev/null "
+            "--imageName testImage --imageTag latest --metadata /dev/null")
+    eq_(image_mock.call_args_list, [
+        call("/dev/null", "testImage", "latest")
     ])
+    eq_(meta_mock.call_args_list, [call(None, "/dev/null")])
 
 
-def test_exec_submit():
-    cliInput = """exec-engine submit --wdlSource /dev/null
-    --workflowInputs /dev/null --workflowOptions /dev/tty
-    """
-    calls_eq(
-        'ccc_client.exec_engine.ExecEngineRunner.ExecEngineRunner.submit_workflow',
-        cliInput,
-        [call('/dev/null', ['/dev/null'], '/dev/tty')]
-    )
+@patch('ccc_client.app_repo.AppRepoRunner.AppRepoRunner.upload_metadata')
+def test_app_upload_metadata(mock):
+    run_cli("app-repo upload-metadata --metadata /dev/null --imageId foo")
+    eq_(mock.call_args_list, [call("foo", "/dev/null")])
 
 
-def test_exec_status():
-    cliInput = """exec-engine status foo"""
-    calls_eq(
-        'ccc_client.exec_engine.ExecEngineRunner.ExecEngineRunner.get_status',
-        cliInput,
-        [call("foo")]
-    )
+@patch('ccc_client.app_repo.AppRepoRunner.AppRepoRunner.get_metadata')
+def test_app_get_metadata(mock):
+    run_cli("app-repo get-metadata foo")
+    eq_(mock.call_args_list, [call("foo")])
 
 
-def test_exec_outputs():
-    cliInput = """exec-engine outputs foo"""
-    calls_eq(
-        'ccc_client.exec_engine.ExecEngineRunner.ExecEngineRunner.get_outputs',
-        cliInput,
-        [call("foo")]
-    )
-
-
-def test_exec_metadata():
-    cliInput = """exec-engine metadata foo"""
-    calls_eq(
-        'ccc_client.exec_engine.ExecEngineRunner.ExecEngineRunner.get_metadata',
-        cliInput,
-        [call("foo")]
-    )
-
-
-def test_app_upload_image():
-    cliInput = """app-repo upload-image --imageBlob /dev/null
-    --imageName testImage --imageTag latest --metadata /dev/null
-    """
-    upload_image_fqn = 'ccc_client.app_repo.AppRepoRunner.AppRepoRunner.upload_image'
-    upload_metadata_fqn = 'ccc_client.app_repo.AppRepoRunner.AppRepoRunner.upload_metadata'
-    with patch(upload_image_fqn) as image_mock, \
-         patch(upload_metadata_fqn) as meta_mock:
-
-        cli_main(cliInput)
-        eq_(image_mock.call_args_list, [call("/dev/null", "testImage", "latest")])
-        eq_(meta_mock.call_args_list, [call(None, "/dev/null")])
-
-
-def test_app_upload_metadata():
-    cliInput = """app-repo upload-metadata --metadata /dev/null --imageId foo """
-    calls_eq(
-        'ccc_client.app_repo.AppRepoRunner.AppRepoRunner.upload_metadata',
-        cliInput,
-        [call("foo", "/dev/null")]
-    )
-
-
-def test_app_get_metadata():
-    cliInput = """app-repo get-metadata foo"""
-    calls_eq(
-        'ccc_client.app_repo.AppRepoRunner.AppRepoRunner.get_metadata',
-        cliInput,
-        [call("foo")]
-    )
-
-
-def test_app_delete():
-    cliInput = """app-repo delete-metadata foo"""
-    calls_eq(
-        'ccc_client.app_repo.AppRepoRunner.AppRepoRunner.delete_metadata',
-        cliInput,
-        [call("foo")]
-    )
+@patch('ccc_client.app_repo.AppRepoRunner.AppRepoRunner.delete_metadata')
+def test_app_delete(mock):
+    run_cli("app-repo delete-metadata foo")
+    eq_(mock.call_args_list, [call("foo")])
 
 
 class testOptionParsing(unittest.TestCase):

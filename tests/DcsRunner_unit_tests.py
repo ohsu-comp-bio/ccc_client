@@ -36,7 +36,8 @@ class TestDcsRunner(unittest.TestCase):
                 ids=self.mock_cccId
             )
             mock_post.assert_called_with(
-                "http://central-gateway.ccc.org:9520/api/v1/dcs/resourceLink/search",
+                "http://central-gateway.ccc.org:9520/"
+                "api/v1/dcs/resourceLink/search",
                 data=json.dumps({"cccIds": [self.mock_cccId]}),
                 headers={"Content-Type": "application/json",
                          "Authorization": "Bearer "}
@@ -49,7 +50,8 @@ class TestDcsRunner(unittest.TestCase):
                 cccId=self.mock_cccId
             )
             mock_get.assert_called_with(
-                "http://central-gateway.ccc.org:9520/api/v1/dcs/resource/{0}/parents".format(self.mock_cccId),
+                "http://central-gateway.ccc.org:9520/"
+                "api/v1/dcs/resource/{0}/parents".format(self.mock_cccId),
                 headers={"Content-Type": "application/json",
                          "Authorization": "Bearer "}
             )
@@ -61,7 +63,8 @@ class TestDcsRunner(unittest.TestCase):
                 setId=self.mock_setId
             )
             mock_get.assert_called_with(
-                "http://central-gateway.ccc.org:9520/api/v1/dcs/resource/{0}/children".format(self.mock_setId),
+                "http://central-gateway.ccc.org:9520/"
+                "api/v1/dcs/resource/{0}/children".format(self.mock_setId),
                 headers={"Content-Type": "application/json",
                          "Authorization": "Bearer "}
             )
@@ -89,7 +92,8 @@ class TestDcsRunner(unittest.TestCase):
                 setId=self.mock_setId
             )
             mock_delete.assert_called_with(
-                "http://central-gateway.ccc.org:9520/api/v1/dcs/resource/{0}".format(self.mock_setId),
+                "http://central-gateway.ccc.org:9520/"
+                "api/v1/dcs/resource/{0}".format(self.mock_setId),
                 headers={"Content-Type": "application/json",
                          "Authorization": "Bearer "}
             )

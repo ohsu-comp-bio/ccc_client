@@ -67,13 +67,6 @@ class TestAppRepoRunner(unittest.TestCase):
                 imageTag="latest"
             )
             assert mock_post.called
-            # mock_post.assert_called_once_with(
-            #     "http://docker-centos7:8082/api/v1/tool",
-            #     headers={'Authorization': 'Bearer ', 'Content-Type': 'multipart/form-data'},
-            #     files={'imageName': (None, 'mock'),
-            #            'imageTag': (None, 'latest'),
-            #            'file': open(self.mock_img_filepath, 'rb')}
-            # )
 
         # pass path of image tarball that does not exist
         with patch('requests.post') as mock_post:
@@ -86,6 +79,8 @@ class TestAppRepoRunner(unittest.TestCase):
                 )
 
     def test_ar_create_or_update_metadata(self):
+        url = "http://docker-centos7:8082/api/v1/tool/{0}"
+
         # mimic successful put metadata request w/ metadata file path
         with patch('requests.put') as mock_put:
             mock_put.return_value.status_code = 201
@@ -94,8 +89,11 @@ class TestAppRepoRunner(unittest.TestCase):
                 metadata=self.mock_metadata_filepath
             )
             mock_put.assert_called_once_with(
-                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
-                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '},
+                url.format(self.imageId),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer '
+                },
                 data=self.valid_metadata_str
             )
 
@@ -107,8 +105,11 @@ class TestAppRepoRunner(unittest.TestCase):
                 metadata=self.valid_metadata_str
             )
             mock_put.assert_called_once_with(
-                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
-                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '},
+                url.format(self.imageId),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer '
+                },
                 data=self.valid_metadata_str
             )
 
@@ -120,8 +121,11 @@ class TestAppRepoRunner(unittest.TestCase):
                 metadata=self.valid_metadata_dict
             )
             mock_put.assert_called_once_with(
-                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
-                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '},
+                url.format(self.imageId),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer '
+                },
                 data=self.valid_metadata_str
             )
 
@@ -165,24 +169,32 @@ class TestAppRepoRunner(unittest.TestCase):
         # mimic successful get request:
         # by image id
         with patch('requests.get') as mock_get:
+            url = "http://docker-centos7:8082/api/v1/tool/{0}"
             mock_get.return_value.status_code = 200
             self.ar_client.get_metadata(
                 image_id_or_name=self.imageId,
             )
             mock_get.assert_called_once_with(
-                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
-                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
+                url.format(self.imageId),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer '
+                }
             )
 
         # by image name
         with patch('requests.get') as mock_get:
+            url = "http://docker-centos7:8082/api/v1/tool/{0}/data"
             mock_get.return_value.status_code = 500
             self.ar_client.get_metadata(
                 image_id_or_name=self.imageName,
             )
             mock_get.assert_called_with(
-                "http://docker-centos7:8082/api/v1/tool/{0}/data".format(self.imageName),
-                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
+                url.format(self.imageName),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer '
+                }
             )
 
     def test_ar_delete_metadata(self):
@@ -191,9 +203,13 @@ class TestAppRepoRunner(unittest.TestCase):
             self.ar_client.delete_metadata(
                 imageId=self.imageId,
             )
+            url = "http://docker-centos7:8082/api/v1/tool/{0}"
             mock_delete.assert_called_with(
-                "http://docker-centos7:8082/api/v1/tool/{0}".format(self.imageId),
-                headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '}
+                url.format(self.imageId),
+                headers={
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer '
+                }
             )
 
     def test_ar_list_tools(self):
