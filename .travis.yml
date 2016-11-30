@@ -11,11 +11,9 @@ cache:
 install:
   - pip install pip --upgrade
   - pip install setuptools==25.1.0
+  - pip install -r requirements_dev.txt
   - python setup.py install
   - ccc_client --version
-
-before_script:
-  - pip install -r requirements_dev.txt
 
 # run_tests.py runs everything under the script: tag so only put commands
 # under it that we want to run (and want to be able to run) as local tests
