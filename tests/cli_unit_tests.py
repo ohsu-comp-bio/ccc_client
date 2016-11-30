@@ -186,7 +186,8 @@ class testHelpLong(unittest.TestCase):
     common_parser.add_argument("--authToken", "-T",
                                type=str,
                                help="authorization token")
-    parser = argparse.ArgumentParser(description="Mock Parser",
+    parser = argparse.ArgumentParser(prog="ccc_client",
+                                     description="Mock Parser",
                                      parents=[common_parser])
     parser.add_argument("--help-long",
                         default=False,
@@ -204,9 +205,9 @@ class testHelpLong(unittest.TestCase):
         help="fake flag"
     )
 
-    help_long = """usage: nosetests [-h] [--debug] [--host HOST] [--port PORT]
-                 [--authToken AUTHTOKEN] [--help-long] [--version]
-                 {mock} ...
+    help_long = """usage: ccc_client [-h] [--debug] [--host HOST] [--port PORT]
+                  [--authToken AUTHTOKEN] [--help-long] [--version]
+                  {mock} ...
 
 Mock Parser
 
@@ -226,7 +227,7 @@ service:
 ============================================================
 mock
 ============================================================
-usage: nosetests mock [-h] {test} ...
+usage: ccc_client mock [-h] {test} ...
 
 action:
   {test}
@@ -234,8 +235,8 @@ action:
 --------
 | test |
 --------
-usage: nosetests mock test [-h] [--debug] [--host HOST] [--port PORT]
-                           [--authToken AUTHTOKEN] [--mock]
+usage: ccc_client mock test [-h] [--debug] [--host HOST] [--port PORT]
+                            [--authToken AUTHTOKEN] [--mock]
 
 optional arguments:
   --mock                fake flag
@@ -243,4 +244,5 @@ optional arguments:
 
     def testHelpLong(self):
         resp = cli.display_help(self.parser)
-        self.assertEqual(resp, self.help_long)
+        self.maxDiff = None
+        self.assertMultiLineEqual(resp, self.help_long)
