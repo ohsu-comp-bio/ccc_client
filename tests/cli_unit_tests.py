@@ -1,222 +1,133 @@
 import argparse
 import unittest
 
-from ccc_client import cli, DtsRunner, ExecEngineRunner, AppRepoRunner, ElasticSearchRunner, EveMongoRunner
+from nose.tools import eq_
+from mock import patch, call
+
+from ccc_client import cli
 
 
-class TestCommonArgs(unittest.TestCase):
-
-    def testParseArguments(self):
-        cliInput = """--port 8000 --host 127.0.0.1 --authToken foo"""
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.port, "8000")
-        self.assertEqual(args.host, "127.0.0.1")
-        self.assertEqual(args.authToken, "foo")
-        self.assertEqual(args.debug, False)
+def run_cli(args):
+    '''Run the CLI for tests, with extra help.'''
+    return cli.cli_main(['ccc_client'] + args.split())
 
 
-class TestDtsArgs(unittest.TestCase):
-
-    def testParseArgumentsPost(self):
-        cliInput = """dts post --filepath /dev/null /dev/null --user test
-        --site central
-        """
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.filepath, ["/dev/null", "/dev/null"])
-        self.assertEqual(args.user, "test")
-        self.assertEqual(args.site, ["central"])
-        self.assertEqual(args.runner, DtsRunner)
-        self.assertEqual(args.action, "post")
-
-    def testParseArgumentsPut(self):
-        cliInput = """dts put --filepath /dev/null --user test --site central
-        --cccId foo
-        """
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.filepath, "/dev/null")
-        self.assertEqual(args.user, "test")
-        self.assertEqual(args.site, ["central"])
-        self.assertEqual(args.cccId, "foo")
-        self.assertEqual(args.runner, DtsRunner)
-        self.assertEqual(args.action, "put")
-
-    def testParseArgumentsGet(self):
-        cliInput = """dts get foo"""
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.cccId, ["foo"])
-        self.assertEqual(args.runner, DtsRunner)
-        self.assertEqual(args.action, "get")
-
-    def testParseArgumentsDelete(self):
-        cliInput = """dts delete foo"""
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.cccId, ["foo"])
-        self.assertEqual(args.runner, DtsRunner)
-        self.assertEqual(args.action, "delete")
+def calls_eq(mock_target_name, cliInput, expected_calls):
+    '''
+    Given a fully-qualified name of a method to mock and a string of
+    CLI arguments to test, verify that the method was called as expected.
+    e.g. calls_eq('ccc_client.Runner.method_name', 'svc action --arg', [
+      call('expected_method_arg_1')
+    ])
+    '''
+    with patch(mock_target_name) as mock:
+        run_cli(cliInput)
+        eq_(mock.call_args_list, expected_calls)
 
 
-class TestExecEngineArgs(unittest.TestCase):
-
-    def testParseArgumentsSubmit(self):
-        cliInput = """exec-engine submit --wdlSource /dev/null
-        --workflowInputs /dev/null --workflowOptions /dev/null
-        """
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.wdlSource, "/dev/null")
-        self.assertEqual(args.workflowInputs, ["/dev/null"])
-        self.assertEqual(args.workflowOptions, "/dev/null")
-        self.assertEqual(args.runner, ExecEngineRunner)
-        self.assertEqual(args.action, "submit")
-
-    def testParseArgumentsStatus(self):
-        cliInput = """exec-engine status foo"""
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.workflowId, ["foo"])
-        self.assertEqual(args.runner, ExecEngineRunner)
-        self.assertEqual(args.action, "status")
-
-    def testParseArgumentsOutputs(self):
-        cliInput = """exec-engine outputs foo"""
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.workflowId, ["foo"])
-        self.assertEqual(args.runner, ExecEngineRunner)
-        self.assertEqual(args.action, "outputs")
-
-    def testParseArgumentsMetadata(self):
-        cliInput = """exec-engine metadata foo"""
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.workflowId, ["foo"])
-        self.assertEqual(args.runner, ExecEngineRunner)
-        self.assertEqual(args.action, "metadata")
+def test_common_args():
+    cliInput = "dts get --port 8000 --host 127.0.0.1 --authToken foo bar"
+    args = cli.parser.parse_args(cliInput.split())
+    eq_(args.port, "8000")
+    eq_(args.host, "127.0.0.1")
+    eq_(args.authToken, "foo")
+    eq_(args.debug, False)
 
 
-class TestAppRepoArgs(unittest.TestCase):
-
-    def testParseArgumentsPost(self):
-        cliInput = """app-repo upload-image --imageBlob /dev/null
-        --imageName testImage --imageTag latest --metadata /dev/null
-        """
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.imageBlob, "/dev/null")
-        self.assertEqual(args.imageName, "testImage")
-        self.assertEqual(args.imageTag, "latest")
-        self.assertEqual(args.metadata, "/dev/null")
-        self.assertEqual(args.runner, AppRepoRunner)
-        self.assertEqual(args.action, "upload-image")
-
-    def testParseArgumentsPut(self):
-        cliInput = """app-repo upload-metadata --metadata /dev/null --imageId foo """
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.imageId, "foo")
-        self.assertEqual(args.metadata, "/dev/null")
-        self.assertEqual(args.runner, AppRepoRunner)
-        self.assertEqual(args.action, "upload-metadata")
-
-    def testParseArgumentsGet(self):
-        cliInput = """app-repo get-metadata foo"""
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.imageIdOrName, "foo")
-        self.assertEqual(args.runner, AppRepoRunner)
-        self.assertEqual(args.action, "get-metadata")
-
-    def testParseArgumentsDelete(self):
-        cliInput = """app-repo delete-metadata foo"""
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.imageId, "foo")
-        self.assertEqual(args.runner, AppRepoRunner)
-        self.assertEqual(args.action, "delete-metadata")
+@patch('ccc_client.dts.DtsRunner.DtsRunner.post')
+def test_dts_post(mock):
+    run_cli("dts post --filepath /dev/null /dev/tty "
+            "--user test --site central")
+    eq_(mock.call_args_list, [
+        call("/dev/null", ["central"], "test", None),
+        call("/dev/tty", ["central"], "test", None)
+    ])
 
 
-class TestElasticSearchArgs(unittest.TestCase):
-
-    def testParseArgumentsQuery(self):
-        cliInput = """elasticsearch query --domain patient --query-terms foo:bar
-        """
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.domain, "patient")
-        self.assertEqual(args.query_terms, ["foo:bar"])
-        self.assertEqual(args.runner, ElasticSearchRunner)
-        self.assertEqual(args.action, "query")
-
-    def testParseArgumentsPublishBatch(self):
-        cliInput = """elasticsearch publish-batch --tsv /dev/null --site ohsu
-        --user test --project foo --domain patient --domainJson /dev/null
-        """
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.tsv, "/dev/null")
-        self.assertEqual(args.site, "ohsu")
-        self.assertEqual(args.user, "test")
-        self.assertEqual(args.project, "foo")
-        self.assertEqual(args.domain, "patient")
-        self.assertEqual(args.domainJson, "/dev/null")
-        self.assertEqual(args.isMock, False)
-        self.assertEqual(args.skipDtsRegistration, False)
-        self.assertEqual(args.runner, ElasticSearchRunner)
-        self.assertEqual(args.action, "publish-batch")
-
-    def testParseArgumentsPublishResource(self):
-        cliInput = """elasticsearch publish-resource --filepath /dev/null
-        --mimeType text --inheritFrom blah --propertyOverride 1:2 --site ohsu
-        --user test --project foo --workflowId bar --domainJson /dev/null
-        --mock --skipDtsRegistration
-        """
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.filepath, "/dev/null")
-        self.assertEqual(args.mimeType, "text")
-        self.assertEqual(args.inheritFrom, "blah")
-        self.assertEqual(args.propertyOverride, ["1:2"])
-        self.assertEqual(args.site, "ohsu")
-        self.assertEqual(args.user, "test")
-        self.assertEqual(args.project, "foo")
-        self.assertEqual(args.workflowId, "bar")
-        self.assertEqual(args.domainJson, "/dev/null")
-        self.assertEqual(args.isMock, True)
-        self.assertEqual(args.skipDtsRegistration, True)
-        self.assertEqual(args.runner, ElasticSearchRunner)
-        self.assertEqual(args.action, "publish-resource")
+@patch('ccc_client.dts.DtsRunner.DtsRunner.put')
+def test_dts_put(mock):
+    run_cli("dts put --filepath /dev/null --user test --site central "
+            "--cccId foo")
+    eq_(mock.call_args_list, [
+        call("foo", "/dev/null", ["central"], "test")
+    ])
 
 
-class TestEveMongoArgs(unittest.TestCase):
+@patch('ccc_client.dts.DtsRunner.DtsRunner.get')
+def test_dts_get(mock):
+    run_cli("dts get foo")
+    eq_(mock.call_args_list, [call('foo')])
 
-    def testParseArgumentsPublishBatch(self):
-        cliInput = """eve-mongo publish-batch --tsv /dev/null --site ohsu
-        --user test --program foo --project foo --domain case --domainJson /dev/null
-        """
-        parser = cli.setup_parser()
-        args = parser.parse_args(cliInput.split())
-        self.assertEqual(args.tsv, "/dev/null")
-        self.assertEqual(args.site, "ohsu")
-        self.assertEqual(args.user, "test")
-        self.assertEqual(args.program, "foo")
-        self.assertEqual(args.project, "foo")
-        self.assertEqual(args.domain, "case")
-        self.assertEqual(args.domainJson, "/dev/null")
-        self.assertEqual(args.isMock, False)
-        self.assertEqual(args.skipDtsRegistration, False)
-        self.assertEqual(args.runner, EveMongoRunner)
-        self.assertEqual(args.action, "publish-batch")
+
+@patch('ccc_client.dts.DtsRunner.DtsRunner.delete')
+def test_dts_delete(mock):
+    run_cli("dts delete foo")
+    eq_(mock.call_args_list, [call('foo')])
+
+
+@patch('ccc_client.exec_engine.ExecEngineRunner'
+       '.ExecEngineRunner.submit_workflow')
+def test_exec_submit(mock):
+    run_cli("exec-engine submit --wdlSource /dev/null "
+            "--workflowInputs /dev/null --workflowOptions /dev/tty")
+    eq_(mock.call_args_list, [
+        call('/dev/null', ['/dev/null'], '/dev/tty')
+    ])
+
+
+@patch('ccc_client.exec_engine.ExecEngineRunner'
+       '.ExecEngineRunner.get_status')
+def test_exec_status(mock):
+    run_cli("exec-engine status foo")
+    eq_(mock.call_args_list, [call("foo")])
+
+
+@patch('ccc_client.exec_engine.ExecEngineRunner'
+       '.ExecEngineRunner.get_outputs')
+def test_exec_outputs(mock):
+    run_cli("exec-engine outputs foo")
+    eq_(mock.call_args_list, [call("foo")])
+
+
+@patch('ccc_client.exec_engine.ExecEngineRunner'
+       '.ExecEngineRunner.get_metadata')
+def test_exec_metadata(mock):
+    run_cli("exec-engine metadata foo")
+    eq_(mock.call_args_list, [call("foo")])
+
+
+@patch('ccc_client.app_repo.AppRepoRunner.AppRepoRunner.upload_metadata')
+@patch('ccc_client.app_repo.AppRepoRunner.AppRepoRunner.upload_image')
+def test_app_upload_image(image_mock, meta_mock):
+    run_cli("app-repo upload-image --imageBlob /dev/null "
+            "--imageName testImage --imageTag latest --metadata /dev/null")
+    eq_(image_mock.call_args_list, [
+        call("/dev/null", "testImage", "latest")
+    ])
+    eq_(meta_mock.call_args_list, [call(None, "/dev/null")])
+
+
+@patch('ccc_client.app_repo.AppRepoRunner.AppRepoRunner.upload_metadata')
+def test_app_upload_metadata(mock):
+    run_cli("app-repo upload-metadata --metadata /dev/null --imageId foo")
+    eq_(mock.call_args_list, [call("foo", "/dev/null")])
+
+
+@patch('ccc_client.app_repo.AppRepoRunner.AppRepoRunner.get_metadata')
+def test_app_get_metadata(mock):
+    run_cli("app-repo get-metadata foo")
+    eq_(mock.call_args_list, [call("foo")])
+
+
+@patch('ccc_client.app_repo.AppRepoRunner.AppRepoRunner.delete_metadata')
+def test_app_delete(mock):
+    run_cli("app-repo delete-metadata foo")
+    eq_(mock.call_args_list, [call("foo")])
 
 
 class testOptionParsing(unittest.TestCase):
 
     help_str = """usage: ccc_client mock test
-
 optional arguments:
   -h, --help            show this help message and exit
   --debug               debug flag
@@ -227,7 +138,6 @@ optional arguments:
   --mock MOCK           mock argument"""
 
     stripped_common_args = """usage: ccc_client mock test
-
 optional arguments:
   --mock MOCK           mock argument"""
 
@@ -253,7 +163,8 @@ class testHelpLong(unittest.TestCase):
     common_parser.add_argument("--authToken", "-T",
                                type=str,
                                help="authorization token")
-    parser = argparse.ArgumentParser(description="Mock Parser",
+    parser = argparse.ArgumentParser(prog="ccc_client",
+                                     description="Mock Parser",
                                      parents=[common_parser])
     parser.add_argument("--help-long",
                         default=False,
@@ -271,12 +182,10 @@ class testHelpLong(unittest.TestCase):
         help="fake flag"
     )
 
-    help_long = """usage: nosetests [-h] [--debug] [--host HOST] [--port PORT]
-                 [--authToken AUTHTOKEN] [--help-long] [--version]
-                 {mock} ...
-
+    help_long = """usage: ccc_client [-h] [--debug] [--host HOST] [--port PORT]
+                  [--authToken AUTHTOKEN] [--help-long] [--version]
+                  {mock} ...
 Mock Parser
-
 optional arguments:
   -h, --help            show this help message and exit
   --debug               debug flag
@@ -286,28 +195,24 @@ optional arguments:
                         authorization token
   --help-long           Show help message for all services and actions
   --version             show program's version number and exit
-
 service:
   {mock}
-
 ============================================================
 mock
 ============================================================
-usage: nosetests mock [-h] {test} ...
-
+usage: ccc_client mock [-h] {test} ...
 action:
   {test}
-
 --------
 | test |
 --------
-usage: nosetests mock test [-h] [--debug] [--host HOST] [--port PORT]
-                           [--authToken AUTHTOKEN] [--mock]
-
+usage: ccc_client mock test [-h] [--debug] [--host HOST] [--port PORT]
+                            [--authToken AUTHTOKEN] [--mock]
 optional arguments:
   --mock                fake flag
 """
 
     def testHelpLong(self):
         resp = cli.display_help(self.parser)
-        self.assertEqual(resp, self.help_long)
+        self.maxDiff = None
+        self.assertMultiLineEqual(resp, self.help_long)

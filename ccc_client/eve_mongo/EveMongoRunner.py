@@ -7,7 +7,6 @@ import sys
 import requests
 import re
 
-from ccc_client import DtsRunner
 from ccc_client.utils import parseAuthToken
 
 
@@ -214,42 +213,42 @@ class EveMongoRunner(object):
                 r = self.req.post(url=url, json=rowMap)
                 return r
 
-        def validateOrRegisterWithDts(self, rowMap):
-            path = self.__check_resource_path(rowMap)
-            if 'ccc_id' in rowMap.keys():
-                self.validateCccId(rowMap['ccc_id'], path)
-            else:
-                rowMap['ccc_id'] = self.registerWithDts(path)
-            return rowMap
-
-        def registerWithDts(self, filepath):
-            dts = DtsRunner()
-            response = dts.post(filepath,
-                                self.siteId,
-                                self.user)
-            if response.status_code // 100 != 2:
-                raise RuntimeError("DTS registration for " + filepath + " failed")
-            else:
-                return response.text
-
-        def validateCccId(self, ccc_id, filepath):
-            dts = DtsRunner()
-            response = dts.get(ccc_id)
-            if response.status_code // 100 != 2:
-                raise RuntimeError("CCC_ID not found: " + ccc_id)
-            else:
-                data = response.json()
-                assert data['name'] == os.path.basename(filepath)
-                assert data['path'] == os.path.dirname(filepath)
-                return True
-
-        def __check_resource_path(self, rowMap):
-            if 'filepath' in rowMap.keys():
-                path = rowMap['filepath']
-            elif 'url' in rowMap.keys():
-                path = rowMap['url']
-            else:
-                raise KeyError(
-                    "Resource registration or validation with the DTS requires a valid file path or url"
-                )
-            return path
+        # def validateOrRegisterWithDts(self, rowMap):
+        #     path = self.__check_resource_path(rowMap)
+        #     if 'ccc_id' in rowMap.keys():
+        #         self.validateCccId(rowMap['ccc_id'], path)
+        #     else:
+        #         rowMap['ccc_id'] = self.registerWithDts(path)
+        #     return rowMap
+        #
+        # def registerWithDts(self, filepath):
+        #     dts = DtsRunner()
+        #     response = dts.post(filepath,
+        #                         self.siteId,
+        #                         self.user)
+        #     if response.status_code // 100 != 2:
+        #         raise RuntimeError("DTS registration for " + filepath + " failed")
+        #     else:
+        #         return response.text
+        #
+        # def validateCccId(self, ccc_id, filepath):
+        #     dts = DtsRunner()
+        #     response = dts.get(ccc_id)
+        #     if response.status_code // 100 != 2:
+        #         raise RuntimeError("CCC_ID not found: " + ccc_id)
+        #     else:
+        #         data = response.json()
+        #         assert data['name'] == os.path.basename(filepath)
+        #         assert data['path'] == os.path.dirname(filepath)
+        #         return True
+        #
+        # def __check_resource_path(self, rowMap):
+        #     if 'filepath' in rowMap.keys():
+        #         path = rowMap['filepath']
+        #     elif 'url' in rowMap.keys():
+        #         path = rowMap['url']
+        #     else:
+        #         raise KeyError(
+        #             "Resource registration or validation with the DTS requires a valid file path or url"
+        #         )
+        #     return path
