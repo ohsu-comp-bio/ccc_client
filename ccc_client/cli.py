@@ -54,9 +54,9 @@ services = {
         'delete-set': ccc_client.dcs.cli.delete_set,
     },
     'eve-mongo': {
-        'get-status': ccc_client.eve_mongo.cli.get_status,
+        'status': ccc_client.eve_mongo.cli.status,
         'query': ccc_client.eve_mongo.cli.query,
-        'publish-batch': ccc_client.eve_mongo.cli.publish_batch
+        'publish': ccc_client.eve_mongo.cli.publish
     },
 }
 

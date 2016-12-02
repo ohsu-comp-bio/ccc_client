@@ -1,5 +1,5 @@
-from . import get_status, query, publish_batch
+from . import status, query, publish
 
 __all__ = [
-    'get_status', 'query', 'publish_batch',
+    'status', 'query', 'publish',
 ]

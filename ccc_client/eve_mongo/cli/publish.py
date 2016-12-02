@@ -6,7 +6,8 @@ from ccc_client.utils import print_API_response
 
 def run(args):
     runner = EveMongoRunner(args.host, args.port, args.authToken)
-    r = runner.publish_batch(args.tsv, args.site, args.user, args.program, args.project, args.domain, args.domainJson)
+    r = runner.publish(args.tsv, args.site, args.user, args.program,
+                       args.project, args.domain, args.domainJson)
     for response in r:
         print_API_response(response)
 

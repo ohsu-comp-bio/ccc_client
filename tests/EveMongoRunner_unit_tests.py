@@ -22,10 +22,12 @@ class TestEveMongoRunner(unittest.TestCase):
                 "useKeyFieldAsIndexKey": True,
                 "idx": 0,
                 "fieldDescriptors": {
-                    "id": {"aliases": ["ccc_id", "cccdid", "cccid", "ccc_did"]},
+                    "id": {"aliases": ["ccc_id", "cccdid",
+                                       "cccid", "ccc_did"]},
                     "ccc_filepath": {"aliases": ["ccc_filepath"]},
                     "name": {},
-                    "FILEPATH": {"aliases": ["url", "filepath", "file_path"]},
+                    "FILEPATH": {"aliases": ["url", "filepath",
+                                             "file_path"]},
                     "type": {},
                     "mimeType": {"aliases": ["mimetype"]},
                     "format": {"aliases": ["extension"]}
@@ -42,22 +44,23 @@ class TestEveMongoRunner(unittest.TestCase):
     em_mock_file = tempfile.NamedTemporaryFile(delete=False)
     em_mock_filepath = em_mock_file.name
     em_mock_file.write("id\tlocation\tformat\n".encode())
-    em_mock_file.write(("fakeUUID\t"+mock_dd_file.name+"\ttxt\n").encode())
+    em_mock_file.write(
+        ("fakeUUID\t"+mock_dd_file.name+"\ttxt\n").encode())
     em_mock_file.close()
 
     def test_status(self):
         with patch('requests.get') as mock_get:
             mock_get.return_value.status_code = 201
-            self.em_client.get_status()
+            self.em_client.status()
             mock_get.assert_called_with(
                 url="http://192.168.99.100:8000/v0/status"
             )
 
-    def test_publish_batch(self):
+    def test_publish(self):
         # Mimic successful post
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
-            self.em_client.publish_batch(
+            self.em_client.publish(
                 tsv=self.em_mock_filepath,
                 siteId=self.siteId,
                 user=self.user,
@@ -66,7 +69,8 @@ class TestEveMongoRunner(unittest.TestCase):
                 domainName='file'
             )
             mock_post.assert_called_with(
-                url="http://192.168.99.100:8000/v0/submission/{}/{}".format(self.program, self.project),
+                url="http://192.168.99.100:8000/v0/submission/{}/{}".format(
+                    self.program, self.project),
                 data=json.dumps(
                     {
                         "format": "txt",
@@ -86,7 +90,7 @@ class TestEveMongoRunner(unittest.TestCase):
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
             with self.assertRaises(RuntimeError):
-                self.em_client.publish_batch(
+                self.em_client.publish(
                     tsv=self.em_mock_filepath,
                     siteId=self.siteId,
                     user=self.user,
@@ -98,7 +102,7 @@ class TestEveMongoRunner(unittest.TestCase):
         # Test new domain file
         with patch('requests.post') as mock_post:
             mock_post.return_value.status_code = 201
-            self.em_client.publish_batch(
+            self.em_client.publish(
                 tsv=self.em_mock_filepath,
                 siteId=self.siteId,
                 user=self.user,
@@ -120,6 +124,7 @@ class TestEveMongoRunner(unittest.TestCase):
                 headers={"Content-Type": "application/json",
                          "Authorization": "Bearer "}
             )
+
 
 if __name__ == '__main__':
     unittest.main()

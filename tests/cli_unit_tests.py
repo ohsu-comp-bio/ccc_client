@@ -125,6 +125,28 @@ def test_app_delete(mock):
     eq_(mock.call_args_list, [call("foo")])
 
 
+@patch('ccc_client.eve_mongo.EveMongoRunner.EveMongoRunner.status')
+def test_app_em_status(mock):
+    run_cli("eve-mongo status")
+
+
+@patch('ccc_client.eve_mongo.EveMongoRunner.EveMongoRunner.query')
+def test_app_em_query(mock):
+    run_cli('eve-mongo query -e files -f {"foo": "bar"}')
+    eq_(mock.call_args_list, [call("files", '{"foo": "bar"}')])
+
+
+@patch('ccc_client.eve_mongo.EveMongoRunner.EveMongoRunner.publish')
+def test_app_em_publish(mock):
+    run_cli("eve-mongo publish --tsv /dev/null --site ohsu "
+            "--user testUser --program testProgram --project testProject "
+            "--domain file --domainJson /dev/null")
+    eq_(mock.call_args_list, [
+        call("/dev/null", "ohsu", "testUser", "testProgram",
+             "testProject", "file", "/dev/null")
+    ])
+
+
 class testOptionParsing(unittest.TestCase):
 
     help_str = """usage: ccc_client mock test

@@ -22,20 +22,23 @@ class EveMongoRunner(object):
             self.authToken = ""
 
         self.url = "{}:{}".format(host, port)
-        self.headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + self.authToken}
+        self.headers = {'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + self.authToken}
 
-    def get_status(self):
+    def status(self):
         url = "{}/v0/status".format(self.url)
         r = requests.get(url=url)
         return r
 
     def query(self, endpoint, filter=None):
         url = '{}/v0/{}'.format(self.url, endpoint)
-        r = requests.get(url=url, data=json.dumps(filter), headers=self.headers)
+        r = requests.get(url=url, data=json.dumps(filter),
+                         headers=self.headers)
         return r
 
     # @classmethod
-    def publish_batch(self, tsv, siteId, user, programCode, projectCode, domainName, domainFile=None):
+    def publish(self, tsv, siteId, user, programCode,
+                projectCode, domainName, domainFile=None):
 
         # Note: this creates the opportunity to allow externally provided field
         # definitions, or potentially a different schema at runtime
@@ -77,9 +80,9 @@ class EveMongoRunner(object):
     # Responsible for inspecting the header and normalizing/augmenting field
     # names
     class RowParser(object):
-        def __init__(self, fileHeader=None, siteId=None, user=None, programCode=None,
-                     projectCode=None, domainName=None, headers=None, url=None,
-                     domainDescriptors=None):
+        def __init__(self, fileHeader=None, siteId=None, user=None,
+                     programCode=None, projectCode=None, domainName=None,
+                     headers=None, url=None, domainDescriptors=None):
 
             self.fileHeader = fileHeader
             self.siteId = siteId
@@ -106,7 +109,8 @@ class EveMongoRunner(object):
             if not rowArr:
                 raise ValueError("row cannot be empty")
             elif len(rowArr) != len(self.fileHeader):
-                raise ValueError("fileHeader and row must have the same number of items")
+                raise ValueError("fileHeader and row must have "
+                                 "the same number of items")
             else:
                 ret = dict(zip(self.fileHeader, rowArr))
                 return ret
@@ -172,9 +176,8 @@ class EveMongoRunner(object):
         def pushMapToEveMongo(self, rowMap):
             rowMap = self.processRowMap(rowMap)
 
-            # Note: According to the GDC API, the API endpoint url follows the format:
-            # "[base_host]/[API_version]/submission/[programName]/[projectCode]".
-            # We will need to decide what constitutes 'program' and 'project' in our database.
-            url = "{}/v0/submission/{}/{}".format(self.url, self.programCode, self.projectCode)
-            r = requests.post(url=url, data=json.dumps(rowMap, sort_keys=True), headers=self.headers)
+            url = "{}/v0/submission/{}/{}".format(self.url, self.programCode,
+                                                  self.projectCode)
+            r = requests.post(url=url, data=json.dumps(rowMap, sort_keys=True),
+                              headers=self.headers)
             return r
