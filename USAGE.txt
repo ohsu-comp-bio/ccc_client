@@ -1,5 +1,5 @@
 usage: ccc_client [-h] [--help-long] [--version]
-                  {dts,exec-engine,app-repo,dcs} ...
+                  {dts,exec-engine,app-repo,eve-mongo,dcs} ...
 
 CCC client
 
@@ -9,7 +9,7 @@ optional arguments:
   --version             show program's version number and exit
 
 service:
-  {dts,exec-engine,app-repo,dcs}
+  {dts,exec-engine,app-repo,eve-mongo,dcs}
 
 ============================================================
 dts
@@ -259,6 +259,61 @@ usage: ccc_client app-repo update-metadata --metadata METADATA
                                            [--authToken AUTHTOKEN]
 
 optional arguments:
+  --host HOST           host
+  --port PORT           port
+  --authToken AUTHTOKEN, -T AUTHTOKEN
+                        authorization token
+
+============================================================
+eve-mongo
+============================================================
+usage: ccc_client eve-mongo [-h] {status,query,publish} ...
+
+action:
+  {status,query,publish}
+
+----------
+| status |
+----------
+usage: ccc_client eve-mongo status [-h] [--debug] [--host HOST] [--port PORT]
+                                   [--authToken AUTHTOKEN]
+
+---------
+| query |
+---------
+usage: ccc_client eve-mongo query --endpoint {programs,projects,files}
+                                  [--filter FILTER] [-h] [--debug]
+                                  [--host HOST] [--port PORT]
+                                  [--authToken AUTHTOKEN]
+
+optional arguments:
+  --host HOST           host
+  --port PORT           port
+  --authToken AUTHTOKEN, -T AUTHTOKEN
+                        authorization token
+
+-----------
+| publish |
+-----------
+usage: ccc_client eve-mongo publish --tsv TSV
+                                    [--site {central,dfci,ohsu,oicr}]
+                                    [--user USER] [--program PROGRAM]
+                                    [--project PROJECT]
+                                    [--domain {case,sample,file}]
+                                    [--domainJson DOMAINJSON] [-h] [--debug]
+                                    [--host HOST] [--port PORT]
+                                    [--authToken AUTHTOKEN]
+
+optional arguments:
+  --project PROJECT, -p PROJECT
+                        The project this data is associated with
+  --domain {case,sample,file}, -d {case,sample,file}
+                        target domain to register the data to
+  --domainJson DOMAINJSON, -D DOMAINJSON
+                        this is the path to an alternate file describing the
+                        domains/fields to use for import.
+  -h, --help            show this help message and exit
+  --debug               debug flag
   --host HOST           host
   --port PORT           port
   --authToken AUTHTOKEN, -T AUTHTOKEN
