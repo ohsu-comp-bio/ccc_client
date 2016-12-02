@@ -132,8 +132,8 @@ def test_app_em_status(mock):
 
 @patch('ccc_client.eve_mongo.EveMongoRunner.EveMongoRunner.query')
 def test_app_em_query(mock):
-    run_cli('eve-mongo query -e files -f {"foo": "bar"}')
-    eq_(mock.call_args_list, [call("files", '{"foo": "bar"}')])
+    run_cli('eve-mongo query -e files -f foo')
+    eq_(mock.call_args_list, [call("files", "foo")])
 
 
 @patch('ccc_client.eve_mongo.EveMongoRunner.EveMongoRunner.publish')

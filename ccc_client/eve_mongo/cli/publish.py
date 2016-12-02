@@ -43,6 +43,6 @@ parser.add_argument(
 )
 parser.add_argument(
     "--domainJson", "-D", type=str,
-    help="this is the path to an alternate file describing the \
-        domains/fields to use for import."
+    help="this is the path to an alternate file describing the "
+         "domains/fields to use for import."
 )
