@@ -1,13 +1,14 @@
 import argparse
 
-#from ccc_client.eve_mongo.EveMongoRunner import EveMongoRunner
+from ccc_client.eve_mongo.EveMongoRunner import EveMongoRunner
 from ccc_client.utils import print_API_response
+
 
 def run(args):
     runner = EveMongoRunner(args.host, args.port, args.authToken)
-    r = runner.publish_batch(args.tsv, args.siteId, args.user, args.programCode, args.projectCode, args.domainName,
-                             args.isMock, args.skipDtsRegistration)
-    print_API_response(r)
+    r = runner.publish_batch(args.tsv, args.site, args.user, args.program, args.project, args.domain, args.domainJson)
+    for response in r:
+        print_API_response(response)
 
 
 parser = argparse.ArgumentParser()
@@ -43,11 +44,4 @@ parser.add_argument(
     "--domainJson", "-D", type=str,
     help="this is the path to an alternate file describing the \
         domains/fields to use for import."
-)
-parser.add_argument(
-    "--skipDtsRegistration",
-    dest="skipDtsRegistration",
-    action="store_true",
-    help="skip any attempt to register or validate CCC Ids and filepaths \
-        with the DTS"
 )

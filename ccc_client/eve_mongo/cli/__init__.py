@@ -1,5 +1,5 @@
 from . import publish_batch
 
 __all__ = [
-    'publish_batch',
+    'get_status', 'query', 'publish_batch',
 ]
