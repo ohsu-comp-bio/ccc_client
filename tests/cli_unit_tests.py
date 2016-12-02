@@ -207,7 +207,9 @@ class testHelpLong(unittest.TestCase):
     help_long = """usage: ccc_client [-h] [--debug] [--host HOST] [--port PORT]
                   [--authToken AUTHTOKEN] [--help-long] [--version]
                   {mock} ...
+
 Mock Parser
+
 optional arguments:
   -h, --help            show this help message and exit
   --debug               debug flag
@@ -217,19 +219,24 @@ optional arguments:
                         authorization token
   --help-long           Show help message for all services and actions
   --version             show program's version number and exit
+
 service:
   {mock}
+
 ============================================================
 mock
 ============================================================
 usage: ccc_client mock [-h] {test} ...
+
 action:
   {test}
+
 --------
 | test |
 --------
 usage: ccc_client mock test [-h] [--debug] [--host HOST] [--port PORT]
                             [--authToken AUTHTOKEN] [--mock]
+
 optional arguments:
   --mock                fake flag
 """
