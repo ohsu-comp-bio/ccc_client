@@ -30,9 +30,9 @@ class EveMongoRunner(object):
         r = self.req.get(url=url)
         return r
 
-    def query(self, endpoint):
+    def query(self, endpoint, filter=None):
         url = '{}/v0/{}'.format(self.url, endpoint)
-        r = self.req.get(url=url)
+        r = self.req.get(url=url, json=filter)
         return r
 
     # @classmethod

@@ -6,7 +6,7 @@ from ccc_client.utils import print_API_response
 
 def run(args):
     runner = EveMongoRunner(args.host, args.port, args.authToken)
-    r = runner.query(args.endpoint)
+    r = runner.query(args.endpoint, args.filter)
     print_API_response(r)
 
 
@@ -17,4 +17,8 @@ parser.add_argument(
     required=True,
     choices=["programs", "projects", "files"],
     help="data type to query"
+)
+parser.add_argument(
+    "--filter", "-f", type=str,
+    help='json filter for query: e.g. "{"program": "CCC"}"'
 )
