@@ -16,7 +16,6 @@ def calls_eq(mock_target_name, cliInput, expected_calls):
     '''
     Given a fully-qualified name of a method to mock and a string of
     CLI arguments to test, verify that the method was called as expected.
-
     e.g. calls_eq('ccc_client.Runner.method_name', 'svc action --arg', [
       call('expected_method_arg_1')
     ])
@@ -126,10 +125,31 @@ def test_app_delete(mock):
     eq_(mock.call_args_list, [call("foo")])
 
 
+@patch('ccc_client.eve_mongo.EveMongoRunner.EveMongoRunner.status')
+def test_app_em_status(mock):
+    run_cli("eve-mongo status")
+
+
+@patch('ccc_client.eve_mongo.EveMongoRunner.EveMongoRunner.query')
+def test_app_em_query(mock):
+    run_cli('eve-mongo query -e files -f foo')
+    eq_(mock.call_args_list, [call("files", "foo")])
+
+
+@patch('ccc_client.eve_mongo.EveMongoRunner.EveMongoRunner.publish')
+def test_app_em_publish(mock):
+    run_cli("eve-mongo publish --tsv /dev/null --site ohsu "
+            "--user testUser --program testProgram --project testProject "
+            "--domain file --domainJson /dev/null")
+    eq_(mock.call_args_list, [
+        call("/dev/null", "ohsu", "testUser", "testProgram",
+             "testProject", "file", "/dev/null")
+    ])
+
+
 class testOptionParsing(unittest.TestCase):
 
     help_str = """usage: ccc_client mock test
-
 optional arguments:
   -h, --help            show this help message and exit
   --debug               debug flag
@@ -140,7 +160,6 @@ optional arguments:
   --mock MOCK           mock argument"""
 
     stripped_common_args = """usage: ccc_client mock test
-
 optional arguments:
   --mock MOCK           mock argument"""
 

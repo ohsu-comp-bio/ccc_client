@@ -12,6 +12,7 @@ import ccc_client.app_repo.cli
 import ccc_client.exec_engine.cli
 import ccc_client.dts.cli
 import ccc_client.dcs.cli
+import ccc_client.eve_mongo.cli
 
 try:
     import http.client as http_client
@@ -51,6 +52,11 @@ services = {
         'list-resources': ccc_client.dcs.cli.list_resources,
         'delete-link': ccc_client.dcs.cli.delete_link,
         'delete-set': ccc_client.dcs.cli.delete_set,
+    },
+    'eve-mongo': {
+        'status': ccc_client.eve_mongo.cli.status,
+        'query': ccc_client.eve_mongo.cli.query,
+        'publish': ccc_client.eve_mongo.cli.publish
     },
 }
 
@@ -118,7 +124,7 @@ def display_help(parser):
     subparsers_actions = [
         action for action in parser._actions
         if isinstance(action, argparse._SubParsersAction)
-    ]
+        ]
 
     # Iterate through the services
     for subparsers_action in subparsers_actions:
@@ -128,7 +134,7 @@ def display_help(parser):
             method_subparser_actions = [
                 action for action in subparser._actions
                 if isinstance(action, argparse._SubParsersAction)
-            ]
+                ]
 
             # Print service help
             help_msg.append("=" * 60)

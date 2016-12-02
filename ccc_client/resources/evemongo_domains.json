@@ -1,0 +1,166 @@
+{ 
+  "case": {
+    "keyField": "id",
+    "docType": "case",
+    "indexPrefix": "case",
+    "unmatchedInheritance": true,
+    "useKeyFieldAsIndexKey": true,
+    "idx": 0,
+    "fieldDescriptors": {
+      "id": {
+        "missingValue": "Not Provided", 
+        "dataType": "string", 
+        "aliases": ["individualId", "individualid", "individual_id"]
+      },
+      "project_code": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "study_donor_involved_in": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "submitted_donor_id": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "sex": {
+        "missingValue": "Not Provided", 
+        "dataType": "string",
+        "aliases": ["donor_sex", "gender"]
+      },
+      "description": {
+        "missingValue": "Not Provided",
+        "dataType": "string",
+        "aliases": ["patient_comment"]
+      }
+    }
+  },
+  "sample": {
+    "keyField": "id",
+    "docType": "sample",
+    "indexPrefix": "sample",
+    "unmatchedInheritance": true,
+    "useKeyFieldAsIndexKey": true,
+    "idx": 1,
+    "fieldDescriptors": {
+      "id": {
+        "missingValue": "Not Provided", 
+        "dataType": "string", 
+        "aliases": ["sampleId", "specimen_id", "specimenId", "icgc_specimen_id"]
+      },
+      "project_code": {
+        "missingValue": "Not Provided",
+        "dataType": "string"
+      },
+      "individual_id": {
+        "missingValue": "Not Provided", 
+        "dataType": "string", 
+        "aliases": ["individualId", "icgc_donor_id"]
+      },
+      "cases": {
+        "missingValue": "Not Provided",
+        "dataType": "dict",
+        "dict_key" : "id",
+        "aliases": ["individualId"]
+      },
+      "submitted_donor_id": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "name": {
+        "missingValue": "Not Provided", 
+        "dataType": "string",
+        "aliases": ["specimen_type"]
+      },
+      "specimen_type_other": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "specimen_interval": {
+        "dataType": "int"
+      },
+      "specimen_donor_treatment_type": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "specimen_donor_treatment_type_other": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "specimen_processing": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "specimen_processing_other": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "specimen_storage": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "specimen_storage_other": {
+        "missingValue": "Not Provided", 
+        "dataType": "string"
+      },
+      "percentage_cellularity": {
+        "dataType": "float"
+      },
+      "level_of_cellularity": {
+        "dataType": "float"
+      }
+    }
+  },
+  "file": {
+    "keyField": "id",
+    "docType": "file",
+    "indexPrefix": "file",
+    "useKeyFieldAsIndexKey": true,
+    "idx": 2,
+    "fieldDescriptors": {
+      "id": {
+        "dataType": "string", 
+        "aliases": ["ccc_id", "cccdid", "cccid", "ccc_did"]
+      },
+      "ccc_filepath": {
+        "dataType": "string",
+        "aliases": ["ccc_filepath"]
+      },
+      "name": {
+        "dataType": "string"
+      },
+      "location": {
+        "dataType": "string",
+        "aliases": ["url", "filepath", "file_path"]
+      },
+      "type": {
+        "dataType": "string"
+      },
+      "mimeType": {
+        "dataType": "string",
+        "aliases": ["mimetype"]
+      },
+      "samples": {
+        "missingValue": "Not Provided",
+        "dataType": "dict",
+        "dict_key" : "id",
+        "aliases": ["sampleId"]
+      },
+      "biosample_id": {
+        "missingValue": "Not Provided",
+        "dataType": "string",
+        "aliases": ["sampleId"]
+      },
+      "individual_id": {
+        "missingValue": "Not Provided",
+        "dataType": "string",
+        "aliases": ["individualId"]
+      },
+      "format": {
+        "dataType": "string",
+        "aliases": ["extension"]
+      }
+    }
+  }
+}
