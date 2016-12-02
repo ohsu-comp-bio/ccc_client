@@ -1,8 +1,8 @@
-import json
-import tempfile
 import unittest
+import tempfile
+import json
 
-import httpretty
+from mock import patch
 from ccc_client import EveMongoRunner
 
 
@@ -13,131 +13,113 @@ class TestEveMongoRunner(unittest.TestCase):
     project = 'testProject'
     user = 'testUser'
 
-    rp = em_client.RowParser(
-        fileHeader=None,
-        siteId=siteId,
-        user=user,
-        programCode=program,
-        projectCode=project,
-        domainName='file',
-        req=em_client.req,
-        domainDescriptors=em_client.DomainDescriptors,
-        isMock=False,
-        skipDtsRegistration=True
-    )
-
     mock_domain_descriptors = json.dumps(
         {
             "file": {
                 "keyField": "id",
                 "docType": "file",
                 "indexPrefix": "file",
-                "idx": 1,
+                "useKeyFieldAsIndexKey": True,
+                "idx": 0,
                 "fieldDescriptors": {
-                    "id": {"aliases": ["cccdid", "cccid", "ccc_did", "ccc_did"]},
-                    "ccc_filepath": {},
+                    "id": {"aliases": ["ccc_id", "cccdid", "cccid", "ccc_did"]},
+                    "ccc_filepath": {"aliases": ["ccc_filepath"]},
                     "name": {},
-                    "location": {"aliases": ["file_path"]},
+                    "FILEPATH": {"aliases": ["url", "filepath", "file_path"]},
                     "type": {},
-                    "format": {}
+                    "mimeType": {"aliases": ["mimetype"]},
+                    "format": {"aliases": ["extension"]}
                 }
             }
         }
     )
 
     mock_dd_file = tempfile.NamedTemporaryFile(delete=False)
+    mock_dd_filepath = mock_dd_file.name
     mock_dd_file.write(mock_domain_descriptors.encode())
     mock_dd_file.close()
 
-    em_record_to_publish = tempfile.NamedTemporaryFile(delete=False)
-    em_record_filepath = em_record_to_publish.name
-    em_record_to_publish.write("id\tlocation\tformat\n".encode())
-    em_record_to_publish.write(("fakeUUID\t"+mock_dd_file.name+"\ttxt\n").encode())
-    em_record_to_publish.close()
+    em_mock_file = tempfile.NamedTemporaryFile(delete=False)
+    em_mock_filepath = em_mock_file.name
+    em_mock_file.write("id\tlocation\tformat\n".encode())
+    em_mock_file.write(("fakeUUID\t"+mock_dd_file.name+"\ttxt\n").encode())
+    em_mock_file.close()
 
-    def test_set_read_domainDescriptors(self):
-        em = EveMongoRunner()
-        em.setDomainDescriptors(self.mock_dd_file.name)
-        # check file reference
-        self.assertEqual(em._EveMongoRunner__domainFile,
-                         self.mock_dd_file.name)
-        # check domain data was loaded
-        self.assertEqual(em.DomainDescriptors,
-                         json.loads(self.mock_domain_descriptors))
+    def test_status(self):
+        with patch('requests.get') as mock_get:
+            mock_get.return_value.status_code = 201
+            self.em_client.get_status()
+            mock_get.assert_called_with(
+                url="http://192.168.99.100:8000/v0/status"
+            )
 
-    def test_field_processing(self):
-        # dict
-        res = self.em_client._EveMongoRunner__process_fields(
-            {"foo": "bar"}
-        )
-        self.assertEqual(res, {"foo": "bar"})
-
-        # list
-        res = self.em_client._EveMongoRunner__process_fields(
-            [{"foo": "bar"}]
-        )
-        self.assertEqual(res, {"foo": "bar"})
-
-        # list
-        res = self.em_client._EveMongoRunner__process_fields(
-            ["foo:bar"]
-        )
-        self.assertEqual(res, {"foo": "bar"})
-
-        # str
-        res = self.em_client._EveMongoRunner__process_fields(
-            "foo:bar"
-        )
-        self.assertEqual(res, {"foo": "bar"})
-
-    @httpretty.activate
     def test_publish_batch(self):
-        mock_post = "<Response [200]>"
-        httpretty.register_uri(httpretty.POST,
-                               "http://192.168.99.100:8000/v0/submission/{}/{}".format(self.program, self.project),
-                               body=mock_post)
-        res = self.em_client.publish_batch(
-            tsv=self.em_record_filepath,
-            siteId=self.siteId,
-            user=self.user,
-            programCode=self.program,
-            projectCode=self.project,
-            domainName="file",
-            isMock=False,
-            skipDtsRegistration=True
-        )
-        self.assertEqual(str(res[0]), mock_post)
-
-    def test_publish_batch_mock(self):
-        res = self.em_client.publish_batch(
-                tsv=self.em_record_filepath,
+        # Mimic successful post
+        with patch('requests.post') as mock_post:
+            mock_post.return_value.status_code = 201
+            self.em_client.publish_batch(
+                tsv=self.em_mock_filepath,
                 siteId=self.siteId,
                 user=self.user,
                 programCode=self.program,
                 projectCode=self.project,
-                domainName="file",
-                isMock=True,
-                skipDtsRegistration=True
+                domainName='file'
             )
-        self.assertEqual(
-            res,
-            [{"format": "txt",
-              "id": "fakeUUID",
-              "location": self.mock_dd_file.name,
-              "projectCode": self.project,
-              "siteId": self.siteId,
-              "type": "file"}]
-        )
+            mock_post.assert_called_with(
+                url="http://192.168.99.100:8000/v0/submission/{}/{}".format(self.program, self.project),
+                data=json.dumps(
+                    {
+                        "format": "txt",
+                        "id": "fakeUUID",
+                        "location": self.mock_dd_file.name,
+                        "projectCode": self.project,
+                        "siteId": self.siteId,
+                        "type": "file"
+                    },
+                    sort_keys=True
+                ),
+                headers={"Content-Type": "application/json",
+                         "Authorization": "Bearer "}
+            )
 
-    def test_processRowMap(self):
-        rowMap = {
-            'cccdid': 'uuid',
-            'file_path': '/tmp/fakepath.txt'
-        }
+        # Check bad domain
+        with patch('requests.post') as mock_post:
+            mock_post.return_value.status_code = 201
+            with self.assertRaises(RuntimeError):
+                self.em_client.publish_batch(
+                    tsv=self.em_mock_filepath,
+                    siteId=self.siteId,
+                    user=self.user,
+                    programCode=self.program,
+                    projectCode=self.project,
+                    domainName='badDomain'
+                )
 
-        res = self.rp.processRowMap(rowMap)
-        self.assertEqual(res['location'], rowMap['file_path'])
-        self.assertEqual(res['id'], rowMap['cccdid'])
+        # Test new domain file
+        with patch('requests.post') as mock_post:
+            mock_post.return_value.status_code = 201
+            self.em_client.publish_batch(
+                tsv=self.em_mock_filepath,
+                siteId=self.siteId,
+                user=self.user,
+                programCode=self.program,
+                projectCode=self.project,
+                domainName='file',
+                domainFile=self.mock_dd_filepath,
+            )
+
+    def test_query(self):
+        with patch('requests.get') as mock_get:
+            mock_get.return_value.status_code = 201
+            self.em_client.query(
+                endpoint='files'
+            )
+            mock_get.assert_called_with(
+                url="http://192.168.99.100:8000/v0/files",
+                data=json.dumps(None),
+                headers={"Content-Type": "application/json",
+                         "Authorization": "Bearer "}
+            )
 
 if __name__ == '__main__':
     unittest.main()

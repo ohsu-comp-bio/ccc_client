@@ -22,17 +22,16 @@ class EveMongoRunner(object):
             self.authToken = ""
 
         self.url = "{}:{}".format(host, port)
-        self.req = requests.Session()
-        self.req.headers = {'Authorization': 'Bearer ' + self.authToken}
+        self.headers = {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + self.authToken}
 
     def get_status(self):
         url = "{}/v0/status".format(self.url)
-        r = self.req.get(url=url)
+        r = requests.get(url=url)
         return r
 
     def query(self, endpoint, filter=None):
         url = '{}/v0/{}'.format(self.url, endpoint)
-        r = self.req.get(url=url, json=filter)
+        r = requests.get(url=url, data=json.dumps(filter), headers=self.headers)
         return r
 
     # @classmethod
@@ -67,7 +66,7 @@ class EveMongoRunner(object):
                                                programCode,
                                                projectCode,
                                                domainName,
-                                               self.req,
+                                               self.headers,
                                                self.url,
                                                self.DomainDescriptors)
                 else:
@@ -79,7 +78,7 @@ class EveMongoRunner(object):
     # names
     class RowParser(object):
         def __init__(self, fileHeader=None, siteId=None, user=None, programCode=None,
-                     projectCode=None, domainName=None, req=None, url=None,
+                     projectCode=None, domainName=None, headers=None, url=None,
                      domainDescriptors=None):
 
             self.fileHeader = fileHeader
@@ -88,7 +87,7 @@ class EveMongoRunner(object):
             self.programCode = programCode
             self.projectCode = projectCode
             self.domainName = domainName
-            self.req = req
+            self.headers = headers
             self.url = url
             self.domainDescriptors = domainDescriptors
             self.aliasMap = self.getAliases()
@@ -177,5 +176,5 @@ class EveMongoRunner(object):
             # "[base_host]/[API_version]/submission/[programName]/[projectCode]".
             # We will need to decide what constitutes 'program' and 'project' in our database.
             url = "{}/v0/submission/{}/{}".format(self.url, self.programCode, self.projectCode)
-            r = self.req.post(url=url, json=rowMap)
+            r = requests.post(url=url, data=json.dumps(rowMap, sort_keys=True), headers=self.headers)
             return r
