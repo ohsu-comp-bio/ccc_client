@@ -143,14 +143,14 @@ class AppRepoRunner(object):
         return response
 
     def list_tools(self):
-        if self.host  == "central-gateway.ccc.org":
+        if self.host == "central-gateway.ccc.org":
             host = "docker-centos7"
         else:
             host = self.host
         endpoint = "https://{0}:5000/v2/_catalog".format(host)
         response = requests.get(
             endpoint,
-            verify = False
+            verify=False
         )
         return response
 

@@ -218,7 +218,7 @@ class TestAppRepoRunner(unittest.TestCase):
             self.ar_client.list_tools()
             mock_get.assert_called_with(
                 "https://docker-centos7:5000/v2/_catalog",
-                verify = False
+                verify=False
             )
 
 
