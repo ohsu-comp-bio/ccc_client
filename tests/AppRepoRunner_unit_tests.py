@@ -79,7 +79,7 @@ class TestAppRepoRunner(unittest.TestCase):
                 )
 
     def test_ar_create_or_update_metadata(self):
-        url = "http://docker-centos7:8082/api/v1/tool/{0}"
+        url = "http://central-gateway.ccc.org:8082/api/v1/tool/{0}"
 
         # mimic successful put metadata request w/ metadata file path
         with patch('requests.put') as mock_put:
@@ -169,7 +169,7 @@ class TestAppRepoRunner(unittest.TestCase):
         # mimic successful get request:
         # by image id
         with patch('requests.get') as mock_get:
-            url = "http://docker-centos7:8082/api/v1/tool/{0}"
+            url = "http://central-gateway.ccc.org:8082/api/v1/tool/{0}"
             mock_get.return_value.status_code = 200
             self.ar_client.get_metadata(
                 image_id_or_name=self.imageId,
@@ -184,7 +184,7 @@ class TestAppRepoRunner(unittest.TestCase):
 
         # by image name
         with patch('requests.get') as mock_get:
-            url = "http://docker-centos7:8082/api/v1/tool/{0}/data"
+            url = "http://central-gateway.ccc.org:8082/api/v1/tool/{0}/data"
             mock_get.return_value.status_code = 500
             self.ar_client.get_metadata(
                 image_id_or_name=self.imageName,
@@ -203,7 +203,7 @@ class TestAppRepoRunner(unittest.TestCase):
             self.ar_client.delete_metadata(
                 imageId=self.imageId,
             )
-            url = "http://docker-centos7:8082/api/v1/tool/{0}"
+            url = "http://central-gateway.ccc.org:8082/api/v1/tool/{0}"
             mock_delete.assert_called_with(
                 url.format(self.imageId),
                 headers={
@@ -217,7 +217,8 @@ class TestAppRepoRunner(unittest.TestCase):
         with patch('requests.get') as mock_get:
             self.ar_client.list_tools()
             mock_get.assert_called_with(
-                "http://docker-centos7:5000/v2/_catalog",
+                "https://docker-centos7:5000/v2/_catalog",
+                verify = False
             )
 
 
