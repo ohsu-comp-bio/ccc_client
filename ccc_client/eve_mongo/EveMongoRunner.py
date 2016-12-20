@@ -12,16 +12,20 @@ from ccc_client.utils import parseAuthToken
 class EveMongoRunner(object):
 
     def __init__(self, host=None, port=None, authToken=None):
-        if not host:
-            host = "http://192.168.99.100"
-        if not port:
+        if host is not None:
+            host = re.sub("^http[s]?://",  "", host)
+        else:
+            host = "192.168.99.100"
+        if port is not None:
+            port = str(port)
+        else:
             port = "8000"
         if authToken is not None:
             self.authToken = parseAuthToken(authToken)
         else:
             self.authToken = ""
 
-        self.url = "{}:{}".format(host, port)
+        self.url = "http://{}:{}".format(host, port)
         self.headers = {'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + self.authToken}
 

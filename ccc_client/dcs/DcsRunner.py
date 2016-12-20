@@ -15,7 +15,7 @@ class DcsRunner(object):
     def __init__(self, host=None, port=None, authToken=None):
 
         if host is not None:
-            self.host = re.sub("^http[s]?:",  "", host)
+            self.host = re.sub("^http[s]?://",  "", host)
         else:
             self.host = "central-gateway.ccc.org"
 

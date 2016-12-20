@@ -16,9 +16,9 @@ class AppRepoRunner(object):
     def __init__(self, host=None, port=None, authToken=None):
 
         if host is not None:
-            self.host = re.sub("^http[s]?:",  "", host)
+            self.host = re.sub("^http[s]?://",  "", host)
         else:
-            self.host = "docker-centos7"
+            self.host = "central-gateway.ccc.org"
 
         if port is not None:
             self.port = str(port)
@@ -143,9 +143,14 @@ class AppRepoRunner(object):
         return response
 
     def list_tools(self):
-        endpoint = "http://{0}:5000/v2/_catalog".format(self.host)
+        if self.host  == "central-gateway.ccc.org":
+            host = "docker-centos7"
+        else:
+            host = self.host
+        endpoint = "https://{0}:5000/v2/_catalog".format(host)
         response = requests.get(
-            endpoint
+            endpoint,
+            verify = False
         )
         return response
 
