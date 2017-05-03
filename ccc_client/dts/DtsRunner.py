@@ -39,19 +39,21 @@ class DtsRunner(object):
         self.endpoint = "api/v1/dts/file"
 
     def get(self, cccId):
-        endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
-                                                   self.endpoint, cccId)
+        endpoint = "http://{0}:{1}/{2}/".format(self.host, self.port,
+                                                self.endpoint)
         response = requests.get(
             endpoint,
+            params=cccId,
             headers=self.headers
         )
         return response
 
     def delete(self, cccId):
-        endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
-                                                   self.endpoint, cccId)
+        endpoint = "http://{0}:{1}/{2}/".format(self.host, self.port,
+                                                self.endpoint)
         response = requests.delete(
             endpoint,
+            params=cccId,
             headers=self.headers
         )
         return response
