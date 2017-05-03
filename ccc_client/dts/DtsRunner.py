@@ -6,6 +6,7 @@ import re
 import requests
 import sys
 import uuid
+import urllib
 
 from ccc_client.utils import parseAuthToken
 
@@ -39,21 +40,21 @@ class DtsRunner(object):
         self.endpoint = "api/v1/dts/file"
 
     def get(self, cccId):
-        endpoint = "http://{0}:{1}/{2}/".format(self.host, self.port,
-                                                self.endpoint)
+        cccId = urllib.quote(cccId, safe='')
+        endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
+                                                    self.endpoint, cccId)
         response = requests.get(
             endpoint,
-            params=cccId,
             headers=self.headers
         )
         return response
 
     def delete(self, cccId):
-        endpoint = "http://{0}:{1}/{2}/".format(self.host, self.port,
-                                                self.endpoint)
+        cccId = urllib.quote(cccId, safe='')
+        endpoint = "http://{0}:{1}/{2}/{3}".format(self.host, self.port,
+                                                    self.endpoint, cccId)
         response = requests.delete(
             endpoint,
-            params=cccId,
             headers=self.headers
         )
         return response

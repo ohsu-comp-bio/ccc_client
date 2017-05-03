@@ -62,6 +62,7 @@ class DcsRunner(object):
         return response
 
     def list_sets(self, cccId):
+        cccId = urllib.quote(cccId, safe='')
         endpoint = "http://{0}:{1}/{2}/resource/{3}/parents".format(
             self.host,
             self.port,
@@ -72,6 +73,7 @@ class DcsRunner(object):
         return response
 
     def list_resources(self, setId):
+        setId = urllib.quote(setId, safe='')
         endpoint = "http://{0}:{1}/{2}/resource/{3}/children".format(
             self.host,
             self.port,
@@ -92,6 +94,7 @@ class DcsRunner(object):
         return response
 
     def delete_set(self, setId):
+        setId = urllib.quote(setId, safe='')
         endpoint = "http://{0}:{1}/{2}/resource/{3}".format(
             self.host,
             self.port,

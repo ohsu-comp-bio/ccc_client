@@ -48,14 +48,16 @@ class AppRepoRunner(object):
         if imageTag is None:
             imageTag = "latest"
 
-        form_data = {'file': open(imageBlob, 'rb'),
-                     "imageName": (None, imageName),
-                     "imageTag": (None, imageTag)}
+        form_data = {
+            'file': open(imageBlob, 'rb'),
+            'imageName': (None, imageName),
+            'imageTag': (None, imageTag)
+        }
 
-        headers = self.__setup_call_headers("post")
+        ## headers = self.__setup_call_headers("post")
         response = requests.post(endpoint,
-                                 files=form_data,
-                                 headers=headers)
+                                 files=form_data)
+
         return response
 
     def upload_metadata(self, imageId, metadata):
@@ -66,12 +68,13 @@ class AppRepoRunner(object):
             print(response.text, file=sys.stderr)
             raise ValueError
         else:
-            self.__create_or_update_metadata(imageId, metadata)
+            return self.__create_or_update_metadata(imageId, metadata)
 
     def update_metadata(self, imageId, metadata):
-        self.__create_or_update_metadata(imageId, metadata)
+        return self.__create_or_update_metadata(imageId, metadata)
 
     def __create_or_update_metadata(self, imageId, metadata):
+        imageId = urllib.quote(imageId, safe='')
         if isinstance(metadata, str):
             if os.path.isfile(metadata):
                 with open(metadata) as metadata_filehandle:
@@ -109,6 +112,7 @@ class AppRepoRunner(object):
         return response
 
     def get_metadata(self, image_id_or_name):
+        image_id_or_name = urllib.quote(image_id_or_name, safe='')
         endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
                                                    self.port,
                                                    self.endpoint,
@@ -131,6 +135,7 @@ class AppRepoRunner(object):
         return response
 
     def delete_metadata(self, imageId):
+        imageId = urllib.quote(imageId, safe='')
         endpoint = "http://{0}:{1}/{2}/{3}".format(self.host,
                                                    self.port,
                                                    self.endpoint,

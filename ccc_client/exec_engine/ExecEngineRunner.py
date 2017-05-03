@@ -118,6 +118,7 @@ class ExecEngineRunner(object):
         return self._get(workflowId, "outputs")
 
     def abort(self, workflowId):
+        workflowId = urllib.quote(workflowId, safe='')
         endpoint = "http://{0}:{1}/{2}/{3}/abort".format(
             self.host, self.secondary_port, self.endpoint, workflowId
         )
@@ -125,6 +126,7 @@ class ExecEngineRunner(object):
         return response
 
     def _get(self, workflowId, action):
+        workflowId = urllib.quote(workflowId, safe='')
         valid_actions = ["status", "metadata", "logs", "outputs"]
         assert action in valid_actions
         endpoint = "http://{0}:{1}/{2}/{3}/{4}".format(
